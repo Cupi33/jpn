@@ -17,17 +17,18 @@ const Login = () => {
       <Col lg="5" md="7">
         <Card className="bg-secondary shadow border-0">
             <Form role="form">
-              <FormGroup className="mb-3">
+              <FormGroup className="mb-3" style={{ marginTop: '20px' }}>
                 <InputGroup className="input-group-alternative">
                   <InputGroupAddon addonType="prepend">
                     <InputGroupText>
-                      <i className="ni ni-email-83" />
+                      <i className="ni ni-badge" />
                     </InputGroupText>
                   </InputGroupAddon>
                   <Input
-                    placeholder="Email"
-                    type="email"
-                    autoComplete="new-email"
+                    placeholder="Nombor Kad Pengenalan"
+                    type="icno"
+                    autoComplete="off"
+                    pattern="[0-9]*"
                   />
                 </InputGroup>
               </FormGroup>
@@ -39,28 +40,15 @@ const Login = () => {
                     </InputGroupText>
                   </InputGroupAddon>
                   <Input
-                    placeholder="Password"
+                    placeholder="Kata Laluan"
                     type="password"
                     autoComplete="new-password"
                   />
                 </InputGroup>
               </FormGroup>
-              <div className="custom-control custom-control-alternative custom-checkbox">
-                <input
-                  className="custom-control-input"
-                  id=" customCheckLogin"
-                  type="checkbox"
-                />
-                <label
-                  className="custom-control-label"
-                  htmlFor=" customCheckLogin"
-                >
-                  <span className="text-muted">Remember me</span>
-                </label>
-              </div>
               <div className="text-center">
                 <Button className="my-4" color="primary" type="button">
-                  Sign in
+                  Masuk
                 </Button>
               </div>
             </Form>
@@ -72,7 +60,7 @@ const Login = () => {
               href="#pablo"
               onClick={(e) => e.preventDefault()}
             >
-              <small>Forgot password?</small>
+              <small>Lupa kata laluan?</small>
             </a>
           </Col>
           <Col className="text-right" xs="6">
@@ -81,7 +69,7 @@ const Login = () => {
               href="#pablo"
               onClick={(e) => e.preventDefault()}
             >
-              <small>Create new account</small>
+              <small>Daftar akaun baru</small>
             </a>
           </Col>
         </Row>

@@ -1,10 +1,10 @@
 import Index from "views/Index.js";
-import Profile from "views/customer/Profile.js";
-import Maps from "views/customer/Maps.js";
-import Register from "views/customer/Register.js";
-import Login from "views/customer/Login.js";
-import Tables from "views/customer/Tables.js";
-import Icons from "views/customer/Icons.js";
+import Profile from "views/Citizen/Profile.js";
+import Maps from "views/Citizen/Maps.js";
+import Register from "views/Citizen/Register.js";
+import Login from "views/Citizen/Login.js";
+import Tables from "views/Citizen/Tables.js";
+import Icons from "views/Citizen/Icons.js";
 
 var routes = [
   {
