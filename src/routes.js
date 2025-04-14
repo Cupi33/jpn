@@ -1,10 +1,10 @@
 import Index from "views/Index.js";
-import Profile from "views/examples/Profile.js";
-import Maps from "views/examples/Maps.js";
-import Register from "views/examples/Register.js";
-import Login from "views/examples/Login.js";
-import Tables from "views/examples/Tables.js";
-import Icons from "views/examples/Icons.js";
+import Profile from "views/customer/Profile.js";
+import Maps from "views/customer/Maps.js";
+import Register from "views/customer/Register.js";
+import Login from "views/customer/Login.js";
+import Tables from "views/customer/Tables.js";
+import Icons from "views/customer/Icons.js";
 
 var routes = [
   {
