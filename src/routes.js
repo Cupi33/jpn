@@ -5,13 +5,14 @@ import Register from "views/Citizen/Register.js";
 import Login from "views/Citizen/Login.js";
 import Tables from "views/Citizen/Tables.js";
 import Icons from "views/Citizen/Icons.js";
+import MenuUtama from "views/Citizen/MenuUtama";
 
 var routes = [
   {
-    path: "/register",
+    path: "/MenuUtama",
     name: "Menu Utama",
     icon: "ni ni-shop text-green",
-    component: <Register />,
+    component: <MenuUtama />,
     layout: "/auth",
   },
   {
