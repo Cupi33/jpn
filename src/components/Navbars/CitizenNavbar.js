@@ -13,7 +13,7 @@ import {
   Col,
 } from "reactstrap";
 
-const AdminNavbar = () => {
+const CitizenNavbar = () => {
   return (
     <>
       <Navbar className="navbar-top navbar-horizontal navbar-dark" expand="md">
@@ -21,7 +21,8 @@ const AdminNavbar = () => {
           <NavbarBrand to="/" tag={Link}>
             <img
               alt="..."
-              src={require("../../assets/img/brand/argon-react-white.png")}
+              src={require("../../assets/img/icons/common/logo.png")}
+              style={{ height: "120px" }}
             />
           </NavbarBrand>
           <button className="navbar-toggler" id="navbar-collapse-main">
@@ -87,4 +88,4 @@ const AdminNavbar = () => {
   );
 };
 
-export default AdminNavbar;
+export default CitizenNavbar;
