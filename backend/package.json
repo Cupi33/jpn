@@ -1,0 +1,19 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+  "client": "cd src && npm start",
+  "server": "cd server && node app.js",
+  "dev": "concurrently \"npm run server\" \"npm run client\"",
+  "start": "node server/app.js",
+  "build": "cd src && npm run build"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
