@@ -8,6 +8,13 @@ import Icons from "views/Citizen/Icons.js";
 
 var routes = [
   {
+    path: "/register",
+    name: "Menu Utama",
+    icon: "ni ni-shop text-green",
+    component: <Register />,
+    layout: "/auth",
+  },
+  {
     path: "/index",
     name: "Dashboard",
     icon: "ni ni-tv-2 text-primary",
