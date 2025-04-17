@@ -1,22 +1,3 @@
-/*!
-
-=========================================================
-* Argon Dashboard React - v1.2.4
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/argon-dashboard-react
-* Copyright 2024 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/argon-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
-
-// reactstrap components
 import {
   Button,
   Card,
@@ -24,7 +5,6 @@ import {
   CardBody,
   FormGroup,
   Form,
-  Input,
   Container,
   Row,
   Col,
@@ -63,7 +43,7 @@ const Profile = () => {
                     onClick={(e) => e.preventDefault()}
                     size="sm"
                   >
-                    Connect
+                    Ubah Profil
                   </Button>
                   <Button
                     className="float-right"
@@ -72,55 +52,46 @@ const Profile = () => {
                     onClick={(e) => e.preventDefault()}
                     size="sm"
                   >
-                    Message
+                    Buang
                   </Button>
                 </div>
               </CardHeader>
               <CardBody className="pt-0 pt-md-4">
                 <Row>
                   <div className="col">
-                    <div className="card-profile-stats d-flex justify-content-center mt-md-5">
-                      <div>
-                        <span className="heading">22</span>
-                        <span className="description">Friends</span>
-                      </div>
-                      <div>
-                        <span className="heading">10</span>
-                        <span className="description">Photos</span>
-                      </div>
-                      <div>
-                        <span className="heading">89</span>
-                        <span className="description">Comments</span>
-                      </div>
-                    </div>
+                    <div className="card-profile-stats d-flex justify-content-center mt-md-5"></div>
                   </div>
                 </Row>
                 <div className="text-center">
+                 <h7>
+                  Username
+                 </h7>
                   <h3>
-                    Jessica Jones
-                    <span className="font-weight-light">, 27</span>
+                    Dazaikal
+                    <span className="font-weight-light"></span>
                   </h3>
-                  <div className="h5 font-weight-300">
-                    <i className="ni location_pin mr-2" />
-                    Bucharest, Romania
-                  </div>
-                  <div className="h5 mt-4">
-                    <i className="ni business_briefcase-24 mr-2" />
-                    Solution Manager - Creative Tim Officer
-                  </div>
-                  <div>
-                    <i className="ni education_hat mr-2" />
-                    University of Computer Science
+                  {/* Added buttons container */}
+                  <div className="d-flex justify-content-center mt-3 mb-4">
+                    <Button
+                      className="mx-2"
+                      color="primary"
+                      href="#pablo"
+                      onClick={(e) => e.preventDefault()}
+                      size="sm"
+                    >
+                      Ubah Username
+                    </Button>
+                    <Button
+                      className="mx-2"
+                      color="secondary"
+                      href="#pablo"
+                      onClick={(e) => e.preventDefault()}
+                      size="sm"
+                    >
+                      Ubah Kata Laluan
+                    </Button>
                   </div>
                   <hr className="my-4" />
-                  <p>
-                    Ryan — the name taken by Melbourne-raised, Brooklyn-based
-                    Nick Murphy — writes, performs and records all of his own
-                    music.
-                  </p>
-                  <a href="#pablo" onClick={(e) => e.preventDefault()}>
-                    Show more
-                  </a>
                 </div>
               </CardBody>
             </Card>
@@ -147,7 +118,7 @@ const Profile = () => {
               <CardBody>
                 <Form>
                   <h6 className="heading-small text-muted mb-4">
-                    User information
+                    Info Pengguna
                   </h6>
                   <div className="pl-lg-4">
                     <Row>
@@ -155,167 +126,113 @@ const Profile = () => {
                         <FormGroup>
                           <label
                             className="form-control-label"
-                            htmlFor="input-username"
+                            htmlFor="display-fullname"
                           >
-                            Username
+                            Nama Penuh
                           </label>
-                          <Input
-                            className="form-control-alternative"
-                            defaultValue="lucky.jesse"
-                            id="input-username"
-                            placeholder="Username"
-                            type="text"
-                          />
+                          <div className="form-control-plaintext" id="display-fullname">
+                            Muhammad Sufi Haikal Bin Saifuzbahari
+                          </div>
                         </FormGroup>
                       </Col>
                       <Col lg="6">
-                        <FormGroup>
+                      <FormGroup>
                           <label
                             className="form-control-label"
-                            htmlFor="input-email"
+                            htmlFor="display-age"
                           >
-                            Email address
+                            Umur
                           </label>
-                          <Input
-                            className="form-control-alternative"
-                            id="input-email"
-                            placeholder="jesse@example.com"
-                            type="email"
-                          />
+                          <div className="form-control-plaintext" id="display-age">
+                            22
+                          </div>
                         </FormGroup>
                       </Col>
                     </Row>
                     <Row>
                       <Col lg="6">
-                        <FormGroup>
+                      <FormGroup>
                           <label
                             className="form-control-label"
-                            htmlFor="input-first-name"
+                            htmlFor="display-dob"
                           >
-                            First name
+                            Tarikh Lahir
                           </label>
-                          <Input
-                            className="form-control-alternative"
-                            defaultValue="Lucky"
-                            id="input-first-name"
-                            placeholder="First name"
-                            type="text"
-                          />
+                          <div className="form-control-plaintext" id="display-dob">
+                            21 April 2003
+                          </div>
                         </FormGroup>
                       </Col>
                       <Col lg="6">
-                        <FormGroup>
+                      <FormGroup>
                           <label
                             className="form-control-label"
-                            htmlFor="input-last-name"
+                            htmlFor="display-gender"
                           >
-                            Last name
+                            Jantina
                           </label>
-                          <Input
-                            className="form-control-alternative"
-                            defaultValue="Jesse"
-                            id="input-last-name"
-                            placeholder="Last name"
-                            type="text"
-                          />
+                          <div className="form-control-plaintext" id="display-gender">
+                            Lelaki
+                          </div>
+                        </FormGroup>
+                      </Col> 
+                    <Col lg="6">
+                      <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="display-race"
+                          >
+                            Bangsa
+                          </label>
+                          <div className="form-control-plaintext" id="display-race">
+                            Melayu
+                          </div>
                         </FormGroup>
                       </Col>
-                    </Row>
+                      <Col lg="6">
+                      <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="display-religion"
+                          >
+                            Agama
+                          </label>
+                          <div className="form-control-plaintext" id="display-religion">
+                            Islam
+                          </div>
+                        </FormGroup>
+                      </Col>
+                      </Row>
+                      <Row>
+                      <Col lg="6">
+                      <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="display-maritalStatus"
+                          >
+                            Status Perkahwinan
+                          </label>
+                          <div className="form-control-plaintext" id="display-maritalStatus">
+                            Bujang
+                          </div>
+                        </FormGroup>
+                      </Col>
+                      <Col lg="6">
+                      <FormGroup>
+                          <label
+                            className="form-control-label"
+                            htmlFor="display-address"
+                          >
+                            Alamat
+                          </label>
+                          <div className="form-control-plaintext" id="display-address">
+                            No 23 Jalan Tenaga 5 Taman Jaya Indah Ampang Selangor
+                          </div>
+                        </FormGroup>
+                      </Col>
+                      </Row>
                   </div>
                   <hr className="my-4" />
-                  {/* Address */}
-                  <h6 className="heading-small text-muted mb-4">
-                    Contact information
-                  </h6>
-                  <div className="pl-lg-4">
-                    <Row>
-                      <Col md="12">
-                        <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="input-address"
-                          >
-                            Address
-                          </label>
-                          <Input
-                            className="form-control-alternative"
-                            defaultValue="Bld Mihail Kogalniceanu, nr. 8 Bl 1, Sc 1, Ap 09"
-                            id="input-address"
-                            placeholder="Home Address"
-                            type="text"
-                          />
-                        </FormGroup>
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col lg="4">
-                        <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="input-city"
-                          >
-                            City
-                          </label>
-                          <Input
-                            className="form-control-alternative"
-                            defaultValue="New York"
-                            id="input-city"
-                            placeholder="City"
-                            type="text"
-                          />
-                        </FormGroup>
-                      </Col>
-                      <Col lg="4">
-                        <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="input-country"
-                          >
-                            Country
-                          </label>
-                          <Input
-                            className="form-control-alternative"
-                            defaultValue="United States"
-                            id="input-country"
-                            placeholder="Country"
-                            type="text"
-                          />
-                        </FormGroup>
-                      </Col>
-                      <Col lg="4">
-                        <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="input-country"
-                          >
-                            Postal code
-                          </label>
-                          <Input
-                            className="form-control-alternative"
-                            id="input-postal-code"
-                            placeholder="Postal code"
-                            type="number"
-                          />
-                        </FormGroup>
-                      </Col>
-                    </Row>
-                  </div>
-                  <hr className="my-4" />
-                  {/* Description */}
-                  <h6 className="heading-small text-muted mb-4">About me</h6>
-                  <div className="pl-lg-4">
-                    <FormGroup>
-                      <label>About Me</label>
-                      <Input
-                        className="form-control-alternative"
-                        placeholder="A few words about you ..."
-                        rows="4"
-                        defaultValue="A beautiful Dashboard for Bootstrap 4. It is Free and
-                        Open Source."
-                        type="textarea"
-                      />
-                    </FormGroup>
-                  </div>
                 </Form>
               </CardBody>
             </Card>
