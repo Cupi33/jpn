@@ -5,7 +5,7 @@ import Register from "views/Citizen/Register.js";
 import Login from "views/Citizen/Login.js";
 import Tables from "views/Citizen/Tables.js";
 import Icons from "views/Citizen/Icons.js";
-import MenuUtama from "views/Citizen/MenuUtama";
+import MenuUtama from "views/Citizen/MenuUtama.js";
 
 var routes = [
   {
@@ -13,7 +13,7 @@ var routes = [
     name: "Menu Utama",
     icon: "ni ni-shop text-green",
     component: <MenuUtama />,
-    layout: "/auth",
+    layout: "/citizen",
   },
   {
     path: "/index",
@@ -55,14 +55,14 @@ var routes = [
     name: "Login",
     icon: "ni ni-key-25 text-info",
     component: <Login />,
-    layout: "/auth",
+    layout: "/citizen",
   },
   {
     path: "/register",
     name: "Register",
     icon: "ni ni-circle-08 text-pink",
     component: <Register />,
-    layout: "/auth",
+    layout: "/citizen",
   },
 ];
 export default routes;
