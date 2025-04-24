@@ -8,7 +8,6 @@ import "assets/scss/argon-dashboard-react.scss";
 
 import AdminLayout from "layouts/Admin.js";
 import CitizenLayout from "layouts/Citizen.js";
-import PublicLayout from "layouts/PublicLayout";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
