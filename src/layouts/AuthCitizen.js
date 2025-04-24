@@ -28,7 +28,7 @@ const Citizen = (props) => {
 
   const getRoutes = (routes) => {
     return routes.map((prop, key) => {
-      if (prop.layout === "/citizen") {
+      if (prop.layout === "/authCitizen") {
         return (
           <Route path={prop.path} element={prop.component} key={key} exact />
         );
@@ -77,7 +77,7 @@ const Citizen = (props) => {
           <Row className="justify-content-center">
             <Routes>
               {getRoutes(routes)}
-              <Route path="*" element={<Navigate to="/citizen/login" replace />} />
+              <Route path="*" element={<Navigate to="/authCitizen/login" replace />} />
             </Routes>
           </Row>
         </Container>

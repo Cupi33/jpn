@@ -7,7 +7,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import "assets/scss/argon-dashboard-react.scss";
 
 import AdminLayout from "layouts/Admin.js";
-import CitizenLayout from "layouts/Citizen.js";
+import AuthCitizenLayout from "layouts/AuthCitizen.js";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -16,14 +16,9 @@ root.render(
   <BrowserRouter>
     <Routes>
       <Route path="/admin/*" element={<AdminLayout />} />
-      <Route path="/citizen/*" element={<CitizenLayout />} />
-      
-      {/* <Route 
-          path="/*" element={<PublicLayout />} >
-          <Route path="setting" element={<Setting />} />
-      </Route> */}
+      <Route path="/authCitizen/*" element={<AuthCitizenLayout />} />
 
-      <Route path="*" element={<Navigate to="/citizen/login" replace />} />
+      <Route path="*" element={<Navigate to="/authCitizen/login" replace />} />
     </Routes>
   </BrowserRouter>
 );
