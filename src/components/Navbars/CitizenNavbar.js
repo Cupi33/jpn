@@ -57,7 +57,7 @@ const CitizenNavbar = () => {
               <NavItem>
                 <NavLink
                   className="nav-link-icon"
-                  to="/auth/register"
+                  to="/authCitizen/register"
                   tag={Link}
                 >
                   <i className="ni ni-circle-08" />
@@ -65,7 +65,7 @@ const CitizenNavbar = () => {
                 </NavLink>
               </NavItem>
               <NavItem>
-                <NavLink className="nav-link-icon" to="/auth/login" tag={Link}>
+                <NavLink className="nav-link-icon" to="/authCitizen/login" tag={Link}>
                   <i className="ni ni-key-25" />
                   <span className="nav-link-inner--text">Login</span>
                 </NavLink>
