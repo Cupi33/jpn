@@ -38,30 +38,7 @@ import {
                 </CardBody>
               </Card>
             </Col>
-            
-            <Col lg="6" className="mb-4">
-              <Card className="shadow">
-                <CardHeader className="bg-transparent">
-                  <Row className="align-items-center">
-                    <Col>
-                      <h6 className="text-uppercase text-muted ls-1 mb-1">
-                        Pendaftaran
-                      </h6>
-                      <h2 className="mb-0">Anak Angkat</h2>
-                    </Col>
-                    <Col className="col-auto">
-                      <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
-                        <i className="ni ni-single-02" />
-                      </div>
-                    </Col>
-                  </Row>
-                </CardHeader>
-                <CardBody>
-                  {/* You can add content here if needed */}
-                </CardBody>
-              </Card>
-            </Col>
-            
+          
             <Col lg="6" className="mb-4">
               <Card className="shadow">
                 <CardHeader className="bg-transparent">
