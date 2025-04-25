@@ -6,6 +6,7 @@ import Login from "views/Citizen/Login.js";
 import Tables from "views/Citizen/Tables.js";
 import Icons from "views/Citizen/Icons.js";
 import MenuUtama from "views/Citizen/MenuUtama.js";
+import Statistic from "views/Citizen/Statistic.js"
 
 // Route groups by layout
 const routeGroups = {
@@ -41,6 +42,12 @@ const routeGroups = {
         name: "Tables",
         icon: "ni ni-bullet-list-67 text-red",
         component: <Tables />,
+      },
+      {
+        path: "/statistic",
+        name: "Statistik",
+        icon: "ni ni-sound-wave text-lilac",
+        component: <Statistic />,
       },
     ],
   },
