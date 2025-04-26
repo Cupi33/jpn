@@ -7,6 +7,8 @@ import Tables from "views/Citizen/Tables.js";
 import Icons from "views/Citizen/Icons.js";
 import MenuUtama from "views/Citizen/MenuUtama.js";
 import Statistic from "views/Citizen/Statistic.js"
+import DeathApplication from "views/Citizen/DeathApplication.js";
+
 
 // Route groups by layout
 const routeGroups = {
@@ -71,6 +73,17 @@ const routeGroups = {
         name: "Register",
         icon: "ni ni-circle-08 text-pink",
         component: <Register />,
+      },
+    ],
+  },
+  applicationCitizen: {
+    layout: "/applicationCitizen",
+    routes: [
+      {
+        path: "/DeathApplication",
+        name: "Pendaftaran Kematian",
+        icon: "ni ni-skull",
+        component: <DeathApplication />,
       },
     ],
   },
