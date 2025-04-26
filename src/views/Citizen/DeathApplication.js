@@ -76,6 +76,21 @@ const DeathApplication = () => {
              </FormGroup>
               </Col>
             </Row>
+            <FormGroup>
+              <label
+                    className="form-control-label"
+                    htmlFor="upload-police-report"
+              > 
+                Surat Kematian Daripada PDRM
+              </label>
+              <Input
+                className="form-control"
+                id="upload-police-report"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png" // Accept only certain file types
+              />
+           </FormGroup>
+
           </div>
           <hr className="my-4" />
           <div className="text-center">
