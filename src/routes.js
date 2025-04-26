@@ -9,6 +9,7 @@ import MenuUtama from "views/Citizen/MenuUtama.js";
 import Statistic from "views/Citizen/Statistic.js"
 import DeathApplication from "views/Citizen/DeathApplication.js";
 import NewbornApplication from "views/Citizen/NewbornApplication";
+import ICApplication from "views/Citizen/ICApplication";
 
 
 // Route groups by layout
@@ -91,6 +92,12 @@ const routeGroups = {
         name: "Pendaftaran Bayi",
         // icon: "ni ni-infant",
         component: <NewbornApplication />,
+      },
+      {
+        path: "/ICApplication",
+        name: "Permohonan Kad Pengenalan",
+        // icon: "ni ni-infant",
+        component: <ICApplication />,
       },
     ],
   },
