@@ -83,6 +83,17 @@ const Sidebar = (props) => {
     };
   }
 
+  const sidebarRoutes = routes.filter(route => {
+    // Include all applicationCitizen routes
+    if (route.group === "citizenMenu") return true;
+  
+    // Include only MenuUtama from authCitizen
+    if (route.group === "authCitizen" && route.path === "/MenuUtama") return true;
+  
+    // Exclude everything else
+    return false;
+  });
+
   return (
     <Navbar
       className="navbar-vertical fixed-left navbar-light bg-white"
@@ -196,7 +207,7 @@ const Sidebar = (props) => {
           </div>
           {/* Form */}
           {/* Navigation */}
-          <Nav navbar>{createLinks(routes)}</Nav>
+          <Nav navbar>{createLinks(sidebarRoutes)}</Nav>
           {/* Divider */}
           <hr className="my-3" />
           {/* Heading */}
