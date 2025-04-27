@@ -8,6 +8,8 @@ import {
     CardHeader
   } from "reactstrap";
   // core components
+
+  import { Link } from "react-router-dom";
   
   const MenuUtama = () => {
     
@@ -25,11 +27,14 @@ import {
                         Pendaftaran
                       </h6>
                       <h2 className="mb-0">Kelahiran Bayi</h2>
+                      <h6 className="mb-1">Sila Tekan Ikon</h6>
                     </Col>
                     <Col className="col-auto">
+                      <Link to ="/applicationCitizen/NewbornApplication" >
                       <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
                         <i className="fas fa-baby" />
                       </div>
+                      </Link>
                     </Col>
                   </Row>
                 </CardHeader>
@@ -48,11 +53,14 @@ import {
                         Pendaftaran
                       </h6>
                       <h2 className="mb-0">Kematian</h2>
+                      <h6 className="mb-1">Sila Tekan Ikon</h6>
                     </Col>
                     <Col className="col-auto">
-                      <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
-                        <i className="fas fa-skull" />
-                      </div>
+                      <Link to="/applicationCitizen/DeathApplication">
+                        <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
+                          <i className="fas fa-skull" />
+                        </div>
+                      </Link>
                     </Col>
                   </Row>
                 </CardHeader>
@@ -71,11 +79,14 @@ import {
                         Permohonan
                       </h6>
                       <h2 className="mb-0">Kad Pengenalan</h2>
+                      <h6 className="mb-1">Sila Tekan Ikon</h6>
                     </Col>
                     <Col className="col-auto">
-                      <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
-                        <i className="ni ni-credit-card" />
-                      </div>
+                      <Link to= "/applicationCitizen/ICApplication">
+                        <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
+                          <i className="ni ni-credit-card" />
+                        </div>
+                      </Link>
                     </Col>
                   </Row>
                 </CardHeader>
