@@ -14,8 +14,8 @@ import ICApplication from "views/Citizen/ICApplication";
 
 // Route groups by layout
 const routeGroups = {
-  admin: {
-    layout: "/admin",
+  citizenMenu: {
+    layout: "/citizenMenu",
     routes: [
       {
         path: "/index",

@@ -6,9 +6,9 @@ import "assets/plugins/nucleo/css/nucleo.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import "assets/scss/argon-dashboard-react.scss";
 
-import AdminLayout from "layouts/Admin.js";
 import AuthCitizenLayout from "layouts/AuthCitizen.js";
 import ApplicationCitizen from "layouts/ApplicationCitizen";
+import CitizenMenu from "layouts/CitizenMenu.js";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -16,7 +16,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <BrowserRouter>
     <Routes>
-      <Route path="/admin/*" element={<AdminLayout />} />
+      <Route path="/citizenMenu/*" element={<CitizenMenu />} />
       <Route path="/authCitizen/*" element={<AuthCitizenLayout />} />
       <Route path="/applicationCitizen/*" element={<ApplicationCitizen />}/>
 

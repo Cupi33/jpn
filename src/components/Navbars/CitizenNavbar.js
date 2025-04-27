@@ -73,7 +73,7 @@ const CitizenNavbar = () => {
               <NavItem>
                 <NavLink
                   className="nav-link-icon"
-                  to="/admin/user-profile"
+                  to="/citizenMenu/user-profile"
                   tag={Link}
                 >
                   <i className="ni ni-single-02" />
