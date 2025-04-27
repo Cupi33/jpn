@@ -32,10 +32,10 @@ const ApplicationNavbar = () => {
             <div className="navbar-collapse-header d-md-none">
               <Row>
                 <Col className="collapse-brand" xs="6">
-                  <Link to="/">
+                  <Link to="/authCitizen/MenuUtama">
                     <img
                       alt="..."
-                      src={require("../../assets/img/brand/argon-react.png")}
+                      src={require("../../assets/img/icons/common/logo.png")}
                     />
                   </Link>
                 </Col>
@@ -51,7 +51,7 @@ const ApplicationNavbar = () => {
               <NavItem>
                 <NavLink className="nav-link-icon" to="/" tag={Link}>
                   <i className="ni ni-planet" />
-                  <span className="nav-link-inner--text">Menu Utama</span>
+                  <span className="nav-link-inner--text">Dashboard</span>
                 </NavLink>
               </NavItem>
               <NavItem>
@@ -60,8 +60,8 @@ const ApplicationNavbar = () => {
                   to="/authCitizen/register"
                   tag={Link}
                 >
-                  <i className="ni ni-circle-08" />
-                  <span className="nav-link-inner--text">Permohonan</span>
+                  <i className="ni ni-single-02" />
+                  <span className="nav-link-inner--text">Profil</span>
                 </NavLink>
               </NavItem>
               <NavItem>
@@ -73,11 +73,11 @@ const ApplicationNavbar = () => {
               <NavItem>
                 <NavLink
                   className="nav-link-icon"
-                  to="/admin/user-profile"
+                  to="/citizenMenu/user-profile"
                   tag={Link}
                 >
                   <i className="ni ni-single-02" />
-                  <span className="nav-link-inner--text">Info Pengguna</span>
+                  <span className="nav-link-inner--text">Profil Pengguna</span>
                 </NavLink>
               </NavItem>
             </Nav>
