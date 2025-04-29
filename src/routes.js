@@ -10,6 +10,7 @@ import Statistic from "views/Citizen/Statistic.js"
 import DeathApplication from "views/Citizen/DeathApplication.js";
 import NewbornApplication from "views/Citizen/NewbornApplication";
 import ICApplication from "views/Citizen/ICApplication";
+import AdminLogin from "views/Admin/loginAdmin";
 
 
 // Route groups by layout
@@ -98,6 +99,17 @@ const routeGroups = {
         name: "Permohonan Kad Pengenalan",
         // icon: "ni ni-infant",
         component: <ICApplication />,
+      },
+    ],
+  },
+  authAdmin: {
+    layout: "/authAdmin",
+    routes: [
+      {
+        path: "/loginAdmin",
+        name: "Log Masuk Staff",
+         icon: "ni ni-key",
+        component: <AdminLogin />,
       },
     ],
   },

@@ -9,6 +9,7 @@ import "assets/scss/argon-dashboard-react.scss";
 import AuthCitizenLayout from "layouts/AuthCitizen.js";
 import ApplicationCitizen from "layouts/ApplicationCitizen";
 import CitizenMenu from "layouts/CitizenMenu.js";
+import AuthAdmin from "layouts/AuthAdmin";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -19,6 +20,7 @@ root.render(
       <Route path="/citizenMenu/*" element={<CitizenMenu />} />
       <Route path="/authCitizen/*" element={<AuthCitizenLayout />} />
       <Route path="/applicationCitizen/*" element={<ApplicationCitizen />}/>
+      <Route path="/authAdmin/*" element={<AuthAdmin />} />
 
       <Route path="*" element={<Navigate to="/authCitizen/login" replace />} />
     </Routes>
