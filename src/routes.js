@@ -11,6 +11,7 @@ import DeathApplication from "views/Citizen/DeathApplication.js";
 import NewbornApplication from "views/Citizen/NewbornApplication";
 import ICApplication from "views/Citizen/ICApplication";
 import AdminLogin from "views/Admin/loginAdmin";
+import DashboardAdmin from "views/Admin/dashboardAdmin"
 
 
 // Route groups by layout
@@ -110,6 +111,18 @@ const routeGroups = {
         name: "Log Masuk Staff",
          icon: "ni ni-key",
         component: <AdminLogin />,
+      },
+    ],
+  },
+
+  adminMenu: {
+    layout: "/adminMenu",
+    routes: [
+      {
+        path: "/dashboard",
+        name: "Dashboard",
+         icon: "ni ni-laptop text-green",
+        component: <DashboardAdmin />,
       },
     ],
   },
