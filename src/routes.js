@@ -14,6 +14,12 @@ import AdminLogin from "views/Admin/loginAdmin";
 import DashboardAdmin from "views/Admin/dashboardAdmin"
 import CheckApplication from "views/Admin/CheckApplication";
 import NewbornCheck from "views/Admin/checkAdmin/NewbornCheck";
+import TableNewborn from "views/Admin/checkAdmin/TableNewborn";
+import DeathCheck from "views/Admin/checkAdmin/DeathCheck";
+import TableDeath from "views/Admin/checkAdmin/TableDeath";
+import ICCheck from "views/Admin/checkAdmin/ICCheck";
+import TableIC from "views/Admin/checkAdmin/TableIC";
+
 
 
 // Route groups by layout
@@ -143,6 +149,36 @@ const routeGroups = {
         name: "Semak Permohonan Bayi",
          icon: "ni ni-check-bold text-blue",
         component: <NewbornCheck />,
+      },
+      {
+        path: "/tableNewborn",
+        name: "Senarai Permohonan Bayi",
+         icon: "ni ni-check-bold text-blue",
+        component: <TableNewborn />,
+      },
+      {
+        path: "/checkDeath",
+        name: "Senarai Permohonan Kematian",
+         icon: "ni ni-check-bold text-blue",
+        component: <DeathCheck />,
+      },
+      {
+        path: "/tableDeath",
+        name: "Senarai Permohonan Kematian",
+         icon: "ni ni-check-bold text-blue",
+        component: <TableDeath />,
+      },
+      {
+        path: "/checkIC",
+        name: "Senarai Permohonan IC",
+         icon: "ni ni-check-bold text-blue",
+        component: <ICCheck />,
+      },
+      {
+        path: "/tableIC",
+        name: "Senarai Permohonan IC",
+         icon: "ni ni-check-bold text-blue",
+        component: <TableIC />,
       },
     ],
   },

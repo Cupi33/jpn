@@ -50,7 +50,7 @@ import {
                       <h6 className="mb-1">Sila Tekan Ikon</h6>
                     </Col>
                     <Col className="col-auto">
-                      <Link to="/applicationCitizen/DeathApplication">
+                      <Link to="/adminApplication/checkDeath">
                         <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
                           <i className="fas fa-skull" />
                         </div>
@@ -75,7 +75,7 @@ import {
                       <h6 className="mb-1">Sila Tekan Ikon</h6>
                     </Col>
                     <Col className="col-auto">
-                      <Link to="/applicationCitizen/ICApplication">
+                      <Link to="/adminApplication/checkIC">
                         <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
                           <i className="ni ni-credit-card" />
                         </div>

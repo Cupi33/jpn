@@ -84,11 +84,11 @@ const AdminSidebar = (props) => {
   }
 
   const sidebarRoutes = routes.filter(route => {
-    // Include all applicationCitizen routes
+    // Include all adminMenu routes
     if (route.group === "adminMenu") return true;
   
     // Include only MenuUtama from authCitizen
-    //if (route.group === "authCitizen" && route.path === "/MenuUtama") return true;
+    if (route.group === "adminApplication" && route.path === "/checkApplication") return true;
   
     // Exclude everything else
     return false;

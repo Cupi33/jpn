@@ -12,7 +12,7 @@ import {
   // core components
 //   import { Link } from "react-router-dom";
   
-  const NewbornCheck = () => {
+  const ICCheck = () => {
     return (
       <>
         {/* Page content */}
@@ -22,7 +22,7 @@ import {
           <div className="col">
             <Card className="bg-default shadow">
               <CardHeader className="bg-transparent border-0">
-                <h3 className="text-white mb-0">Semakan Permohonan Pendaftaran Bayi</h3>
+                <h3 className="text-white mb-0">Semakan Permohonan Kad Pengenalan</h3>
               </CardHeader>
               <Table
                 className="align-items-center table-light table-flush"
@@ -54,7 +54,7 @@ import {
                       22/4/2025  
                     </td>
                     <td>
-                        <Link to= "/adminApplication/tableNewborn">
+                        <Link to= "/adminApplication/tableIC">
                             <Button type="button" color="primary">
                                 Semak
                             </Button>
@@ -74,5 +74,5 @@ import {
     );
   };
   
-  export default NewbornCheck;
+  export default ICCheck;
   
