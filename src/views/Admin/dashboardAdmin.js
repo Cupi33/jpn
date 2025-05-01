@@ -29,7 +29,7 @@ import {
   chartExample2,
 } from "variables/charts.js";
 
-import Header from "components/Headers/Header.js";
+import AdminHeader from "components/Headers/AdminHeader";
 
 const Index = (props) => {
   const [activeNav, setActiveNav] = useState(1);
@@ -46,7 +46,7 @@ const Index = (props) => {
   };
   return (
     <>
-      <Header />
+      <AdminHeader />
       {/* Page content */}
       <Container className="mt--7" fluid>
         <Row>
@@ -128,6 +128,7 @@ const Index = (props) => {
           </Col>
         </Row>
         <Row className="mt-5">
+          {/* {untuk able first page visits} */}
           <Col className="mb-5 mb-xl-0" xl="8">
             <Card className="shadow">
               <CardHeader className="border-0">
@@ -223,6 +224,7 @@ const Index = (props) => {
                   </div>
                 </Row>
               </CardHeader>
+              {/* {untuk table social traffic} */}
               <Table className="align-items-center table-flush" responsive>
                 <thead className="thead-light">
                   <tr>

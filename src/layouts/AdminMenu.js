@@ -54,14 +54,14 @@ const AdminMenu = (props) => {
           imgAlt: "...",
         }}
       />
-      <div className="main-content" ref={mainContent}>
+      <div className="main-content " ref={mainContent}>
         <AdminNavbar
           {...props}
           brandText={getBrandText(props?.location?.pathname)}
         />
         <Routes>
           {getRoutes(routes)}
-          <Route path="*" element={<Navigate to="/citizenMenu/MenuUtama" replace />} />
+          <Route path="*" element={<Navigate to="/adminMenu/dashboard" replace />} />
         </Routes>
         <Container fluid>
           <AdminFooter />
