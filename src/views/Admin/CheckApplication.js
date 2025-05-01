@@ -28,7 +28,7 @@ import {
                       <h6 className="mb-1">Sila Tekan Ikon</h6>
                     </Col>
                     <Col className="col-auto">
-                      <Link to="/applicationCitizen/NewbornApplication">
+                      <Link to="/adminApplication/checkNewborn">
                         <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
                           <i className="fas fa-baby" />
                         </div>
