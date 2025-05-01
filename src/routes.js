@@ -12,6 +12,7 @@ import NewbornApplication from "views/Citizen/NewbornApplication";
 import ICApplication from "views/Citizen/ICApplication";
 import AdminLogin from "views/Admin/loginAdmin";
 import DashboardAdmin from "views/Admin/dashboardAdmin"
+import CheckApplication from "views/Admin/CheckApplication";
 
 
 // Route groups by layout
@@ -124,8 +125,27 @@ const routeGroups = {
          icon: "ni ni-laptop text-green",
         component: <DashboardAdmin />,
       },
+      {
+        path: "/checkApplication",
+        name: "Semak Permohonan",
+         icon: "ni ni-check-bold text-blue",
+        component: <CheckApplication />,
+      },
     ],
   },
+
+  adminApplication: {
+    layout: "/adminApplication",
+    routes: [
+      {
+        path: "/checkApplication",
+        name: "Semak Permohonan",
+         icon: "ni ni-check-bold text-blue",
+        component: <CheckApplication />,
+      },
+    ],
+  },
+
 };
 
 // Combine all routes with their respective layouts

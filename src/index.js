@@ -11,6 +11,7 @@ import ApplicationCitizen from "layouts/ApplicationCitizen";
 import CitizenMenu from "layouts/CitizenMenu.js";
 import AuthAdmin from "layouts/AuthAdmin";
 import AdminMenu from "layouts/AdminMenu";
+import AdminApplication from "layouts/AdminApplication";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -23,6 +24,7 @@ root.render(
       <Route path="/applicationCitizen/*" element={<ApplicationCitizen />}/>
       <Route path="/authAdmin/*" element={<AuthAdmin />} />
       <Route path="/adminMenu/*" element={<AdminMenu />} />
+      <Route path="/adminApplication/*" element={<AdminApplication />} />
 
       <Route path="*" element={<Navigate to="/authCitizen/login" replace />} />
     </Routes>

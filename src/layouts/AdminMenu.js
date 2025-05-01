@@ -1,7 +1,7 @@
 import React from "react";
 import { useLocation, Route, Routes, Navigate } from "react-router-dom";
-// reactstrap components
 import { Container } from "reactstrap";
+
 // core components
 import AdminNavbar from "components/Navbars/AdminNavbar.js";
 import AdminFooter from "components/Footers/AdminFooter.js";
@@ -16,7 +16,9 @@ const AdminMenu = (props) => {
   React.useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
-    mainContent.current.scrollTop = 0;
+    if (mainContent.current) {
+      mainContent.current.scrollTop = 0;
+    }
   }, [location]);
 
   const getRoutes = (routes) => {
@@ -25,9 +27,8 @@ const AdminMenu = (props) => {
         return (
           <Route path={prop.path} element={prop.component} key={key} exact />
         );
-      } else {
-        return null;
       }
+      return null;
     });
   };
 
@@ -54,7 +55,11 @@ const AdminMenu = (props) => {
           imgAlt: "...",
         }}
       />
-      <div className="main-content " ref={mainContent}>
+      <div
+        className="main-content"
+        ref={mainContent}
+        style={{ minHeight: "100vh", overflowY: "auto", paddingBottom: "2rem" }}
+      >
         <AdminNavbar
           {...props}
           brandText={getBrandText(props?.location?.pathname)}
