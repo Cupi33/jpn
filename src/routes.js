@@ -19,6 +19,7 @@ import DeathCheck from "views/Admin/checkAdmin/DeathCheck";
 import TableDeath from "views/Admin/checkAdmin/TableDeath";
 import ICCheck from "views/Admin/checkAdmin/ICCheck";
 import TableIC from "views/Admin/checkAdmin/TableIC";
+import LaporanHarian from "views/Admin/LaporanHarian";
 
 
 
@@ -131,6 +132,12 @@ const routeGroups = {
         name: "Dashboard",
          icon: "ni ni-laptop text-green",
         component: <DashboardAdmin />,
+      },
+      {
+        path: "/laporan",
+        name: "Laporan",
+         icon: "ni ni-book-bookmark text-pink",
+        component: <LaporanHarian />,
       },
     ],
   },
