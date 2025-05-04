@@ -117,8 +117,8 @@ const routeGroups = {
     routes: [
       {
         path: "/loginAdmin",
-        name: "Log Masuk Staff",
-         icon: "ni ni-key",
+        name: "Log Keluar",
+         icon: "ni ni-user-run",
         component: <AdminLogin />,
       },
     ],
