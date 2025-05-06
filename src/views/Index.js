@@ -1,11 +1,8 @@
-import { useState } from "react";
-// node.js library that concatenates classes (strings)
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Add this import
 import classnames from "classnames";
-// javascipt plugin for creating charts
 import Chart from "chart.js";
-// react plugin used to create charts
 import { Line, Bar } from "react-chartjs-2";
-// reactstrap components
 import {
   Button,
   Card,
@@ -20,24 +17,39 @@ import {
   Row,
   Col,
 } from "reactstrap";
-
-// core components
 import {
   chartOptions,
   parseOptions,
   chartExample1,
   chartExample2,
 } from "variables/charts.js";
-
 import Header from "components/Headers/Header.js";
 
 const Index = (props) => {
-
-  const [citizenID,setCitzenID] = useState('');
-  const [username,setusername] = useState('');
-
+  // const [citizenID, setCitizenID] = useState('');
+  // const [username, setUsername] = useState('');
   const [activeNav, setActiveNav] = useState(1);
   const [chartExample1Data, setChartExample1Data] = useState("data1");
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  useEffect(() => {
+    // Get user data from sessionStorage
+    console.log('Checking session storage...');
+  console.log('Current citizenID:', sessionStorage.getItem('citizenID'));
+  console.log('Current username:', sessionStorage.getItem('username'));
+    const storedCitizenID = sessionStorage.getItem('citizenID');
+    const storedUsername = sessionStorage.getItem('username');
+
+    if (storedCitizenID && storedUsername) {
+      // setCitizenID(storedCitizenID);
+      // setUsername(storedUsername);
+      setIsLoading(false);
+    } else {
+      // If no data exists, redirect to login page
+      navigate('/authCitizen/login');
+    }
+  }, [navigate]);
 
   if (window.Chart) {
     parseOptions(Chart, chartOptions());
@@ -48,6 +60,17 @@ const Index = (props) => {
     setActiveNav(index);
     setChartExample1Data("data" + index);
   };
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="text-center mt-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="sr-only">Loading...</span>
+        </div>
+      </div>
+    );
+  }
   return (
     <>
       <Header />
