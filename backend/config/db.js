@@ -23,8 +23,13 @@ export async function execute(query, params = []) {
   let connection;
   try {
     connection = await getConnection();
-    const result = await connection.execute(query, params,
-     {outFormat: oracledb.OUT_FORMAT_OBJECT,} 
+    const result = await connection.execute(
+      query,
+      params,
+      {
+        outFormat: oracledb.OUT_FORMAT_OBJECT,
+        autoCommit: true   // 👈 Add this line!
+      }
     );
     return result;
   } catch (err) {
@@ -40,3 +45,4 @@ export async function execute(query, params = []) {
     }
   }
 }
+
