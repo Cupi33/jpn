@@ -11,6 +11,7 @@ import {
   Col,
 } from "reactstrap";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 // core components
 import UserHeader from "components/Headers/UserHeader.js";
@@ -18,18 +19,30 @@ import UserHeader from "components/Headers/UserHeader.js";
 const Profile = () => {
   const [citizenID, setCitizenID] = useState("");
   const [username, setUsername] = useState("");
+  const [profileData, setProfileData] = useState(null); // State to hold profile data
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("Checking session storage...");
     const storedCitizenID = sessionStorage.getItem("citizenID");
     const storedUsername = sessionStorage.getItem("username");
-    console.log("Current citizenID:", storedCitizenID);
-    console.log("Current username:", storedUsername);
 
     if (storedCitizenID && storedUsername) {
       setCitizenID(storedCitizenID);
       setUsername(storedUsername);
+
+      // Fetch profile data from API
+      axios
+        .post("http://localhost:5000/profile/profile", { citizenID: storedCitizenID })
+        .then((response) => {
+          if (response.data.success) {
+            setProfileData(response.data.user);
+          } else {
+            console.error("Failed to fetch profile data:", response.data.message);
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching profile data:", error);
+        });
     } else {
       navigate("/authCitizen/login");
     }
@@ -139,7 +152,7 @@ const Profile = () => {
                             Nama Penuh
                           </label>
                           <div className="form-control-plaintext" id="display-fullname">
-                            Muhammad Sufi Haikal Bin Saifuzbahari
+                            {profileData?.fullname || "Loading..."}
                           </div>
                         </FormGroup>
                       </Col>
@@ -149,7 +162,7 @@ const Profile = () => {
                             Umur
                           </label>
                           <div className="form-control-plaintext" id="display-age">
-                            22
+                            {profileData?.age || "Loading..."}
                           </div>
                         </FormGroup>
                       </Col>
@@ -161,7 +174,7 @@ const Profile = () => {
                             Tarikh Lahir
                           </label>
                           <div className="form-control-plaintext" id="display-dob">
-                            21 April 2003
+                            {profileData?.dob || "Loading..."}
                           </div>
                         </FormGroup>
                       </Col>
@@ -171,7 +184,7 @@ const Profile = () => {
                             Jantina
                           </label>
                           <div className="form-control-plaintext" id="display-gender">
-                            Lelaki
+                            {profileData?.gender || "Loading..."}
                           </div>
                         </FormGroup>
                       </Col>
@@ -181,7 +194,7 @@ const Profile = () => {
                             Bangsa
                           </label>
                           <div className="form-control-plaintext" id="display-race">
-                            Melayu
+                            {profileData?.race || "Loading..."}
                           </div>
                         </FormGroup>
                       </Col>
@@ -191,7 +204,7 @@ const Profile = () => {
                             Agama
                           </label>
                           <div className="form-control-plaintext" id="display-religion">
-                            Islam
+                            {profileData?.religion || "Loading..."}
                           </div>
                         </FormGroup>
                       </Col>
@@ -203,7 +216,7 @@ const Profile = () => {
                             Status Perkahwinan
                           </label>
                           <div className="form-control-plaintext" id="display-maritalStatus">
-                            Bujang
+                            {profileData?.status || "Loading..."}
                           </div>
                         </FormGroup>
                       </Col>
@@ -213,7 +226,7 @@ const Profile = () => {
                             Alamat
                           </label>
                           <div className="form-control-plaintext" id="display-address">
-                            No 23 Jalan Tenaga 5 Taman Jaya Indah Ampang Selangor
+                            {profileData?.address || "Loading..."}
                           </div>
                         </FormGroup>
                       </Col>

@@ -36,12 +36,13 @@ router.post('/profile', async (req, res) => {
       success: true,
       message: 'Success',
       user: {
-        fullname: user.full_name,
+        fullname: user.fullname,
         dob: formattedDob,  // Send the formatted date
         gender: user.gender,
         race: user.race,
         religion: user.religion,
         age: user.age,
+        address : user.address,
         status: user.status,
       }
     });
