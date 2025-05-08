@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import {
   Button,
   Card,
@@ -9,14 +10,34 @@ import {
   Row,
   Col,
 } from "reactstrap";
+import { useNavigate } from "react-router-dom";
+
 // core components
 import UserHeader from "components/Headers/UserHeader.js";
 
 const Profile = () => {
+  const [citizenID, setCitizenID] = useState("");
+  const [username, setUsername] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log("Checking session storage...");
+    const storedCitizenID = sessionStorage.getItem("citizenID");
+    const storedUsername = sessionStorage.getItem("username");
+    console.log("Current citizenID:", storedCitizenID);
+    console.log("Current username:", storedUsername);
+
+    if (storedCitizenID && storedUsername) {
+      setCitizenID(storedCitizenID);
+      setUsername(storedUsername);
+    } else {
+      navigate("/authCitizen/login");
+    }
+  }, [navigate]);
+
   return (
     <>
       <UserHeader />
-      {/* Page content */}
       <Container className="mt--7" fluid>
         <Row>
           <Col className="order-xl-2 mb-5 mb-xl-0" xl="4">
@@ -39,7 +60,6 @@ const Profile = () => {
                   <Button
                     className="mr-4"
                     color="info"
-                    href="#pablo"
                     onClick={(e) => e.preventDefault()}
                     size="sm"
                   >
@@ -48,7 +68,6 @@ const Profile = () => {
                   <Button
                     className="float-right"
                     color="default"
-                    href="#pablo"
                     onClick={(e) => e.preventDefault()}
                     size="sm"
                   >
@@ -59,23 +78,19 @@ const Profile = () => {
               <CardBody className="pt-0 pt-md-4">
                 <Row>
                   <div className="col">
-                    <div className="card-profile-stats d-flex justify-content-center mt-md-5"></div>
+                    <div className="card-profile-stats d-flex justify-content-center mt-md-5" />
                   </div>
                 </Row>
                 <div className="text-center">
-                 <h7>
-                  Username
-                 </h7>
+                  <h7>Username</h7>
                   <h3>
-                    Dazaikal
+                    {username}
                     <span className="font-weight-light"></span>
                   </h3>
-                  {/* Added buttons container */}
                   <div className="d-flex justify-content-center mt-3 mb-4">
                     <Button
                       className="mx-2"
                       color="primary"
-                      href="#pablo"
                       onClick={(e) => e.preventDefault()}
                       size="sm"
                     >
@@ -84,7 +99,6 @@ const Profile = () => {
                     <Button
                       className="mx-2"
                       color="secondary"
-                      href="#pablo"
                       onClick={(e) => e.preventDefault()}
                       size="sm"
                     >
@@ -106,7 +120,6 @@ const Profile = () => {
                   <Col className="text-right" xs="4">
                     <Button
                       color="primary"
-                      href="#pablo"
                       onClick={(e) => e.preventDefault()}
                       size="sm"
                     >
@@ -117,17 +130,12 @@ const Profile = () => {
               </CardHeader>
               <CardBody>
                 <Form>
-                  <h6 className="heading-small text-muted mb-4">
-                    Info Pengguna
-                  </h6>
+                  <h6 className="heading-small text-muted mb-4">Info Pengguna</h6>
                   <div className="pl-lg-4">
                     <Row>
                       <Col lg="6">
                         <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="display-fullname"
-                          >
+                          <label className="form-control-label" htmlFor="display-fullname">
                             Nama Penuh
                           </label>
                           <div className="form-control-plaintext" id="display-fullname">
@@ -136,11 +144,8 @@ const Profile = () => {
                         </FormGroup>
                       </Col>
                       <Col lg="6">
-                      <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="display-age"
-                          >
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="display-age">
                             Umur
                           </label>
                           <div className="form-control-plaintext" id="display-age">
@@ -151,11 +156,8 @@ const Profile = () => {
                     </Row>
                     <Row>
                       <Col lg="6">
-                      <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="display-dob"
-                          >
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="display-dob">
                             Tarikh Lahir
                           </label>
                           <div className="form-control-plaintext" id="display-dob">
@@ -164,24 +166,18 @@ const Profile = () => {
                         </FormGroup>
                       </Col>
                       <Col lg="6">
-                      <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="display-gender"
-                          >
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="display-gender">
                             Jantina
                           </label>
                           <div className="form-control-plaintext" id="display-gender">
                             Lelaki
                           </div>
                         </FormGroup>
-                      </Col> 
-                    <Col lg="6">
-                      <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="display-race"
-                          >
+                      </Col>
+                      <Col lg="6">
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="display-race">
                             Bangsa
                           </label>
                           <div className="form-control-plaintext" id="display-race">
@@ -190,11 +186,8 @@ const Profile = () => {
                         </FormGroup>
                       </Col>
                       <Col lg="6">
-                      <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="display-religion"
-                          >
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="display-religion">
                             Agama
                           </label>
                           <div className="form-control-plaintext" id="display-religion">
@@ -202,14 +195,11 @@ const Profile = () => {
                           </div>
                         </FormGroup>
                       </Col>
-                      </Row>
-                      <Row>
+                    </Row>
+                    <Row>
                       <Col lg="6">
-                      <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="display-maritalStatus"
-                          >
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="display-maritalStatus">
                             Status Perkahwinan
                           </label>
                           <div className="form-control-plaintext" id="display-maritalStatus">
@@ -218,11 +208,8 @@ const Profile = () => {
                         </FormGroup>
                       </Col>
                       <Col lg="6">
-                      <FormGroup>
-                          <label
-                            className="form-control-label"
-                            htmlFor="display-address"
-                          >
+                        <FormGroup>
+                          <label className="form-control-label" htmlFor="display-address">
                             Alamat
                           </label>
                           <div className="form-control-plaintext" id="display-address">
@@ -230,7 +217,7 @@ const Profile = () => {
                           </div>
                         </FormGroup>
                       </Col>
-                      </Row>
+                    </Row>
                   </div>
                   <hr className="my-4" />
                 </Form>
