@@ -26,7 +26,8 @@ const Profile = () => {
     const storedCitizenID = sessionStorage.getItem("citizenID");
     const storedUsername = sessionStorage.getItem("username");
 
-    if (storedCitizenID && storedUsername) {
+    if (storedCitizenID && storedUsername)
+       {
       setCitizenID(storedCitizenID);
       setUsername(storedUsername);
 

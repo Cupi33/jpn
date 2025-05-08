@@ -1,9 +1,26 @@
 
 
 // reactstrap components
+import axios from "axios";
+import { useEffect,useState } from "react";
 import { Card, CardBody, CardTitle, Container, Row, Col } from "reactstrap";
 
 const Header = () => {
+const [statData, setStatData] = useState(null); 
+
+  useEffect(() => {
+    axios
+    .post("http://localhost:5000/stat/general",{ "test" :"data"})
+    .then((response) => {
+      if (response.data.success) {
+        setStatData(response.data.stat);
+      } else {
+        console.error("Failed to fetch statistic data:", response.data.message);
+      }
+    })
+  }
+)
+
   return (
     <>
       <div className="header bg-gradient-info pb-8 pt-5 pt-md-8">
@@ -23,7 +40,8 @@ const Header = () => {
                           JUMLAH RAKYAT MALAYSIA BERDAFTAR
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
-                          4,000,000
+                          {/* 4,000,000 */}
+                          {statData?.jumlah_rakyat || "Loading..."}
                         </span>
                       </div>
                       <Col className="col-auto">
@@ -46,7 +64,10 @@ const Header = () => {
                         >
                           Purata Umur Rakyat Malaysia 
                         </CardTitle>
-                        <span className="h2 font-weight-bold mb-0">35</span>
+                        <span className="h2 font-weight-bold mb-0">
+                          {/* 35 */}
+                          {statData?.purata_umur || "Loading..."}
+                          </span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-warning text-white rounded-circle shadow">
@@ -68,7 +89,10 @@ const Header = () => {
                         >
                           JUMLAH KEMATIAN TAHUN INI
                         </CardTitle>
-                        <span className="h2 font-weight-bold mb-0">924</span>
+                        <span className="h2 font-weight-bold mb-0">
+                        {statData?.jumlah_kematian !== undefined ? statData.jumlah_kematian : "Loading..."}
+
+                          </span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-yellow text-white rounded-circle shadow">
@@ -90,7 +114,9 @@ const Header = () => {
                         >
                           JUMLAH KES KEHILANGAN KAD PENGENALAN
                         </CardTitle>
-                        <span className="h2 font-weight-bold mb-0">4965</span>
+                        <span className="h2 font-weight-bold mb-0">
+                        {statData?.kad_hilang || "Loading..."}
+                          </span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-info text-white rounded-circle shadow">
