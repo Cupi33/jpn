@@ -1,12 +1,91 @@
-import React, { useState } from 'react';
-import { Card, CardBody, CardTitle, Container, Row, Col, Form, FormGroup, Input, Button, Label } from 'reactstrap';
+import React, { useEffect, useState } from 'react';
+import { useNavigate} from 'react-router-dom';
+import { 
+    Card, CardBody, CardTitle, Container, Row, Col, Form, FormGroup, Input, Button, Label 
+} from 'reactstrap';
+import axios from 'axios';
+import Swal from 'sweetalert2';
+
 
 const ICApplication = () => {
     const [selectedReason, setSelectedReason] = useState(''); // 👈 create state to track the selected reason
-
+    const navigate = useNavigate();
     const handleReasonChange = (e) => {
         setSelectedReason(e.target.value);
     };
+    const [address, setAddress] = useState('');
+
+const handleSubmit = async () => {
+  const citizenID = sessionStorage.getItem('citizenID');
+
+  if (!selectedReason) {
+    Swal.fire('Sila pilih sebab permohonan.');
+    return;
+  }
+
+  try {
+    let response;
+    if (selectedReason === 'ta') {
+      if (!address.trim()) {
+        Swal.fire('Sila masukkan alamat baru.');
+        return;
+      }
+      // POST to /2
+      response = await axios.post('http://localhost:5000/icapply/2', {
+        citizenID,
+        address
+      });
+    } else {
+      // POST to /1
+      response = await axios.post('http://localhost:5000/icapply/1', {
+        citizenID,
+        reasons: selectedReason
+      });
+    }
+
+    const { data } = response;
+
+    Swal.fire({
+      icon: data.success ? 'success' : 'error',
+      title: data.message,
+      confirmButtonText: 'Pergi ke halaman utama',
+    }).then(() => {
+      if (data.success) {
+        navigate('/citizenMenu/index');
+      }
+    });
+
+  } catch (err) {
+    console.error('Submission error:', err);
+    Swal.fire('Ralat server! Sila cuba lagi.');
+  }
+};
+
+
+    const [isLoading, setIsLoading] = useState(true); // optional, for UI control
+
+  useEffect(() => {
+    console.log('Checking session storage...');
+    const storedCitizenID = sessionStorage.getItem('citizenID');
+    const storedUsername = sessionStorage.getItem('username');
+
+    console.log('Current citizenID:', storedCitizenID);
+    console.log('Current username:', storedUsername);
+
+    if (storedCitizenID && storedUsername) {
+      setIsLoading(false); // optional: indicate data is loaded
+    } else {
+      navigate('/authCitizen/login');
+    }
+  }, [navigate]);
+
+  if (isLoading) {
+  return (
+    <Container className="mt-5 text-center">
+      <h4>Loading...</h4>
+    </Container>
+  );
+}
 
     return (
         <Container className="mt-5">
@@ -62,7 +141,10 @@ const ICApplication = () => {
                                                                 id="input-new-address"
                                                                 placeholder="Masukkan Alamat Baru"
                                                                 type="text"
-                                                            />
+                                                                value={address}
+                                                                onChange={(e) => setAddress(e.target.value)}
+                                                                />
+
                                                         </FormGroup>
                                                     </Col>
                                                 </Row>
@@ -97,9 +179,10 @@ const ICApplication = () => {
                                                 className="my-4"
                                                 color="primary"
                                                 type="button"
-                                            >
+                                                onClick={handleSubmit}
+                                                >
                                                 Hantar Permohonan
-                                            </Button>
+                                                </Button>
                                         </div>
                                     </Form>
                                 </Col>

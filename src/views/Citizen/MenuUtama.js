@@ -29,6 +29,13 @@ const MenuUtama = () => {
     }
   }, [navigate]);
 
+  if (isLoading) {
+  return (
+    <Container className="mt-5 text-center">
+      <h4>Loading...</h4>
+    </Container>
+  );
+}
 
     return (
       <>

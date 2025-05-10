@@ -59,7 +59,8 @@
     "react-router-dom": "6.21.1",
     "react-scripts": "5.0.1",
     "reactstrap": "8.10.0",
-    "sass": "1.69.5"
+    "sass": "1.69.5",
+    "sweetalert2": "^11.21.0"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
