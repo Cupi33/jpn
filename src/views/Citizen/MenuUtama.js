@@ -1,18 +1,35 @@
-// reactstrap components
-import {
-    Card,
-    CardBody,
-    Container,
-    Row,
-    Col,
-    CardHeader
-  } from "reactstrap";
-  // core components
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 
-  import { Link } from "react-router-dom";
-  
-  const MenuUtama = () => {
-    
+import {
+  Card,
+  CardBody,
+  Container,
+  Row,
+  Col,
+  CardHeader
+} from "reactstrap";
+
+const MenuUtama = () => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true); // optional, for UI control
+
+  useEffect(() => {
+    console.log('Checking session storage...');
+    const storedCitizenID = sessionStorage.getItem('citizenID');
+    const storedUsername = sessionStorage.getItem('username');
+
+    console.log('Current citizenID:', storedCitizenID);
+    console.log('Current username:', storedUsername);
+
+    if (storedCitizenID && storedUsername) {
+      setIsLoading(false); // optional: indicate data is loaded
+    } else {
+      navigate('/authCitizen/login');
+    }
+  }, [navigate]);
+
+
     return (
       <>
         {/* Page content */}
