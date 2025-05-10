@@ -75,6 +75,18 @@ router.post('/2', async (req, res) => {
     );
 
     // Step 5: Commit
+    // await execute('COMMIT');
+
+    //Step 6:Update address in citizen table
+    await execute(
+  `UPDATE CITIZEN
+   SET address = :1
+   WHERE citizenID = :2`,
+  [address, citizenID]
+);
+
+
+    // Step 5: Commit
     await execute('COMMIT');
 
     // Step 6: Send success response
