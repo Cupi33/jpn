@@ -1,7 +1,38 @@
-import React from 'react';
-import { Card, CardBody, CardTitle, Container, Row, Col , Form, FormGroup,Input, Button} from 'reactstrap';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardBody, CardTitle, Container, Row, Col, Form, FormGroup, Input, Button } from 'reactstrap';
+
 
 const NewbornApplication = () => {
+    const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(true); // optional if you're using isLoading
+
+
+useEffect(() => {
+
+    console.log('Checking session storage...');
+    const storedCitizenID = sessionStorage.getItem('citizenID');
+    const storedUsername = sessionStorage.getItem('username');
+
+    console.log('Current citizenID:', storedCitizenID);
+    console.log('Current username:', storedUsername);
+
+    if (storedCitizenID && storedUsername) {
+      setIsLoading(false); // optional: indicate data is loaded
+    } else {
+      navigate('/authCitizen/login');
+    }
+  }, [navigate]);
+
+  if (isLoading) {
+    return (
+      <Container className="mt-5 text-center">
+        <h4>Loading...</h4>
+      </Container>
+    );
+  }
+  
+
     return (
         <Container className="mt-5">
             <Row className="justify-content-center">
