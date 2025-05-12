@@ -98,5 +98,35 @@ router.post('/register', async (req, res) => {
   }
 });
 
+router.post('/checkICName', async (req, res) => {
+  const { fullname, icno } = req.body;
+
+const cleanedFullname = fullname.trim();
+const cleanedICNo = icno.trim();
+
+  try {
+    const result = await execute(
+      `select * from citizen 
+        where icno = :2
+        and upper(full_name) = upper(:1)`,
+      [ cleanedICNo , cleanedFullname]  // this is NOT safe for real apps, but okay for learning
+    );
+
+    if (result.rows.length === 0) 
+      {
+      return res.status(401).json({ success: false, message: 'Unmatch icno and full name' });
+      }
+
+
+    res.json({
+      success: true,
+      message: 'Match icno and full name',
+    });
+
+  } catch (err) {
+    console.error('Query error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 export default router;
