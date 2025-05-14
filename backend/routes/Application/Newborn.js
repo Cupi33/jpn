@@ -59,8 +59,8 @@ const cleanedICNo = icno.trim();
   try {
     const result = await execute(
       `select * from citizen 
-        where icno = :2
-        and upper(full_name) = upper(:1)`,
+        where icno = :1
+        and upper(full_name) = upper(:2)`,
       [ cleanedICNo , cleanedFullname]  // this is NOT safe for real apps, but okay for learning
     );
 
