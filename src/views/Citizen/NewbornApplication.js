@@ -1,12 +1,59 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardTitle, Container, Row, Col, Form, FormGroup, Input, Button } from 'reactstrap';
-
+import axios from 'axios';
 
 const NewbornApplication = () => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true); // optional if you're using isLoading
 
+    const [fullname,setFullName] = useState('');
+    const [gender,setGender] = useState('');
+    const [religion,setReligion] = useState('');
+    const [race,setRace] = useState('');
+    const [address,setAddress] = useState('');
+    const [dob,setDob] = useState('');
+    const [fatherFullname,setFatherFullName] = useState('');
+    const [fatherICNO,setFatherICNO] = useState('');
+    const [motherFullname,setMotherFullName] = useState('');
+    const [motherICNO,setMotherICNO] = useState('');
+    
+    const [errorFather, setErrorFather] = useState('');
+    const [errorMother, setErrorMother] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
+    
+    const validateParent = async (fullname, icno) => {
+    try {
+      const response = await axios.post('http://localhost:5000/newbornapply/checkICName', {
+        fullname,
+        icno,
+      });
+      return response.data.success;
+    } catch (error) {
+      return false;
+    }
+  };
+
+   const handleSubmit = async () => {
+    setErrorFather('');
+    setErrorMother('');
+    setSuccessMsg('');
+
+    const fatherValid = await validateParent(fatherFullname, fatherICNO);
+    const motherValid = await validateParent(motherFullname, motherICNO);
+
+    if (!fatherValid) {
+      setErrorFather('Nama penuh dan nombor IC bapa tidak sepadan.');
+    }
+    if (!motherValid) {
+      setErrorMother('Nama penuh dan nombor IC ibu tidak sepadan.');
+    }
+
+    if (fatherValid && motherValid) {
+      setSuccessMsg('Maklumat ibu bapa telah disahkan!');
+      // You can proceed with the next step, e.g., form submission to DB
+    }
+  };
 
 useEffect(() => {
 
@@ -60,6 +107,8 @@ useEffect(() => {
                                             id="input-fullname"
                                             placeholder="Contoh: Muhammad Sufi Haikal Bin Saifuzbahari"
                                             type="text"
+                                            value={fullname}
+                                            onChange={(e) => setFullName(e.target.value)}
                                         />
                                 </FormGroup>
                                 </Col>
@@ -77,10 +126,14 @@ useEffect(() => {
                                         <Input
                                             className="form-control"
                                             id="input-gender"
-                                            type="select" >
+                                            type="select" 
+                                            value={gender}
+                                            onChange={(e) => setGender(e.target.value)}
+                                            >
+
                                             <option value="">Pilih Jantina</option>
-                                            <option value="Lelaki">Lelaki</option>
-                                            <option value="Perempuan">Perempuan</option>
+                                            <option value="LELAKI">Lelaki</option>
+                                            <option value="PEREMPUAN">Perempuan</option>
                                         </Input>
                                 </FormGroup>
                                 </Col>
@@ -97,13 +150,17 @@ useEffect(() => {
                                         <Input
                                             className="form-control"
                                             id="input-religion"
-                                            type="select" >
+                                            type="select"
+                                            value={religion}
+                                            onChange={(e) => setReligion(e.target.value)}
+                                             >
+
                                             <option value="">Pilih Agama</option>
-                                            <option value="Islam">Islam</option>
-                                            <option value="Buddha">Buddha</option>
-                                            <option value="Hindu">Hindu</option>
-                                            <option value="Kristian">Kristian</option>
-                                            <option value="Lain-lain">Lain-lain</option>
+                                            <option value="ISLAM">Islam</option>
+                                            <option value="BUDDHA">Buddha</option>
+                                            <option value="HINDU">Hindu</option>
+                                            <option value="KRISTIAN">Kristian</option>
+                                            <option value="LAIN-LAIN">Lain-lain</option>
                                         </Input>
                                 </FormGroup>
                                 </Col>
@@ -120,12 +177,15 @@ useEffect(() => {
                                         <Input
                                             className="form-control"
                                             id="input-race"
-                                            type="select" >
+                                            type="select"
+                                            value={race}
+                                            onChange={(e) => setRace(e.target.value)}
+                                            >
                                             <option value="">Pilih Bangsa</option>
-                                            <option value="Melayu">Melayu</option>
-                                            <option value="Cina">Cina</option>
-                                            <option value="India">India</option>
-                                            <option value="Lain-lain">Lain-lain</option>
+                                            <option value="MELAYU">Melayu</option>
+                                            <option value="CINA">Cina</option>
+                                            <option value="INDIA">India</option>
+                                            <option value="LAIN-LAIN">Lain-lain</option>
                                         </Input>
                                 </FormGroup>
                                 </Col>
@@ -145,6 +205,8 @@ useEffect(() => {
                                             id="input-address"
                                             placeholder="Contoh: No 2 Jalan Talam 4 23200 Bera Pahang"
                                             type="text"
+                                            value={address}
+                                            onChange={(e) => setAddress(e.target.value)}
                                         />
                                 </FormGroup>
                                 </Col>
@@ -164,6 +226,8 @@ useEffect(() => {
                                             id="input-dob"
                                             type="date"
                                             max={new Date().toISOString().split("T")[0]} // 👈 Set maximum date to today
+                                            value={dob}
+                                            onChange={(e) => setDob(e.target.value)}
                                         />
                                         </FormGroup>
                                     </Col>
@@ -223,7 +287,10 @@ useEffect(() => {
                                             id="input-fatherFullname"
                                             placeholder="Contoh: Muhammad Sufi Haikal Bin Saifuzbahari"
                                             type="text"
+                                            value={fatherFullname}
+                                            onChange={(e) => setFatherFullName(e.target.value)}
                                         />
+                                        <small className="text-danger">{errorFather}</small>
                                 </FormGroup>
                                 </Col>
                                 </Row>
@@ -245,11 +312,14 @@ useEffect(() => {
                                                 onInput={(e) => {
                                                 e.target.value = e.target.value.replace(/[^0-9]/g, ''); // Allow only digits
                                                 }}
+                                            value={fatherICNO}
+                                            onChange={(e) => setFatherICNO(e.target.value)}
                                         />
                                 </FormGroup>
                                 </Col>
                                 </Row>
 
+                                {/* Mother */}
                                 <Row>
                                 <Col lg="12">
                                 <FormGroup>
@@ -264,21 +334,45 @@ useEffect(() => {
                                             id="input-motherFullname"
                                             placeholder="Contoh: Muhammad Sufi Haikal Bin Saifuzbahari"
                                             type="text"
+                                            value={motherFullname}
+                                            onChange={(e) => setMotherFullName(e.target.value)}
+                                        />
+                                        <small className="text-danger">{errorMother}</small>
+                                </FormGroup>
+                                </Col>
+                                </Row>  
+
+                                <Row>
+                                <Col lg="12">
+                                <FormGroup>
+                                        <label
+                                            className="form-control-label"
+                                            htmlFor="input-icnomother"
+                                        >
+                                            Nombor Kad Pengenalan Ibu
+                                        </label>
+                                        <Input
+                                            className="form-control"
+                                            id="input-icnoMother"
+                                            placeholder="Contoh: 00001102010100"
+                                            type="text"
+                                                onInput={(e) => {
+                                                e.target.value = e.target.value.replace(/[^0-9]/g, ''); // Allow only digits
+                                                }}
+                                            value={motherICNO}
+                                            onChange={(e) => setMotherICNO(e.target.value)}
                                         />
                                 </FormGroup>
                                 </Col>
-                                </Row>   
+                                </Row> 
                             </div>
 
                             <hr className="my-4" />
                             <div className="text-center">
-                                <Button 
-                                    className="my-4" 
-                                    color="primary" 
-                                    type="button"
-                                >
-                                    Hantar Permohonan
+                                <Button color="primary" type="button" onClick={handleSubmit}>
+                                  Hantar Permohonan
                                 </Button>
+                                {successMsg && <p className="text-success mt-2">{successMsg}</p>}
                             </div>
                             </Form>
                         </Col>
