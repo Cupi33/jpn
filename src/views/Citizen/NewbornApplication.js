@@ -105,7 +105,8 @@ const NewbornApplication = () => {
       }
       catch(err)
       {
-
+            console.error('Submission error:', err);
+            Swal.fire('Ralat server! Sila cuba lagi.');
       }
     }
   };

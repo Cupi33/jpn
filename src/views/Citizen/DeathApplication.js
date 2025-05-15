@@ -42,7 +42,7 @@ const validateDeceased = async (fullname, icno) => {
 };
 
 const handleSubmit = async () => {
-    // const citizenID = sessionStorage.getItem('citizenID');
+    const citizenID = sessionStorage.getItem('citizenID');
     setErrorDeceased('');
 
 
@@ -64,10 +64,37 @@ const handleSubmit = async () => {
 
     if (deceasedValid) {
       setSuccessMsg('Maklumat si mati telah disahkan!');
-      console.log('Father ID:', deceasedID);
+      console.log('Deceased ID:', deceasedID);
       // You can proceed with the next step, e.g., form submission to DB
 
+      try
+      {
+        let response;
+        response = await axios.post('http://localhost:5000/deathapply/1', {
+        citizenID,
+        deceasedID,
+        relationship,
+        deathDate,
+      });
+
+      const { data } = response;
       
+          Swal.fire({
+            icon: data.success ? 'success' : 'error',
+            title: data.message,
+            confirmButtonText: 'Pergi ke halaman utama',
+          }).then(() => {
+            if (data.success) {
+              navigate('/citizenMenu/index');
+            }
+          });
+
+      }
+      catch(err)
+      {
+          console.error('Submission error:', err);
+          Swal.fire('Ralat server! Sila cuba lagi.');
+      }
     }
   };
 
