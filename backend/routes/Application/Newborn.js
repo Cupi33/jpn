@@ -53,31 +53,34 @@ router.post('/1', async (req, res) => {
 router.post('/checkICName', async (req, res) => {
   const { fullname, icno } = req.body;
 
-const cleanedFullname = fullname.trim();
-const cleanedICNo = icno.trim();
+const cleanedFullname = fullname.replace(/_/g, ' ').trim().toUpperCase();
+const cleanedICNo = icno.replace(/[^0-9]/g, '');
+
+console.log('Cleaned IC:', cleanedICNo); // Should be '890112031453'
+console.log('Cleaned Name:', cleanedFullname); // Should be 'LEE CHONG WEI'
 
   try {
     const result = await execute(
       `select * from citizen 
-        where icno = :1
+        WHERE TRIM(SUBSTR(icno, -12)) = :1
         and upper(full_name) = upper(:2)`,
       [ cleanedICNo , cleanedFullname]  // this is NOT safe for real apps, but okay for learning
     );
 
-    if (result.rows.length === 0) 
-      {
-      return res.status(200).json({ success: false, message: 'Unmatch icno and full name' });
-      }
-
-
-    res.json({
-      success: true,
-      message: 'Match icno and full name',
+     res.json({
+      success: result.rows.length > 0,
+      match: result.rows.length > 0,
+      message: result.rows.length > 0 
+        ? 'Match icno and full name' 
+        : 'Unmatch icno and full name'
     });
 
   } catch (err) {
     console.error('Query error:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
+    });
   }
 });
 

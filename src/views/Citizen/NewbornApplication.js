@@ -23,16 +23,24 @@ const NewbornApplication = () => {
     const [successMsg, setSuccessMsg] = useState('');
     
     const validateParent = async (fullname, icno) => {
-    try {
-      const response = await axios.post('http://localhost:5000/newbornapply/checkICName', {
-        fullname,
-        icno,
-      });
-      return response.data.success;
-    } catch (error) {
-      return false;
-    }
-  };
+  try {
+    const response = await axios.post('http://localhost:5000/newbornapply/checkICName', {
+      fullname: fullname.toUpperCase(), // Ensure consistent casing
+      icno
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Validation response:', response.data); // Add logging
+    return response.data.success;
+
+  } catch (error) {
+    console.error('Validation error:', error.response?.data || error.message);
+    return false;
+  }
+};
 
    const handleSubmit = async () => {
     setErrorFather('');
@@ -288,7 +296,12 @@ useEffect(() => {
                                             placeholder="Contoh: Muhammad Sufi Haikal Bin Saifuzbahari"
                                             type="text"
                                             value={fatherFullname}
-                                            onChange={(e) => setFatherFullName(e.target.value)}
+                                            onChange={(e) => 
+                                              {
+                                                 const cleanValue = e.target.value.replace(/_/g, ' ').trim();
+                                                 setFatherFullName(cleanValue);
+                                              }
+                                              }
                                         />
                                         <small className="text-danger">{errorFather}</small>
                                 </FormGroup>
@@ -313,7 +326,12 @@ useEffect(() => {
                                                 e.target.value = e.target.value.replace(/[^0-9]/g, ''); // Allow only digits
                                                 }}
                                             value={fatherICNO}
-                                            onChange={(e) => setFatherICNO(e.target.value)}
+                                            onChange={(e) => 
+                                              {
+                                                 const cleanValue = e.target.value.replace(/[^0-9]/g, '');
+                                                 setFatherICNO(cleanValue);
+                                              }
+                                              }
                                         />
                                 </FormGroup>
                                 </Col>
@@ -335,7 +353,12 @@ useEffect(() => {
                                             placeholder="Contoh: Muhammad Sufi Haikal Bin Saifuzbahari"
                                             type="text"
                                             value={motherFullname}
-                                            onChange={(e) => setMotherFullName(e.target.value)}
+                                            onChange={(e) => 
+                                              {
+                                                 const cleanValue = e.target.value.replace(/_/g, ' ').trim();
+                                                 setMotherFullName(cleanValue);
+                                              }
+                                              }
                                         />
                                         <small className="text-danger">{errorMother}</small>
                                 </FormGroup>
@@ -360,7 +383,12 @@ useEffect(() => {
                                                 e.target.value = e.target.value.replace(/[^0-9]/g, ''); // Allow only digits
                                                 }}
                                             value={motherICNO}
-                                            onChange={(e) => setMotherICNO(e.target.value)}
+                                            onChange={(e) => 
+                                              {
+                                                 const cleanValue = e.target.value.replace(/[^0-9]/g, '');
+                                                 setMotherICNO(cleanValue);
+                                              }
+                                              }
                                         />
                                 </FormGroup>
                                 </Col>

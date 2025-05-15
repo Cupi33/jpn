@@ -7,7 +7,13 @@ import ICApplication from './routes/Application/ICApplication.js'
 import NewbornApplication from './routes/Application/Newborn.js'
 
 const app = express();
-app.use(cors());
+app.use(cors(
+  {
+    origin: 'http://localhost:3000', // Replace with your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+  }
+));
 app.use(express.json());
 
 app.use('/profile', profileRoutes);
