@@ -1,7 +1,45 @@
-import React from 'react';
+import React, { useEffect , useState } from 'react';
+import { useNavigate} from 'react-router-dom';
 import { Card, CardBody, CardTitle, Container, Row, Col , Form, FormGroup,Input, Button} from 'reactstrap';
 
 const DeathApplication = () => {
+
+const navigate = useNavigate();
+const [isLoading, setIsLoading] = useState(true); 
+
+const [fullname, setFullname] = useState('');
+const [icno, setICNO] = useState('');
+const [relationship, setRelationship] = useState('');
+const handleRelationshipChange = (e) => {
+        setRelationship(e.target.value);
+    };
+
+
+  useEffect(() => {
+      console.log('Checking session storage...');
+      const storedCitizenID = sessionStorage.getItem('citizenID');
+      const storedUsername = sessionStorage.getItem('username');
+  
+      console.log('Current citizenID:', storedCitizenID);
+      console.log('Current username:', storedUsername);
+  
+      if (storedCitizenID && storedUsername) {
+        setIsLoading(false); // optional: indicate data is loaded
+      } else {
+        navigate('/authCitizen/login');
+      }
+    }, [navigate]);
+
+
+    if (isLoading) {
+      return (
+        <Container className="mt-5 text-center">
+          <h4>Loading...</h4>
+        </Container>
+      );
+    }
+
+
     return (
         <Container className="mt-5">
             <Row className="justify-content-center">
@@ -29,6 +67,8 @@ const DeathApplication = () => {
                         id="input-fullname"
                         placeholder="Contoh: Muhammad Sufi Haikal Bin Saifuzbahari"
                         type="text"
+                        value={fullname}
+                        onChange={(e) => setFullname(e.target.value)}
                     />
               </FormGroup>
               </Col>
@@ -48,9 +88,8 @@ const DeathApplication = () => {
                         id="input-fullname"
                         placeholder="Contoh: 00001102010100"
                         type="text"
-                            onInput={(e) => {
-                             e.target.value = e.target.value.replace(/[^0-9]/g, ''); // Allow only digits
-                            }}
+                        value={icno}
+                        onChange={(e) => setICNO(e.target.value)}
                     />
               </FormGroup>
               </Col>
@@ -67,11 +106,18 @@ const DeathApplication = () => {
                     <Input
                         className="form-control"
                         id="input-relationship"
-                        type="select" >
+                        type="select"
+                        value={relationship}
+                        onChange={handleRelationshipChange}
+                        >
+
                         <option value="">Pilih Hubungan</option>
-                        <option value="Ibu/Bapa-Anak">Ibu/Bapa-Anak</option>
-                        <option value="Adik-Beradik">Adik-Beradik</option>
-                        <option value="Suami-Isteri">Suami-Isteri</option>
+                        <option value="PARENT-CHILDREN">Ibu/Bapa kepada Anak</option>
+                        <option value="CHILDREN-PARENT">Anak kepada Ibu/Bapa</option>
+                        <option value="SIBLING">Adik-Beradik</option>
+                        <option value="SPOUSE">Suami-Isteri</option>
+                        <option value="OTHERS">Lain-lain</option>
+                        
                     </Input>
              </FormGroup>
               </Col>
