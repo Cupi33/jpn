@@ -61,18 +61,25 @@ console.log('Cleaned Name:', cleanedFullname); // Should be 'LEE CHONG WEI'
 
   try {
     const result = await execute(
-      `select * from citizen 
-        WHERE TRIM(SUBSTR(icno, -12)) = :1
-        and upper(full_name) = upper(:2)`,
+      `SELECT citizenID as "citizenID" FROM citizen 
+        WHERE icno = (:1)
+        AND UPPER(full_name) = upper(:2)`,
       [ cleanedICNo , cleanedFullname]  // this is NOT safe for real apps, but okay for learning
     );
+
+
+    const user = result.rows[0];
 
      res.json({
       success: result.rows.length > 0,
       match: result.rows.length > 0,
       message: result.rows.length > 0 
         ? 'Match icno and full name' 
-        : 'Unmatch icno and full name'
+        : 'Unmatch icno and full name',
+        user:
+        {
+          citizenID:user.citizenID,
+        }
     });
 
   } catch (err) {

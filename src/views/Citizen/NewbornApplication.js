@@ -23,23 +23,24 @@ const NewbornApplication = () => {
     const [successMsg, setSuccessMsg] = useState('');
     
     const validateParent = async (fullname, icno) => {
-  try {
-    const response = await axios.post('http://localhost:5000/newbornapply/checkICName', {
-      fullname: fullname.toUpperCase(), // Ensure consistent casing
-      icno
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    console.log('Validation response:', response.data); // Add logging
-    return response.data.success;
+        try {
+            const response = await axios.post('http://localhost:5000/newbornapply/checkICName', {
+            fullname: fullname.toUpperCase(), // Ensure consistent casing
+            icno
+            }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+            });
+            
+            console.log('Validation response:', response.data); // Add logging
+            return response.data.success ? response.data.user.citizenID : null;
 
-  } catch (error) {
-    console.error('Validation error:', error.response?.data || error.message);
-    return false;
-  }
+
+        } catch (error) {
+            console.error('Validation error:', error.response?.data || error.message);
+            return false;
+        }
 };
 
    const handleSubmit = async () => {
@@ -47,8 +48,11 @@ const NewbornApplication = () => {
     setErrorMother('');
     setSuccessMsg('');
 
-    const fatherValid = await validateParent(fatherFullname, fatherICNO);
-    const motherValid = await validateParent(motherFullname, motherICNO);
+    const fatherID = await validateParent(fatherFullname, fatherICNO);
+    const motherID = await validateParent(motherFullname, motherICNO);
+
+    const fatherValid = !!fatherID;
+    const motherValid = !!motherID;
 
     if (!fatherValid) {
       setErrorFather('Nama penuh dan nombor IC bapa tidak sepadan.');
@@ -59,6 +63,8 @@ const NewbornApplication = () => {
 
     if (fatherValid && motherValid) {
       setSuccessMsg('Maklumat ibu bapa telah disahkan!');
+      console.log('Father ID:', fatherID);
+      console.log('Mother ID:', motherID);
       // You can proceed with the next step, e.g., form submission to DB
     }
   };
