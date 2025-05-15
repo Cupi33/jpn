@@ -1,6 +1,8 @@
 import React, { useEffect , useState } from 'react';
 import { useNavigate} from 'react-router-dom';
 import { Card, CardBody, CardTitle, Container, Row, Col , Form, FormGroup,Input, Button} from 'reactstrap';
+import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const DeathApplication = () => {
 
@@ -9,10 +11,65 @@ const [isLoading, setIsLoading] = useState(true);
 
 const [fullname, setFullname] = useState('');
 const [icno, setICNO] = useState('');
+const [deathDate, setDeathDate] = useState('');
 const [relationship, setRelationship] = useState('');
 const handleRelationshipChange = (e) => {
         setRelationship(e.target.value);
     };
+
+const [errorDeceased, setErrorDeceased] = useState('');
+const [successMsg, setSuccessMsg] = useState('');
+
+const validateDeceased = async (fullname, icno) => {
+        try {
+            const response = await axios.post('http://localhost:5000/newbornapply/checkICName', {
+            fullname: fullname.toUpperCase(), // Ensure consistent casing
+            icno
+            }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+            });
+            
+            console.log('Validation response:', response.data); // Add logging
+            return response.data.success ? response.data.user.citizenID : null;
+
+
+        } catch (error) {
+            console.error('Validation error:', error.response?.data || error.message);
+            return false;
+        }
+};
+
+const handleSubmit = async () => {
+    // const citizenID = sessionStorage.getItem('citizenID');
+    setErrorDeceased('');
+
+
+    const deceasedID = await validateDeceased(fullname, icno);
+
+    const deceasedValid = !!deceasedID;
+
+
+    if (!deceasedValid) {
+      setErrorDeceased('Nama penuh dan nombor IC bapa tidak sepadan.');
+    }
+
+
+    if(!fullname || !icno || !relationship)
+    {
+        Swal.fire('Pastikan semua butiran diisi');
+  return;
+    }
+
+    if (deceasedValid) {
+      setSuccessMsg('Maklumat si mati telah disahkan!');
+      console.log('Father ID:', deceasedID);
+      // You can proceed with the next step, e.g., form submission to DB
+
+      
+    }
+  };
 
 
   useEffect(() => {
@@ -70,6 +127,7 @@ const handleRelationshipChange = (e) => {
                         value={fullname}
                         onChange={(e) => setFullname(e.target.value)}
                     />
+                    <small className="text-danger">{errorDeceased}</small>
               </FormGroup>
               </Col>
             </Row>
@@ -117,11 +175,33 @@ const handleRelationshipChange = (e) => {
                         <option value="SIBLING">Adik-Beradik</option>
                         <option value="SPOUSE">Suami-Isteri</option>
                         <option value="OTHERS">Lain-lain</option>
-                        
+
                     </Input>
              </FormGroup>
               </Col>
             </Row>
+
+            <Row>
+                                                <Col lg="12">
+                                                    <FormGroup>
+                                                    <label
+                                                        className="form-control-label"
+                                                        htmlFor="input-dob"
+                                                    >
+                                                        Tarikh Kematian
+                                                    </label>
+                                                    <Input
+                                                        className="form-control"
+                                                        id="input-dob"
+                                                        type="date"
+                                                        max={new Date().toISOString().split("T")[0]} // 👈 Set maximum date to today
+                                                        value={deathDate}
+                                                        onChange={(e) => setDeathDate(e.target.value)}
+                                                    />
+                                                    </FormGroup>
+                                                </Col>
+                                            </Row>
+
             <FormGroup>
               <label
                     className="form-control-label"
@@ -144,9 +224,11 @@ const handleRelationshipChange = (e) => {
                 className="my-4" 
                 color="primary" 
                 type="button"
+                onClick={handleSubmit}
             >
                 Hantar Permohonan
             </Button>
+            {successMsg && <p className="text-success mt-2">{successMsg}</p>}
          </div>
         </Form>
       </Col>
