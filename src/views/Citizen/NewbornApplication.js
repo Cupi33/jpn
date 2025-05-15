@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardTitle, Container, Row, Col, Form, FormGroup, Input, Button } from 'reactstrap';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const NewbornApplication = () => {
     const navigate = useNavigate();
@@ -44,6 +45,7 @@ const NewbornApplication = () => {
 };
 
    const handleSubmit = async () => {
+    const citizenID = sessionStorage.getItem('citizenID');
     setErrorFather('');
     setErrorMother('');
     setSuccessMsg('');
@@ -61,11 +63,50 @@ const NewbornApplication = () => {
       setErrorMother('Nama penuh dan nombor IC ibu tidak sepadan.');
     }
 
+    if(!fullname || !gender || !dob || !religion || !race || !address)
+    {
+        Swal.fire('Pastikan semua butiran di bahagian Bayi diisi');
+  return;
+    }
+
     if (fatherValid && motherValid) {
       setSuccessMsg('Maklumat ibu bapa telah disahkan!');
       console.log('Father ID:', fatherID);
       console.log('Mother ID:', motherID);
       // You can proceed with the next step, e.g., form submission to DB
+
+      try
+      {
+        let response;
+        response = await axios.post('http://localhost:5000/newbornapply/1', {
+        citizenID,
+        fatherID,
+        motherID,
+        babyName : fullname,
+        gender,
+        dob,
+        religion,
+        race,
+        address
+      });
+
+      const { data } = response;
+      
+          Swal.fire({
+            icon: data.success ? 'success' : 'error',
+            title: data.message,
+            confirmButtonText: 'Pergi ke halaman utama',
+          }).then(() => {
+            if (data.success) {
+              navigate('/citizenMenu/index');
+            }
+          });
+
+      }
+      catch(err)
+      {
+
+      }
     }
   };
 
