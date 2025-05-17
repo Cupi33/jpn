@@ -54,4 +54,48 @@ router.post('/general', async (req, res) => {
   }
 });
 
+router.post('/totalRace', async (req, res) => {
+  try {
+    console.log('Received request body:', req.body);
+
+    console.log('Executing first query...');
+    const result = await execute(`
+      SELECT RACE, COUNT(RACE) as "kira"
+        FROM CITIZEN
+        GROUP BY RACE
+        ORDER BY RACE ASC
+    `);
+    console.log('Query 1 Result:', result);
+
+    if (!result  || !result.rows.length ) {
+      console.error('Query returned no results');
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const stat1 = result.rows[0] || {};
+    const stat2 = result.rows[1] || {};
+    const stat3 = result.rows[2] || {};
+    const stat4 = result.rows[3] || {};
+    
+
+    const responseData = {
+      success: true,
+      message: 'Query Successful',
+      stat: {
+        cina: stat1.kira || 0,
+        india: stat2.kira || 0,
+        lain: stat3.kira || 0,
+        melayu: stat4.kira || 0,
+      }
+    };
+
+    console.log('Sending response:', JSON.stringify(responseData, null, 2));
+    res.json(responseData);
+
+  } catch (err) {
+    console.error('Retrieval error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 export default router;
