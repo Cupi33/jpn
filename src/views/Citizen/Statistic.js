@@ -32,7 +32,20 @@ import {
 import Header from "components/Headers/Header.js";
 
 const Index = (props) => {
-  const [statData, setStatData] = useState(null);
+  const [statData, setStatData] = useState({
+    melayu: 0,
+    cina: 0,
+    india: 0,
+    lain: 0
+  });
+  const [statDataReligion, setStatDataReligion] = useState({
+    islam: 0,
+    buddha: 0,
+    hindu: 0,
+    kristian: 0,
+    lain: 0
+  });
+
   const [activeNav, setActiveNav] = useState(1);
   const [chartExample1Data, setChartExample1Data] = useState("data1");
 
@@ -40,10 +53,20 @@ const Index = (props) => {
                          (statData.cina || 0) + 
                          (statData.india || 0) + 
                          (statData.lain || 0);
+
+
+    const totalReligion = (statDataReligion.islam || 0) +   (statDataReligion.buddha || 0) + 
+                         (statDataReligion.hindu || 0) + (statDataReligion.kristian || 0) +
+                         (statDataReligion.lain || 0);
             
             // Function to calculate percentage
             const calculatePercentage = (value) => {
               return total > 0 ? Math.round((value / total) * 100) : 0;
+            };
+
+            // Function to calculate percentage religion
+            const calculatePercentageReligion = (value) => {
+              return total > 0 ? Math.round((value / totalReligion) * 100) : 0;
             };
 
   useEffect(() => {
@@ -53,7 +76,21 @@ const Index = (props) => {
       if (response.data.success) {
         setStatData(response.data.stat);
       } else {
-        console.error("Failed to fetch statistic data:", response.data.message);
+        console.error("Failed to fetch race statistic data:", response.data.message);
+      }
+    })
+  }
+)
+
+
+  useEffect(() => {
+    axios
+    .post("http://localhost:5000/stat/totalReligion",{ "test" :"data"})
+    .then((response) => {
+      if (response.data.success) {
+        setStatDataReligion(response.data.stat);
+      } else {
+        console.error("Failed to fetch race statistic data:", response.data.message);
       }
     })
   }
@@ -180,14 +217,16 @@ const Index = (props) => {
                 <tbody>
                   <tr>
                     <th scope="row">ISLAM</th>
-                    <td>1,480</td>
+                    <td>{statDataReligion?.islam || "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">60%</span>
+                        <span className="mr-2">
+                          {calculatePercentageReligion(statDataReligion.islam)}%
+                          </span>
                         <div>
                           <Progress
                             max="100"
-                            value="60"
+                            value={calculatePercentageReligion(statDataReligion.islam)}
                             barClassName="bg-gradient-danger"
                           />
                         </div>
@@ -196,14 +235,16 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">HINDU</th>
-                    <td>5,480</td>
+                    <td>{statDataReligion?.hindu || "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">70%</span>
+                        <span className="mr-2">
+                          {calculatePercentageReligion(statDataReligion.hindu)}%
+                          </span>
                         <div>
                           <Progress
                             max="100"
-                            value="70"
+                            value={calculatePercentageReligion(statDataReligion.hindu)}
                             barClassName="bg-gradient-success"
                           />
                         </div>
@@ -212,26 +253,33 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">BUDDHA</th>
-                    <td>4,807</td>
+                    <td>{statDataReligion?.buddha || "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">80%</span>
+                        <span className="mr-2">
+                          {calculatePercentageReligion(statDataReligion.buddha)}%
+                          </span>
                         <div>
-                          <Progress max="100" value="80" />
+                          <Progress
+                           max="100"
+                            value={calculatePercentageReligion(statDataReligion.buddha)} 
+                           />
                         </div>
                       </div>
                     </td>
                   </tr>
                   <tr>
                     <th scope="row">KRISTIAN</th>
-                    <td>1,480</td>
+                    <td>{statDataReligion?.kristian || "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">60%</span>
+                        <span className="mr-2">
+                          {calculatePercentageReligion(statDataReligion.kristian)}%
+                          </span>
                         <div>
                           <Progress
                             max="100"
-                            value="60"
+                            value={calculatePercentageReligion(statDataReligion.kristian)}
                             barClassName="bg-gradient-danger"
                           />
                         </div>
@@ -240,14 +288,16 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">LAIN-LAIN</th>
-                    <td>1,480</td>
+                    <td>{statDataReligion?.lain || "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">60%</span>
+                        <span className="mr-2">
+                          {calculatePercentageReligion(statDataReligion.lain)}%
+                          </span>
                         <div>
                           <Progress
                             max="100"
-                            value="60"
+                            value={calculatePercentageReligion(statDataReligion.lain)}
                             barClassName="bg-gradient-danger"
                           />
                         </div>

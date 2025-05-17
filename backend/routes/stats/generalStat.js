@@ -98,4 +98,50 @@ router.post('/totalRace', async (req, res) => {
   }
 });
 
+router.post('/totalReligion', async (req, res) => {
+  try {
+    console.log('Received request body:', req.body);
+
+    console.log('Executing first query...');
+    const result = await execute(`
+      SELECT RELIGION, COUNT(RELIGION) as "kira"
+      FROM CITIZEN
+      GROUP BY RELIGION
+      ORDER BY RELIGION ASC
+    `);
+    console.log('Query 1 Result:', result);
+
+    if (!result  || !result.rows.length ) {
+      console.error('Query returned no results');
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const stat1 = result.rows[0] || {};
+    const stat2 = result.rows[1] || {};
+    const stat3 = result.rows[2] || {};
+    const stat4 = result.rows[3] || {};
+    const stat5 = result.rows[4] || {};
+    
+
+    const responseData = {
+      success: true,
+      message: 'Query Successful',
+      stat: {
+        buddha: stat1.kira || 0,
+        hindu: stat2.kira || 0,
+        islam: stat3.kira || 0,
+        kristian: stat4.kira || 0,
+        lain: stat5.kira || 0,
+      }
+    };
+
+    console.log('Sending response:', JSON.stringify(responseData, null, 2));
+    res.json(responseData);
+
+  } catch (err) {
+    console.error('Retrieval error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 export default router;
