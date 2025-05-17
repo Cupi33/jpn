@@ -1,4 +1,5 @@
-import { useState } from "react";
+import axios from "axios";
+import { useEffect,useState } from "react";
 // node.js library that concatenates classes (strings)
 import classnames from "classnames";
 // javascipt plugin for creating charts
@@ -31,8 +32,32 @@ import {
 import Header from "components/Headers/Header.js";
 
 const Index = (props) => {
+  const [statData, setStatData] = useState(null);
   const [activeNav, setActiveNav] = useState(1);
   const [chartExample1Data, setChartExample1Data] = useState("data1");
+
+   const total = (statData.melayu || 0) + 
+                         (statData.cina || 0) + 
+                         (statData.india || 0) + 
+                         (statData.lain || 0);
+            
+            // Function to calculate percentage
+            const calculatePercentage = (value) => {
+              return total > 0 ? Math.round((value / total) * 100) : 0;
+            };
+
+  useEffect(() => {
+    axios
+    .post("http://localhost:5000/stat/totalRace",{ "test" :"data"})
+    .then((response) => {
+      if (response.data.success) {
+        setStatData(response.data.stat);
+      } else {
+        console.error("Failed to fetch statistic data:", response.data.message);
+      }
+    })
+  }
+)
 
   if (window.Chart) {
     parseOptions(Chart, chartOptions());
@@ -255,14 +280,16 @@ const Index = (props) => {
                 <tbody>
                   <tr>
                     <th scope="row">MELAYU</th>
-                    <td>1,480</td>
+                    <td>{statData?.melayu || "Loading..."}</td>
                     <td>
-                      <div className="d-flex align-items-center">
-                        <span className="mr-2">60%</span>
+                      <div  className="d-flex align-items-center">
+                        <span className="mr-2">
+                          {calculatePercentage(statData.melayu)}%
+                        </span>
                         <div>
                           <Progress
                             max="100"
-                            value="60"
+                            value={calculatePercentage(statData.melayu)}
                             barClassName="bg-gradient-danger"
                           />
                         </div>
@@ -271,14 +298,16 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">CINA</th>
-                    <td>5,480</td>
+                    <td>{statData?.cina || "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">70%</span>
+                        <span className="mr-2">
+                          {calculatePercentage(statData.cina)}%
+                          </span>
                         <div>
                           <Progress
                             max="100"
-                            value="70"
+                            value={calculatePercentage(statData.cina)}
                             barClassName="bg-gradient-success"
                           />
                         </div>
@@ -287,26 +316,31 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">INDIA</th>
-                    <td>4,807</td>
+                    <td>{statData?.india || "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">80%</span>
+                        <span className="mr-2">
+                          {calculatePercentage(statData.india)}%
+                          </span>
                         <div>
-                          <Progress max="100" value="80" />
+                          <Progress max="100"
+                           value={calculatePercentage(statData.india)} />
                         </div>
                       </div>
                     </td>
                   </tr>
                   <tr>
                     <th scope="row">LAIN-LAIN</th>
-                    <td>1,480</td>
+                    <td>{statData?.lain || "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">60%</span>
+                        <span className="mr-2">
+                          {calculatePercentage(statData.lain)}%
+                          </span>
                         <div>
                           <Progress
                             max="100"
-                            value="60"
+                            value={calculatePercentage(statData.lain)}
                             barClassName="bg-gradient-danger"
                           />
                         </div>
