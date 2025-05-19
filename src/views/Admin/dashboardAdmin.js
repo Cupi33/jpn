@@ -20,6 +20,8 @@ import {
   Row,
   Col,
 } from "reactstrap";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 // core components
 import {
@@ -32,8 +34,40 @@ import {
 import AdminHeader from "components/Headers/AdminHeader";
 
 const Index = (props) => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Get user data from sessionStorage
+    console.log('Checking session storage...');
+  console.log('Current staffID:', sessionStorage.getItem('staffID'));
+  console.log('Current username:', sessionStorage.getItem('username'));
+    const storedStaffID = sessionStorage.getItem('staffID');
+    const storedUsername = sessionStorage.getItem('username');
+
+    if (storedStaffID && storedUsername) {
+      // setCitizenID(storedCitizenID);
+      // setUsername(storedUsername);
+      setIsLoading(false);
+    } else {
+      // If no data exists, redirect to login page
+      navigate('/authCitizen/login');
+    }
+  }, [navigate]);
+
   const [activeNav, setActiveNav] = useState(1);
   const [chartExample1Data, setChartExample1Data] = useState("data1");
+
+
+  if (isLoading) {
+    return (
+      <div className="text-center mt-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="sr-only">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (window.Chart) {
     parseOptions(Chart, chartOptions());

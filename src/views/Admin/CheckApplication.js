@@ -8,9 +8,38 @@ import {
     CardHeader
   } from "reactstrap";
   // core components
-  import { Link } from "react-router-dom";
+  import { useEffect , useState } from "react";
+
+  import { Link , useNavigate} from "react-router-dom";
   
   const CheckApplication = () => {
+
+    const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+      console.log('Checking session storage...');
+      const storedStaffID = sessionStorage.getItem('staffID');
+      const storedUsername = sessionStorage.getItem('username');
+
+      console.log('Current staffID:', storedStaffID);
+      console.log('Current username:', storedUsername);
+
+      if (storedStaffID && storedUsername) {
+        setIsLoading(false); // optional: indicate data is loaded
+      } else {
+        navigate('/authAdmin/loginAdmin');
+      }
+    }, [navigate]);
+
+    if (isLoading) {
+    return (
+      <Container className="mt-5 text-center">
+        <h4>Loading...</h4>
+      </Container>
+    );
+  }
+
     return (
       <>
         {/* Page content */}

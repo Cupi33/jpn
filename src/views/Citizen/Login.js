@@ -67,7 +67,7 @@ const Login = () => {
                   </InputGroupText>
                 </InputGroupAddon>
                 <Input
-                  placeholder="Nombor Kad Pengenalan"
+                  placeholder="Masukkan Username"
                   type="text"
                   autoComplete="off"
                   value={username}
