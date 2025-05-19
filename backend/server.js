@@ -10,7 +10,7 @@ import DeathApplication from './routes/Application/Death.js'
 const app = express();
 app.use(cors(
   {
-    origin: 'http://localhost:3000', // Replace with your frontend URL
+    origin: '*', // Replace with your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
   }
@@ -25,6 +25,7 @@ app.use('/newbornapply',NewbornApplication);
 app.use('/deathapply',DeathApplication);
 
 const PORT = 5000;
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running at http://0.0.0.0:${PORT}`);
 });
+
