@@ -1,5 +1,6 @@
 import express from 'express';
-import { execute } from "../../config/db.js";
+import { execute, callProcedure } from "../../config/db.js";
+import oracleDB from 'oracledb';
 
 const router = express.Router();
 
@@ -104,4 +105,65 @@ router.post('/2', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+router.get('/tableIC', async (req, res) => {
+  try {
+    const query = `
+      SELECT ap.appID AS "appID", 
+             ct.icno AS "icno", 
+             ap.appDate AS "appDate", 
+             ap.status AS "status"
+      FROM application ap
+      JOIN citizen ct ON ap.citizenID = ct.citizenID
+      WHERE ap.apptype = 'IC'
+      and ap.status = 'PENDING'
+      ORDER BY ap.appDate DESC
+      
+    `;
+
+    const result = await execute(query);
+
+    res.status(200).json({
+      success: true,
+      data: result.rows // ⬅️ This returns an array of rows
+    });
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
+
+router.get('/getICDetails/:appID', async (req, res) => {
+  
+  try {
+    const appID = parseInt(req.params.appID);
+    
+
+    const result = await callProcedure
+    ('BEGIN display_ic_reason(:appID, :full_name, :icno, :reason_desc); END;',
+      {
+        appID,
+        full_name: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 100 },
+        icno: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20 },
+        reason_desc: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 100 }
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: result.outBinds
+    });
+    
+
+  } catch (err) {
+    console.error("Error calling procedure:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
 export default router;

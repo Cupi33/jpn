@@ -46,3 +46,15 @@ export async function execute(query, params = []) {
   }
 }
 
+export async function callProcedure(procSql, bindParams) {
+  let connection;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const result = await connection.execute(procSql, bindParams);
+    await connection.close();
+    return result;
+  } catch (err) {
+    if (connection) await connection.close();
+    throw err;
+  }
+}
