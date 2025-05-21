@@ -1,5 +1,5 @@
 import express from 'express';
-import { execute } from "../../config/db.js";
+import { execute, callProcedure } from "../../config/db.js";
 
 const router = express.Router();
 
@@ -87,6 +87,85 @@ console.log('Cleaned Name:', cleanedFullname); // Should be 'LEE CHONG WEI'
     res.status(500).json({ 
       success: false, 
       message: 'Server error' 
+    });
+  }
+});
+
+router.get('/tableNewborn', async (req, res) => {
+  try {
+    const query = `
+      select ap.appID AS "appID", ct.icno as "icno",
+      ap.appDate as "appDate",ap.status as "status"
+      from application ap
+      join citizen ct
+      on ap.citizenID = ct.citizenID
+      where ap.apptype = 'NEWBORN'
+      and ap.status = 'PENDING'
+      order by ap.appdate desc
+      
+    `;
+
+    const result = await execute(query);
+
+    res.status(200).json({
+      success: true,
+      data: result.rows // ⬅️ This returns an array of rows
+    });
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
+
+router.get('/newbornDetail/:appID', async (req, res) => {
+
+  try {
+    const appID = parseInt(req.params.appID);
+    const query = `
+      SELECT 
+    f.full_name AS father_name,
+    m.full_name AS mother_name,
+    f.icno AS father_icno,
+    m.icno AS mother_icno,
+    nb.babyName as baby_name,
+    nb.gender as gender,
+    TO_CHAR(nb.date_of_birth, 'DD/MM/YYYY') AS  dob,
+    nb.religion as religion,
+    nb.race as race,
+    nb.address as address
+    FROM 
+        NEWBORN_APPLICATION nb
+    JOIN 
+        CITIZEN f ON nb.fatherID = f.citizenID
+    JOIN 
+        CITIZEN m ON nb.motherID = m.citizenID 
+    WHERE 
+        nb.appID = :appID
+    `;
+
+    const result = await execute(query,[appID]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No newborn application found"
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      data: result.rows[0] // ⬅️ This returns an array of rows
+    });
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
     });
   }
 });
