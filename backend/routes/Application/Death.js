@@ -1,5 +1,6 @@
 import express from 'express';
-import { execute } from "../../config/db.js";
+import { execute,callProcedure } from "../../config/db.js";
+import oracleDB from 'oracledb';
 
 const router = express.Router();
 
@@ -46,6 +47,67 @@ router.post('/1', async (req, res) => {
   } catch (err) {
     console.error('Application error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.get('/tableDeath', async (req, res) => {
+  try {
+    const query = `
+      select ap.appID AS "appID", ct.icno as "icno",
+      ap.appDate as "appDate",ap.status as "status"
+      from application ap
+      join citizen ct
+      on ap.citizenID = ct.citizenID
+      where ap.apptype = 'DEATH'
+      and ap.status = 'PENDING'
+      order by ap.appdate desc
+      
+    `;
+
+    const result = await execute(query);
+
+    res.status(200).json({
+      success: true,
+      data: result.rows // ⬅️ This returns an array of rows
+    });
+
+  } catch (err) {
+    console.error("Fetch error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
+});
+
+router.get('/deathDetails/:appID', async (req, res) => {
+  
+  try {
+    const appID = parseInt(req.params.appID);
+    
+
+    const result = await callProcedure
+    ('BEGIN display_death_detail(:appID, :full_name, :icno, :deceased_name, :deceased_icno, :relationship); END;',
+      {
+        appID,
+        full_name: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 50 },
+        icno: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20 },
+        deceased_name: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 50 },
+        deceased_icno: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20 },
+        relationship: {dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20}
+
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: result.outBinds
+    });
+    
+
+  } catch (err) {
+    console.error("Error calling procedure:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 

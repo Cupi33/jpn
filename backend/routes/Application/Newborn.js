@@ -1,5 +1,5 @@
 import express from 'express';
-import { execute, callProcedure } from "../../config/db.js";
+import { execute } from "../../config/db.js";
 
 const router = express.Router();
 
