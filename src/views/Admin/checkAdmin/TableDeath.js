@@ -7,11 +7,24 @@ import {
     CardBody,
     CardHeader,
     Button,
+    Spinner
   } from "reactstrap";
 
-  import { Link } from "react-router-dom";
+  import { Link, useLocation } from "react-router-dom";
+  import { useEffect, useState } from "react";
+  import axios from "axios";
   
   const TableDeath = () => {
+
+    const location = useLocation();
+    const [isLoading, setIsLoading] = useState(true);
+    const [application, setApplication] = useState(null);
+    const [error, setError] = useState(null);
+
+    // Get appID from URL query parameters
+    const queryParams = new URLSearchParams(location.search);
+    const appID = queryParams.get('appID');
+      
     // Define reusable styles
     const tableCellStyle = {
       border: '2px solid #000',
@@ -24,6 +37,65 @@ import {
       ...tableCellStyle,
       backgroundColor: '#f8f9fa' // Light gray background for header cells
     };
+
+
+   // Fetch application details when component mounts
+  useEffect(() => {
+    const fetchApplicationDetails = async () => {
+      try {
+        console.log("Current appID:", appID);
+        const response = await axios.get(`http://localhost:5000/deathapply/deathDetails/${appID}`);
+        if (response.data.success) {
+          setApplication(response.data.data);
+        } else {
+          setError('Failed to fetch application details');
+        }
+      } catch (err) {
+        console.error("Error fetching application details:", err);
+        setError('Error fetching application details');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    if (appID) {
+      fetchApplicationDetails();
+    } else {
+      setError('No application ID provided');
+      setIsLoading(false);
+    }
+  }, [appID]); 
+
+
+  if (isLoading) {
+    return (
+      <Container className="mt-5 text-center">
+        <Spinner color="primary" />
+        <h4>Loading application details...</h4>
+      </Container>
+    );
+  }
+
+if (error) {
+    return (
+      <Container className="mt-5 text-center">
+        <h4 className="text-danger">{error}</h4>
+        <Link to="/adminApplication/checkNewborn">
+          <Button color="secondary" style={{ fontWeight: 700 }} className="mt-3">Back</Button>
+        </Link>
+      </Container>
+    );
+  }
+
+  if (!application) {
+    return (
+      <Container className="mt-5 text-center">
+        <h4>No application data found</h4>
+        <Link to="/adminApplication/checkIC">
+          <Button color="secondary" style={{ fontWeight: 700 }} className="mt-3">Back</Button>
+        </Link>
+      </Container>
+    );
+  }
   
     return (
       <>
@@ -43,23 +115,23 @@ import {
                     <tbody>
                       <tr>
                         <td style={headerCellStyle} width="30%">Nama Pemohon</td>
-                        <td style={tableCellStyle}>SAIFUZBAHARI BIN ISMAIL</td>
+                        <td style={tableCellStyle}>{application?.full_name || 'N/A'}</td>
                       </tr>
                       <tr>
                         <td style={headerCellStyle}>Nombor Kad Pengenalan</td>
-                        <td style={tableCellStyle}>770708086761</td>
+                        <td style={tableCellStyle}>{application?.icno || 'N/A'}</td>
                       </tr>
                       <tr>
                         <td style={headerCellStyle}>Nama Si Mati</td>
-                        <td style={tableCellStyle}>ISMAIL </td>
+                        <td style={tableCellStyle}>{application?.deceased_name || 'N/A'}</td>
                       </tr>
                       <tr>
                         <td style={headerCellStyle}>Nombor Kad Pengenalan Si Mati</td>
-                        <td style={tableCellStyle}>550528061990</td>
+                        <td style={tableCellStyle}>{application?.deceased_icno || 'N/A'}</td>
                       </tr>
                       <tr>
                         <td style={headerCellStyle}>Hubungan Pemohon Dengan Si Mati</td>
-                        <td style={tableCellStyle}>Ibu/Bapa - Anak</td>
+                        <td style={tableCellStyle}>{application?.relationship || 'N/A'}</td>
                       </tr>
                       <tr>
                         <td style={headerCellStyle}>Surat Sokongan</td>
