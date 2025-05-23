@@ -43,8 +43,18 @@ router.post('/1', async (req, res) => {
       }
     });
 
-  } catch (err) {
+  } catch (err) 
+  {
     console.error('Application error:', err);
+
+     // Check for Oracle custom trigger error
+  if (err && err.errorNum === 20001) {
+    return res.status(400).json({
+      success: false,
+      message: 'Permohonan Kad Pengenalan dengan sebab yang sama sudah dihantar dan sedang diproses.'
+    });
+  }
+
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -100,8 +110,18 @@ router.post('/2', async (req, res) => {
       }
     });
 
-  } catch (err) {
+  } catch (err) 
+  {
     console.error('Application error:', err);
+
+     // Check for Oracle custom trigger error
+  if (err && err.errorNum === 20001) {
+    return res.status(400).json({
+      success: false,
+      message: 'Permohonan Kad Pengenalan dengan sebab yang sama sudah dihantar dan sedang diproses.'
+    });
+  }
+  
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
