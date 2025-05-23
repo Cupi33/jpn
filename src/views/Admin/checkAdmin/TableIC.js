@@ -6,10 +6,11 @@ import {
   CardBody,
   CardHeader,
   Button,
-  Spinner
+  Spinner,
+  Input
 } from "reactstrap";
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -18,6 +19,22 @@ const TableIC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [application, setApplication] = useState(null);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const [comment, setComment] = useState(""); // State for comment input
+
+  useEffect(() => {
+    const storedStaffID = sessionStorage.getItem('staffID');
+    const storedUsername = sessionStorage.getItem('username');
+
+    if (storedStaffID && storedUsername) {
+      console.log("staffid :" , storedStaffID);
+      console.log("username :" , storedUsername);
+
+      setIsLoading(false);
+    } else {
+      navigate('/authAdmin/loginAdmin');
+    }
+  }, [navigate]);
 
   // Get appID from URL query parameters
   const queryParams = new URLSearchParams(location.search);
@@ -125,7 +142,25 @@ const TableIC = () => {
                     <tr>
                       <td style={headerCellStyle}>Surat Sokongan</td>
                       <td style={tableCellStyle}></td>
-                    </tr>                   
+                    </tr>
+                    <tr>
+                      <td style={headerCellStyle}>Komen</td>
+                      <td style={tableCellStyle}>
+                        <Input
+                          type="textarea"
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          style={{
+                            width: '100%',
+                            minHeight: '100px',
+                            border: '1px solid #ced4da',
+                            borderRadius: '4px',
+                            padding: '8px'
+                          }}
+                          placeholder="Masukkan komen anda di sini..."
+                        />
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
                 
@@ -139,8 +174,8 @@ const TableIC = () => {
                     <Button color="secondary" style={{ fontWeight: 700 }}>Back</Button>
                   </Link>
                   <div>
-                    <Button color="warning" className="mr-2" style={{ fontWeight: 700 }}>Reset</Button>
-                    <Button color="success" style={{ fontWeight: 700 }}>Accept</Button>
+                    <Button color="warning" className="mr-2" style={{ fontWeight: 700 }}>TOLAK</Button>
+                    <Button color="success" style={{ fontWeight: 700 }}>TERIMA</Button>
                   </div>
                 </div>
               </CardBody>

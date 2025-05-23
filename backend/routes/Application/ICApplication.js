@@ -134,12 +134,14 @@ router.get('/getICDetails/:appID', async (req, res) => {
     
 
     const result = await callProcedure
-    ('BEGIN display_ic_reason(:appID, :full_name, :icno, :reason_desc); END;',
+    ('BEGIN display_ic_reason(:appID, :full_name, :icno, :reason_desc, :reason, :address); END;',
       {
         appID,
-        full_name: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 100 },
+        full_name: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 50 },
         icno: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20 },
-        reason_desc: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 100 }
+        reason_desc: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 50 },
+        reason: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 5 },
+        address: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 50 }
       }
     );
 
