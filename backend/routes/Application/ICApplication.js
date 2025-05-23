@@ -8,52 +8,38 @@ router.post('/1', async (req, res) => {
   const { citizenID, reasons } = req.body;
 
   try {
-    // Step 1: Get next appID from application sequence
-    const appIDResult = await execute(`SELECT application_seq.NEXTVAL AS appID FROM dual`);
-    const appID = appIDResult.rows[0].APPID;
-
-    // Step 2: Insert into application table
-    await execute(
-      `INSERT INTO application (appID, citizenID, appType, appDate)
-       VALUES (:1, :2, 'IC', SYSDATE)`,
-      [appID, citizenID]
+    // Call the stored procedure
+    const result = await callProcedure(
+      `BEGIN insert_ic_application(:citizenID, :reason, :newaddress, :appID, :icAppID); END;`,
+      {
+        citizenID,
+        reason: reasons,
+        newaddress: null, // No address for this endpoint
+        appID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER },
+        icAppID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER }
+      }
     );
 
-    // Step 3: Get next icAppID from ic_application sequence
-    const icAppIDResult = await execute(`SELECT ic_application_seq.NEXTVAL AS icAppID FROM dual`);
-    const icAppID = icAppIDResult.rows[0].ICAPPID;
-
-    // Step 4: Insert into ic_application with its own icAppID, and link to appID
-    await execute(
-      `INSERT INTO ic_application (icAppID, appID, reason)
-       VALUES (:1, :2, :3)`,
-      [icAppID, appID, reasons]
-    );
-
-    // Step 5: Commit
-    await execute('COMMIT');
-
-    // Step 6: Send success response
+    // Send success response
     res.status(201).json({
       success: true,
       message: 'IC Application sent successfully',
       application: {
-        appID,
-        icAppID
+        appID: result.outBinds.appID,
+        icAppID: result.outBinds.icAppID
       }
     });
 
-  } catch (err) 
-  {
+  } catch (err) {
     console.error('Application error:', err);
 
-     // Check for Oracle custom trigger error
-  if (err && err.errorNum === 20001) {
-    return res.status(400).json({
-      success: false,
-      message: 'Permohonan Kad Pengenalan dengan sebab yang sama sudah dihantar dan sedang diproses.'
-    });
-  }
+    // Check for Oracle custom trigger error
+    if (err && err.errorNum === 20001) {
+      return res.status(400).json({
+        success: false,
+        message: 'Permohonan Kad Pengenalan dengan sebab yang sama sudah dihantar dan sedang diproses.'
+      });
+    }
 
     res.status(500).json({ success: false, message: 'Server error' });
   }
@@ -63,65 +49,49 @@ router.post('/2', async (req, res) => {
   const { citizenID, address } = req.body;
 
   try {
-    // Step 1: Get next appID from application sequence
-    const appIDResult = await execute(`SELECT application_seq.NEXTVAL AS appID FROM dual`);
-    const appID = appIDResult.rows[0].APPID;
-
-    // Step 2: Insert into application table
-    await execute(
-      `INSERT INTO application (appID, citizenID, appType, appDate)
-       VALUES (:1, :2, 'IC', SYSDATE)`,
-      [appID, citizenID]
+    // Call the stored procedure
+    const result = await callProcedure(
+      `BEGIN insert_ic_application(:citizenID, :reason, :newaddress, :appID, :icAppID); END;`,
+      {
+        citizenID,
+        reason: 'ta', // Hardcoded reason for address change
+        newaddress: address,
+        appID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER },
+        icAppID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER }
+      }
     );
 
-    // Step 3: Get next icAppID from ic_application sequence
-    const icAppIDResult = await execute(`SELECT ic_application_seq.NEXTVAL AS icAppID FROM dual`);
-    const icAppID = icAppIDResult.rows[0].ICAPPID;
-
-    // Step 4: Insert into ic_application with its own icAppID, and link to appID
+    // Update address in citizen table
     await execute(
-      `INSERT INTO ic_application (icAppID, appID, reason, newaddress)
-       VALUES (:1, :2, 'ta',:3)`,
-      [icAppID, appID, address]
+      `UPDATE CITIZEN
+       SET address = :1
+       WHERE citizenID = :2`,
+      [address, citizenID]
     );
 
-    // Step 5: Commit
-    // await execute('COMMIT');
-
-    //Step 6:Update address in citizen table
-    await execute(
-  `UPDATE CITIZEN
-   SET address = :1
-   WHERE citizenID = :2`,
-  [address, citizenID]
-);
-
-
-    // Step 5: Commit
     await execute('COMMIT');
 
-    // Step 6: Send success response
+    // Send success response
     res.status(201).json({
       success: true,
       message: 'IC Application sent successfully',
       application: {
-        appID,
-        icAppID
+        appID: result.outBinds.appID,
+        icAppID: result.outBinds.icAppID
       }
     });
 
-  } catch (err) 
-  {
+  } catch (err) {
     console.error('Application error:', err);
 
-     // Check for Oracle custom trigger error
-  if (err && err.errorNum === 20001) {
-    return res.status(400).json({
-      success: false,
-      message: 'Permohonan Kad Pengenalan dengan sebab yang sama sudah dihantar dan sedang diproses.'
-    });
-  }
-  
+    // Check for Oracle custom trigger error
+    if (err && err.errorNum === 20001) {
+      return res.status(400).json({
+        success: false,
+        message: 'Permohonan Kad Pengenalan dengan sebab yang sama sudah dihantar dan sedang diproses.'
+      });
+    }
+
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });

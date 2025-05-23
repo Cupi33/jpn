@@ -57,7 +57,17 @@ const handleSubmit = async () => {
 
   } catch (err) {
     console.error('Submission error:', err);
+
+  // Check if backend provided a friendly error message
+  if (err.response && err.response.data && err.response.data.message) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Permohonan Ditolak',
+      text: err.response.data.message,
+    });
+  } else {
     Swal.fire('Ralat server! Sila cuba lagi.');
+  }
   }
 };
 
