@@ -10,6 +10,8 @@ import {
   Input
 } from "reactstrap";
 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -23,6 +25,22 @@ const TableIC = () => {
   const [comment, setComment] = useState(""); // State for comment input
   const [isSubmitting, setIsSubmitting] = useState(false); // State for submit loading
   const [submitError, setSubmitError] = useState(null); // State for submit errors
+
+  // Add this component just before your return statement
+const notification = (
+  <ToastContainer
+    position="top-center"
+    autoClose={3000}
+    hideProgressBar={false}
+    newestOnTop
+    closeOnClick
+    rtl={false}
+    pauseOnFocusLoss
+    draggable
+    pauseOnHover
+    theme="colored"
+  />
+);
 
   useEffect(() => {
     const storedStaffID = sessionStorage.getItem('staffID');
@@ -82,34 +100,50 @@ const TableIC = () => {
   }, [appID]);
 
   const handleReview = async (decision) => {
-    setIsSubmitting(true);
-    setSubmitError(null);
+  setIsSubmitting(true);
+  setSubmitError(null);
+  
+  try {
+    const staffID = sessionStorage.getItem('staffID');
     
-    try {
-      const staffID = sessionStorage.getItem('staffID');
-      
-      const response = await axios.post('http://localhost:5000/icapply/reviewIC', {
-        appID: parseInt(appID),
-        staffID: parseInt(staffID),
-        decision,
-        comments: comment,
-        address: application.address // This might be null for some cases
-      });
+    const response = await axios.post('http://localhost:5000/icapply/reviewIC', {
+      appID: parseInt(appID),
+      staffID: parseInt(staffID),
+      decision,
+      comments: comment,
+      address: application.address
+    });
 
-      if (response.data.success) {
-        // Show success message and redirect back
-        alert(response.data.message);
-        navigate('/adminApplication/checkIC');
-      } else {
-        setSubmitError(response.data.message || 'Failed to submit review');
-      }
-    } catch (err) {
-      console.error("Review submission error:", err);
-      setSubmitError(err.response?.data?.message || 'Server error during review submission');
-    } finally {
-      setIsSubmitting(false);
+    if (response.data.success) {
+      toast.success(
+        decision === 'ACCEPT' 
+          ? 'Permohonan diterima!' 
+          : 'Permohonan ditolak!', 
+        {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+      setTimeout(() => navigate('/adminApplication/checkIC'), 3000);
+    } else {
+      setSubmitError(response.data.message || 'Failed to submit review');
     }
-  };
+  } catch (err) {
+    toast.error(
+      err.response?.data?.message || 'Server error during review submission',
+      {
+        position: "top-center",
+        autoClose: 5000,
+      }
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   if (isLoading) {
     return (
@@ -144,6 +178,18 @@ const TableIC = () => {
 
   return (
     <>
+    <ToastContainer
+      position="top-center"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="colored"
+    />
       <Container className="mt--7" fluid>
         <Row className="mt-5">
           <Col md="12">
@@ -151,6 +197,7 @@ const TableIC = () => {
               <CardHeader>
                 <h3 className="mb-0" style={{ fontWeight: 700 }}>Semakan Permohonan Kad Pengenalan</h3>
               </CardHeader>
+              {notification}
               <CardBody style={{ padding: '20px' }}>
                 {submitError && (
                   <div className="alert alert-danger" role="alert">
