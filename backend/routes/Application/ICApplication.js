@@ -157,5 +157,38 @@ router.get('/getICDetails/:appID', async (req, res) => {
   }
 });
 
+router.post('/reviewIC', async (req, res) => {
+  const {
+    appID,
+    staffID,
+    decision,
+    comments,
+    address // can be null for 'ha' or 'mykid'
+  } = req.body;
+
+  try {
+    const result = await callProcedure(
+      `BEGIN REVIEW_IC(:appID, :staffID, :decision, :comments, :address, :message); END;`,
+      {
+        appID,
+        staffID,
+        decision,
+        comments,
+        address: address || null, // ensure null is passed when no address is needed
+        message: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 50 }
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: result.outBinds.message
+    });
+
+  } catch (err) {
+    console.error("Review error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 
 export default router;

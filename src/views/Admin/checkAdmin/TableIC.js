@@ -21,15 +21,16 @@ const TableIC = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const [comment, setComment] = useState(""); // State for comment input
+  const [isSubmitting, setIsSubmitting] = useState(false); // State for submit loading
+  const [submitError, setSubmitError] = useState(null); // State for submit errors
 
   useEffect(() => {
     const storedStaffID = sessionStorage.getItem('staffID');
     const storedUsername = sessionStorage.getItem('username');
 
     if (storedStaffID && storedUsername) {
-      console.log("staffid :" , storedStaffID);
-      console.log("username :" , storedUsername);
-
+      console.log("staffid :", storedStaffID);
+      console.log("username :", storedUsername);
       setIsLoading(false);
     } else {
       navigate('/authAdmin/loginAdmin');
@@ -80,6 +81,36 @@ const TableIC = () => {
     }
   }, [appID]);
 
+  const handleReview = async (decision) => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      const staffID = sessionStorage.getItem('staffID');
+      
+      const response = await axios.post('http://localhost:5000/icapply/reviewIC', {
+        appID: parseInt(appID),
+        staffID: parseInt(staffID),
+        decision,
+        comments: comment,
+        address: application.address // This might be null for some cases
+      });
+
+      if (response.data.success) {
+        // Show success message and redirect back
+        alert(response.data.message);
+        navigate('/adminApplication/checkIC');
+      } else {
+        setSubmitError(response.data.message || 'Failed to submit review');
+      }
+    } catch (err) {
+      console.error("Review submission error:", err);
+      setSubmitError(err.response?.data?.message || 'Server error during review submission');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <Container className="mt-5 text-center">
@@ -121,6 +152,12 @@ const TableIC = () => {
                 <h3 className="mb-0" style={{ fontWeight: 700 }}>Semakan Permohonan Kad Pengenalan</h3>
               </CardHeader>
               <CardBody style={{ padding: '20px' }}>
+                {submitError && (
+                  <div className="alert alert-danger" role="alert">
+                    {submitError}
+                  </div>
+                )}
+                
                 <table style={{ 
                   width: '100%',
                   borderCollapse: 'collapse',
@@ -174,8 +211,23 @@ const TableIC = () => {
                     <Button color="secondary" style={{ fontWeight: 700 }}>Back</Button>
                   </Link>
                   <div>
-                    <Button color="warning" className="mr-2" style={{ fontWeight: 700 }}>TOLAK</Button>
-                    <Button color="success" style={{ fontWeight: 700 }}>TERIMA</Button>
+                    <Button 
+                      color="warning" 
+                      className="mr-2" 
+                      style={{ fontWeight: 700 }}
+                      onClick={() => handleReview('REJECT')}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? <Spinner size="sm" /> : 'TOLAK'}
+                    </Button>
+                    <Button 
+                      color="success" 
+                      style={{ fontWeight: 700 }}
+                      onClick={() => handleReview('ACCEPT')}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? <Spinner size="sm" /> : 'TERIMA'}
+                    </Button>
                   </div>
                 </div>
               </CardBody>
