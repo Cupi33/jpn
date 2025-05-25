@@ -26,17 +26,17 @@ import {
   const appID = queryParams.get('appID');
 
     // Define reusable styles
-    const tableCellStyle = {
-      border: '2px solid #000',
-      fontWeight: 700,
-      fontSize: '1.1rem',
-      padding: '12px'
-    };
+    // const tableCellStyle = {
+    //   border: '2px solid #000',
+    //   fontWeight: 700,
+    //   fontSize: '1.1rem',
+    //   padding: '12px'
+    // };
   
-    const headerCellStyle = {
-      ...tableCellStyle,
-      backgroundColor: '#f8f9fa' // Light gray background for header cells
-    };
+    // const headerCellStyle = {
+    //   ...tableCellStyle,
+    //   backgroundColor: '#f8f9fa' // Light gray background for header cells
+    // };
   
     // Fetch application details when component mounts
   useEffect(() => {
@@ -106,63 +106,63 @@ import {
                   <h3 className="mb-0" style={{ fontWeight: 700 }}>Semakan Permohonan Pendaftaran Bayi</h3>
                 </CardHeader>
                 <CardBody style={{ padding: '20px' }}>
-                  <table style={{ 
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    border: '2px solid #000'
-                  }}>
+                  {/* Parent Info */}
+                  <h4 className="mb-3" style={{ fontWeight: 700 }}>Maklumat Ibu Bapa</h4>
+                  <table className="table table-bordered">
                     <tbody>
                       <tr>
-                        <td style={headerCellStyle} width="30%">Nama Pemohon(Bapa)</td>
-                        <td style={tableCellStyle}>{application?.FATHER_NAME || 'N/A'}</td>
+                        <th width="30%">Nama Pemohon (Bapa)</th>
+                        <td>{application?.FATHER_NAME || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <td style={headerCellStyle}>Nombor Kad Pengenalan(Bapa)</td>
-                        <td style={tableCellStyle}>{application.FATHER_ICNO || 'N/A'}</td>
+                        <th>Nombor Kad Pengenalan (Bapa)</th>
+                        <td>{application?.FATHER_ICNO || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <td style={headerCellStyle}>Nama Pemohon(Ibu)</td>
-                        <td style={tableCellStyle}>{application.MOTHER_NAME || 'N/A'}</td>
+                        <th>Nama Pemohon (Ibu)</th>
+                        <td>{application?.MOTHER_NAME || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <td style={headerCellStyle}>Nombor Kad Pengenalan(Ibu)</td>
-                        <td style={tableCellStyle}>{application.MOTHER_ICNO|| 'N/A'}</td>
-                      </tr>
-                      <tr>
-                        <td style={headerCellStyle}>Nama Bayi</td>
-                        <td style={tableCellStyle}>{application.BABY_NAME|| 'N/A'}</td>
-                      </tr>
-                      <tr>
-                        <td style={headerCellStyle}>Jantina Bayi</td>
-                        <td style={tableCellStyle}>{application.GENDER|| 'N/A'}</td>
-                      </tr>
-                      <tr>
-                        <td style={headerCellStyle}>Tarikh Lahir Bayi</td>
-                        <td style={tableCellStyle}>{application.DOB|| 'N/A'}</td>
-                      </tr>
-                      <tr>
-                        <td style={headerCellStyle}>Agama Bayi</td>
-                        <td style={tableCellStyle}>{application.BABY_NAME|| 'N/A'}</td>
-                      </tr>
-                      <tr>
-                        <td style={headerCellStyle}>Bangsa Bayi</td>
-                        <td style={tableCellStyle}>{application.RACE|| 'N/A'}</td>
-                      </tr>
-                      <tr>
-                        <td style={headerCellStyle}>Alamat Bayi</td>
-                        <td style={tableCellStyle}>{application.ADDRESS|| 'N/A'}</td>
+                        <th>Nombor Kad Pengenalan (Ibu)</th>
+                        <td>{application?.MOTHER_ICNO || 'N/A'}</td>
                       </tr>
                     </tbody>
                   </table>
-                  
-                  <hr style={{ 
-                    borderTop: '2px solid #000',
-                    margin: '20px 0'
-                  }} />
-                  
-                  <div className="d-flex justify-content-between">
-                    <Link to = "/adminApplication/checkNewborn">
-                    <Button color="secondary" style={{ fontWeight: 700 }}>Back</Button>
+
+                  {/* Baby Info */}
+                  <h4 className="mt-4 mb-3" style={{ fontWeight: 700 }}>Maklumat Bayi</h4>
+                  <table className="table table-bordered">
+                    <tbody>
+                      <tr>
+                        <th width="30%">Nama Bayi</th>
+                        <td>{application?.BABY_NAME || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Jantina Bayi</th>
+                        <td>{application?.GENDER || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Tarikh Lahir Bayi</th>
+                        <td>{application?.DOB || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Agama Bayi</th>
+                        <td>{application?.RELIGION || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Bangsa Bayi</th>
+                        <td>{application?.RACE || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Alamat Bayi</th>
+                        <td>{application?.ADDRESS || 'N/A'}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div className="d-flex justify-content-between mt-4">
+                    <Link to="/adminApplication/checkNewborn">
+                      <Button color="secondary" style={{ fontWeight: 700 }}>Back</Button>
                     </Link>
                     <div>
                       <Button color="warning" className="mr-2" style={{ fontWeight: 700 }}>Reset</Button>
@@ -170,6 +170,7 @@ import {
                     </div>
                   </div>
                 </CardBody>
+
               </Card>
             </Col>
           </Row>
