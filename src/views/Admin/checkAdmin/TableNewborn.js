@@ -136,8 +136,32 @@ import {
                         <td>{application?.MOTHER_ICNO || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <th>Nombor Kad Pengenalan (Ibu)</th>
-                        <td>{application?.MOTHER_ICNO || 'N/A'}</td>
+                        <th>Agama (Bapa)</th>
+                        <td>{application?.FATHER_RELIGION || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Agama (Ibu)</th>
+                        <td>{application?.MOTHER_RELIGION || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Bangsa (Bapa)</th>
+                        <td>{application?.FATHER_RACE || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Bangsa (Ibu)</th>
+                        <td>{application?.MOTHER_RACE || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>ALAMAT (Bapa)</th>
+                        <td>{application?.FATHER_ADDRESS || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>ALAMAT (Ibu)</th>
+                        <td>{application?.MOTHER_ADDRESS || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>STATUS PERKAHWINAN IBU DAN BAPA</th>
+                        <td>{application?.STATUS_MARRIAGE || 'N/A'}</td>
                       </tr>
                     </tbody>
                   </table>
