@@ -44,72 +44,88 @@ const NewbornApplication = () => {
         }
 };
 
-   const handleSubmit = async () => {
-    const citizenID = sessionStorage.getItem('citizenID');
-    setErrorFather('');
-    setErrorMother('');
-    setSuccessMsg('');
+const handleSubmit = async () => {
+  const citizenID = sessionStorage.getItem('citizenID');
+  setErrorFather('');
+  setErrorMother('');
+  setSuccessMsg('');
 
-    const fatherID = await validateParent(fatherFullname, fatherICNO);
-    const motherID = await validateParent(motherFullname, motherICNO);
+    const trimmedFatherName = fatherFullname.trim();
+    const trimmedMotherName = motherFullname.trim();
 
-    const fatherValid = !!fatherID;
-    const motherValid = !!motherID;
+    // Use these for validateParent and submission
+    const fatherID = await validateParent(trimmedFatherName, fatherICNO);
+    const motherID = await validateParent(trimmedMotherName, motherICNO);
 
-    if (!fatherValid) {
-      setErrorFather('Nama penuh dan nombor IC bapa tidak sepadan.');
-    }
-    if (!motherValid) {
-      setErrorMother('Nama penuh dan nombor IC ibu tidak sepadan.');
-    }
 
-    if(!fullname || !gender || !dob || !religion || !race || !address)
-    {
-        Swal.fire('Pastikan semua butiran di bahagian Bayi diisi');
-  return;
-    }
+  const fatherValid = !!fatherID;
+  const motherValid = !!motherID;
 
-    if (fatherValid && motherValid) {
-      setSuccessMsg('Maklumat ibu bapa telah disahkan!');
-      console.log('Father ID:', fatherID);
-      console.log('Mother ID:', motherID);
-      // You can proceed with the next step, e.g., form submission to DB
+  // ✳️ New gender validation based on ICNO
+  const isFatherICMale = parseInt(fatherICNO.slice(-1)) % 2 === 1;
+  const isMotherICFemale = parseInt(motherICNO.slice(-1)) % 2 === 0;
 
-      try
-      {
-        let response;
-        response = await axios.post('http://localhost:5000/newbornapply/1', {
-        citizenID,
-        fatherID,
-        motherID,
-        babyName : fullname,
-        gender,
-        dob,
-        religion,
-        race,
-        address
-      });
+  let hasValidationError = false;
 
-      const { data } = response;
-      
-          Swal.fire({
-            icon: data.success ? 'success' : 'error',
-            title: data.message,
-            confirmButtonText: 'Pergi ke halaman utama',
-          }).then(() => {
-            if (data.success) {
-              navigate('/citizenMenu/index');
-            }
-          });
+  if (!fatherValid) {
+    setErrorFather('Nama penuh dan nombor IC bapa tidak sepadan.');
+    hasValidationError = true;
+  } else if (!isFatherICMale) {
+    setErrorFather('Nombor IC bapa tidak sah — mestilah berakhir dengan nombor ganjil.');
+    hasValidationError = true;
+  }
 
+  if (!motherValid) {
+    setErrorMother('Nama penuh dan nombor IC ibu tidak sepadan.');
+    hasValidationError = true;
+  } else if (!isMotherICFemale) {
+    setErrorMother('Nombor IC ibu tidak sah — mestilah berakhir dengan nombor genap.');
+    hasValidationError = true;
+  }
+
+  if (!fullname || !gender || !dob || !religion || !race || !address) {
+    Swal.fire('Pastikan semua butiran di bahagian Bayi diisi');
+    return;
+  }
+
+  if (hasValidationError) return;
+
+  // Proceed if everything is valid
+  setSuccessMsg('Maklumat ibu bapa telah disahkan!');
+  console.log('Father ID:', fatherID);
+  console.log('Mother ID:', motherID);
+
+  try {
+    const response = await axios.post('http://localhost:5000/newbornapply/1', {
+      citizenID,
+      fatherID,
+      motherID,
+      babyName: fullname.trim(),
+      gender,
+      dob,
+      religion,
+      race,
+      address: address.trim()
+    });
+
+    const { data } = response;
+
+    Swal.fire({
+      icon: data.success ? 'success' : 'error',
+      title: data.message,
+      confirmButtonText: 'Pergi ke halaman utama',
+    }).then(() => {
+      if (data.success) {
+        navigate('/citizenMenu/index');
       }
-      catch(err)
-      {
-            console.error('Submission error:', err);
-            Swal.fire('Ralat server! Sila cuba lagi.');
-      }
-    }
-  };
+    });
+
+  } catch (err) {
+    console.error('Submission error:', err);
+    Swal.fire('Ralat server! Sila cuba lagi.');
+  }
+};
+
 
 useEffect(() => {
 
@@ -346,7 +362,8 @@ useEffect(() => {
                                             value={fatherFullname}
                                             onChange={(e) => 
                                               {
-                                                 const cleanValue = e.target.value.replace(/_/g, ' ').trim();
+                                                 const cleanValue = e.target.value.replace(/_/g, ' ');
+                                    
                                                  setFatherFullName(cleanValue);
                                               }
                                               }
@@ -403,7 +420,7 @@ useEffect(() => {
                                             value={motherFullname}
                                             onChange={(e) => 
                                               {
-                                                 const cleanValue = e.target.value.replace(/_/g, ' ').trim();
+                                                 const cleanValue = e.target.value.replace(/_/g, ' ');
                                                  setMotherFullName(cleanValue);
                                               }
                                               }
