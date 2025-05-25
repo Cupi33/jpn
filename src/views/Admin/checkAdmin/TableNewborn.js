@@ -10,7 +10,7 @@ import {
     Spinner
   } from "reactstrap";
 
-  import { Link, useLocation } from "react-router-dom";
+  import { Link, useLocation, useNavigate } from "react-router-dom";
   import { useEffect, useState } from "react";
   import axios from "axios";
   
@@ -24,19 +24,21 @@ import {
     // Get appID from URL query parameters
   const queryParams = new URLSearchParams(location.search);
   const appID = queryParams.get('appID');
+  const navigate = useNavigate();
 
-    // Define reusable styles
-    // const tableCellStyle = {
-    //   border: '2px solid #000',
-    //   fontWeight: 700,
-    //   fontSize: '1.1rem',
-    //   padding: '12px'
-    // };
-  
-    // const headerCellStyle = {
-    //   ...tableCellStyle,
-    //   backgroundColor: '#f8f9fa' // Light gray background for header cells
-    // };
+  //stored staffID and username
+  useEffect(() => {
+    const storedStaffID = sessionStorage.getItem('staffID');
+    const storedUsername = sessionStorage.getItem('username');
+
+    if (storedStaffID && storedUsername) {
+      console.log("staffid :", storedStaffID);
+      console.log("username :", storedUsername);
+      setIsLoading(false);
+    } else {
+      navigate('/authAdmin/loginAdmin');
+    }
+  }, [navigate]);
   
     // Fetch application details when component mounts
   useEffect(() => {
@@ -44,9 +46,16 @@ import {
       try {
         console.log("Current appID:", appID);
         const response = await axios.get(`http://localhost:5000/newbornapply/newbornDetail/${appID}`);
-        if (response.data.success) {
-          setApplication(response.data.data);
-        } else {
+        if (response.data.success)
+           {
+            setApplication(response.data.data);
+            const fatherID = response.data.data.FATHERID;
+            const motherID = response.data.data.MOTHERID;
+
+            console.log("father id : " , fatherID);
+            console.log("mother id: ",motherID);
+           }
+         else {
           setError('Failed to fetch application details');
         }
       } catch (err) {
@@ -121,6 +130,10 @@ import {
                       <tr>
                         <th>Nama Pemohon (Ibu)</th>
                         <td>{application?.MOTHER_NAME || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Nombor Kad Pengenalan (Ibu)</th>
+                        <td>{application?.MOTHER_ICNO || 'N/A'}</td>
                       </tr>
                       <tr>
                         <th>Nombor Kad Pengenalan (Ibu)</th>
