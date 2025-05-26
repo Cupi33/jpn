@@ -51,9 +51,11 @@ import {
             setApplication(response.data.data);
             const fatherID = response.data.data.FATHERID;
             const motherID = response.data.data.MOTHERID;
+            const registrantID = response.data.data.REGISTRANTID;
 
             console.log("father id : " , fatherID);
             console.log("mother id: ",motherID);
+            console.log("registrant id:", registrantID ) 
            }
          else {
           setError('Failed to fetch application details');

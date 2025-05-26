@@ -126,7 +126,10 @@ router.get('/newbornDetail/:appID', async (req, res) => {
   try {
     const appID = parseInt(req.params.appID);
     const query = `
-      SELECT 
+     SELECT 
+    r.full_name AS registrant_name,
+    r.icno AS registrant_icno,
+    r.citizenID AS registrantID,
     f.full_name AS father_name,
     m.full_name AS mother_name,
     f.icno AS father_icno,
@@ -152,6 +155,10 @@ router.get('/newbornDetail/:appID', async (req, res) => {
         CITIZEN f ON nb.fatherID = f.citizenID
     JOIN 
         CITIZEN m ON nb.motherID = m.citizenID 
+    JOIN 
+        APPLICATION ap ON nb.appID  = ap.appID
+    JOIN 
+        Citizen r ON ap.citizenID = r.citizenID
     WHERE 
         nb.appID = :appID
     `;
