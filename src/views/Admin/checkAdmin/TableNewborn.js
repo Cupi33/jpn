@@ -177,7 +177,7 @@ import {
         pauseOnHover
         theme="colored"
       />
-      
+
         <Container className="mt--7" fluid>
           <Row className="mt-5">
             <Col md="12">
@@ -186,6 +186,20 @@ import {
                   <h3 className="mb-0" style={{ fontWeight: 700 }}>Semakan Permohonan Pendaftaran Bayi</h3>
                 </CardHeader>
                 <CardBody style={{ padding: '20px' }}>
+
+                  {/* Registrant Info */}
+                  <h4 className="mb-3" style={{ fontWeight: 700 }}>Maklumat Pemohon</h4>
+                  <table className="table table-bordered">
+                    <tr>
+                        <th width="30%">Nama Pendaftar</th>
+                        <td>{application?.REGISTRANT_NAME || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <th width="30%">Nombor Kad Pengenalan Pendaftar</th>
+                        <td>{application?.REGISTRANT_ICNO || 'N/A'}</td>
+                    </tr>
+                  </table>
+
                   {/* Parent Info */}
                   <h4 className="mb-3" style={{ fontWeight: 700 }}>Maklumat Ibu Bapa</h4>
                   <table className="table table-bordered">
