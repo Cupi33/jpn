@@ -1,5 +1,6 @@
 import express from 'express';
-import { execute } from "../../config/db.js";
+import { execute, callProcedure } from "../../config/db.js";
+import oracleDB from 'oracledb';
 
 const router = express.Router();
 
@@ -183,6 +184,59 @@ router.get('/newbornDetail/:appID', async (req, res) => {
       success: false,
       message: "Server error"
     });
+  }
+});
+
+router.post('/reviewNewborn', async (req, res) => {
+  const {
+    appID,
+    staffID,
+    decision,
+    comments,
+    fullname,
+    dob,
+    registrantID,
+    gender,
+    race,
+    religion,
+    address,
+    status_marriage,
+    fatherID,
+    motherID
+  } = req.body;
+
+  try {
+    const result = await callProcedure(
+      `BEGIN REVIEW_NEWBORN(:appID, :staffID, :decision, :comments, :fullname, :dob, 
+      :registrantID, :gender, :race, :religion , :address, :status_marriage,
+      :fatherID, :motherID, :message); END;`,
+      {
+        appID,
+        staffID,
+        decision,
+        comments: comments || null,
+         fullname,
+        dob,
+        registrantID,
+        gender,
+        race,
+        religion,
+        address: address || null, // ensure null is passed when no address is needed
+        status_marriage,
+        fatherID,
+        motherID,
+        message: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20 }
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: result.outBinds.message
+    });
+
+  } catch (err) {
+    console.error("Review error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
