@@ -216,7 +216,7 @@ router.post('/reviewNewborn', async (req, res) => {
         decision,
         comments: comments || null,
          fullname,
-        dob,
+        dob: new Date(dob),
         registrantID,
         gender,
         race,

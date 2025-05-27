@@ -7,7 +7,8 @@ import {
     CardBody,
     CardHeader,
     Button,
-    Spinner
+    Spinner,
+    Input
   } from "reactstrap";
 
   import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -25,6 +26,7 @@ import {
   const queryParams = new URLSearchParams(location.search);
   const appID = queryParams.get('appID');
   const navigate = useNavigate();
+  const [comment, setComment] = useState("");
 
   //stored staffID and username
   useEffect(() => {
@@ -95,6 +97,42 @@ import {
       </Container>
     );
   }
+
+  const handleReviewNewborn = async (decision) => {
+  const staffID = sessionStorage.getItem("staffID");
+
+  const payload = {
+    appID: appID,
+    staffID: parseInt(staffID),
+    decision: decision,
+    comments: comment || null,
+    fullname: application?.BABY_NAME,
+    dob: application?.DOB,
+    registrantID: application?.REGISTRANTID,
+    gender: application?.GENDER,
+    race: application?.RACE,
+    religion: application?.RELIGION,
+    address: application?.ADDRESS || null,
+    status_marriage: application?.STATUS_MARRIAGE,
+    fatherID: application?.FATHERID,
+    motherID: application?.MOTHERID,
+  };
+
+  try {
+    const response = await axios.post("http://localhost:5000/newbornapply/reviewNewborn", payload);
+    if (response.data.success) {
+      window.alert(response.data.message); // ✅ Show returned message
+      navigate("/adminApplication/checkNewborn");
+    } else {
+      window.alert("Permohonan gagal diproses.");
+    }
+  } catch (error) {
+    console.error("Error reviewing newborn application:", error);
+    window.alert("Ralat pelayan! Sila cuba lagi.");
+  }
+  console.log("DOB being sent:", application?.DOB);
+
+};
 
   if (!application) {
     return (
@@ -196,20 +234,44 @@ import {
                         <th>Alamat Bayi</th>
                         <td>{application?.ADDRESS || 'N/A'}</td>
                       </tr>
+                      <tr>
+                      <td >Komen</td>
+                      <td >
+                        <Input
+                          type="textarea"
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          style={{
+                            width: '100%',
+                            minHeight: '100px',
+                            border: '1px solid #ced4da',
+                            borderRadius: '4px',
+                            padding: '8px'
+                          }}
+                          placeholder="Masukkan komen anda di sini..."
+                        />
+                      </td>
+                    </tr>
                     </tbody>
                   </table>
-
-                  <div className="d-flex justify-content-between mt-4">
-                    <Link to="/adminApplication/checkNewborn">
-                      <Button color="secondary" style={{ fontWeight: 700 }}>Back</Button>
-                    </Link>
-                    <div>
-                      <Button color="warning" className="mr-2" style={{ fontWeight: 700 }}>Reset</Button>
-                      <Button color="success" style={{ fontWeight: 700 }}>Accept</Button>
+                  <div>
+                      <Button
+                        color="danger"
+                        className="mr-2"
+                        style={{ fontWeight: 700 }}
+                        onClick={() => handleReviewNewborn("REJECT")}
+                      >
+                        TOLAK
+                      </Button>
+                      <Button
+                        color="success"
+                        style={{ fontWeight: 700 }}
+                        onClick={() => handleReviewNewborn("ACCEPT")}
+                      >
+                        TERIMA
+                      </Button>
                     </div>
-                  </div>
                 </CardBody>
-
               </Card>
             </Col>
           </Row>
