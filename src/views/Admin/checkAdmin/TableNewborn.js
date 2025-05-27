@@ -11,6 +11,8 @@ import {
     Input
   } from "reactstrap";
 
+  import { ToastContainer, toast } from 'react-toastify';
+  import 'react-toastify/dist/ReactToastify.css';
   import { Link, useLocation, useNavigate } from "react-router-dom";
   import { useEffect, useState } from "react";
   import axios from "axios";
@@ -78,6 +80,58 @@ import {
   }, [appID]);
 
 
+  const handleReviewNewborn = async (decision) => {
+    const staffID = sessionStorage.getItem("staffID");
+
+    const payload = {
+      appID: appID,
+      staffID: parseInt(staffID),
+      decision: decision,
+      comments: comment || null,
+      fullname: application?.BABY_NAME,
+      dob: application?.DOB,
+      registrantID: application?.REGISTRANTID,
+      gender: application?.GENDER,
+      race: application?.RACE,
+      religion: application?.RELIGION,
+      address: application?.ADDRESS || null,
+      status_marriage: application?.STATUS_MARRIAGE,
+      fatherID: application?.FATHERID,
+      motherID: application?.MOTHERID,
+    };
+
+    try {
+      const response = await axios.post("http://localhost:5000/newbornapply/reviewNewborn", payload);
+      if (response.data.success) {
+        toast.success(
+          decision === 'ACCEPT' 
+            ? 'Permohonan diterima!' 
+            : 'Permohonan ditolak!', 
+          {
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          }
+        );
+        setTimeout(() => navigate("/adminApplication/checkNewborn"), 3000);
+      } else {
+        toast.error(response.data.message || 'Permohonan gagal diproses', {
+          position: "top-center",
+          autoClose: 5000,
+        });
+      }
+    } catch (error) {
+      console.error("Error reviewing newborn application:", error);
+      toast.error("Ralat pelayan! Sila cuba lagi.", {
+        position: "top-center",
+        autoClose: 5000,
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <Container className="mt-5 text-center">
@@ -98,42 +152,6 @@ import {
     );
   }
 
-  const handleReviewNewborn = async (decision) => {
-  const staffID = sessionStorage.getItem("staffID");
-
-  const payload = {
-    appID: appID,
-    staffID: parseInt(staffID),
-    decision: decision,
-    comments: comment || null,
-    fullname: application?.BABY_NAME,
-    dob: application?.DOB,
-    registrantID: application?.REGISTRANTID,
-    gender: application?.GENDER,
-    race: application?.RACE,
-    religion: application?.RELIGION,
-    address: application?.ADDRESS || null,
-    status_marriage: application?.STATUS_MARRIAGE,
-    fatherID: application?.FATHERID,
-    motherID: application?.MOTHERID,
-  };
-
-  try {
-    const response = await axios.post("http://localhost:5000/newbornapply/reviewNewborn", payload);
-    if (response.data.success) {
-      window.alert(response.data.message); // ✅ Show returned message
-      navigate("/adminApplication/checkNewborn");
-    } else {
-      window.alert("Permohonan gagal diproses.");
-    }
-  } catch (error) {
-    console.error("Error reviewing newborn application:", error);
-    window.alert("Ralat pelayan! Sila cuba lagi.");
-  }
-  console.log("DOB being sent:", application?.DOB);
-
-};
-
   if (!application) {
     return (
       <Container className="mt-5 text-center">
@@ -147,6 +165,19 @@ import {
 
     return (
       <>
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
+      
         <Container className="mt--7" fluid>
           <Row className="mt-5">
             <Col md="12">
