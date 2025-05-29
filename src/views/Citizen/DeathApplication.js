@@ -42,61 +42,58 @@ const validateDeceased = async (fullname, icno) => {
 };
 
 const handleSubmit = async () => {
-    const citizenID = sessionStorage.getItem('citizenID');
-    setErrorDeceased('');
+  const citizenID = sessionStorage.getItem('citizenID');
+  setErrorDeceased('');
+  setSuccessMsg('');
 
+  // ✅ Validation: make sure all required fields are filled
+  if (!fullname || !icno || !relationship || !deathDate) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Pastikan semua ruangan borang diisi',
+      confirmButtonText: 'OK'
+    });
+    return;
+  }
 
-    const deceasedID = await validateDeceased(fullname, icno);
+  // ✅ Validate IC and name match
+  const deceasedID = await validateDeceased(fullname, icno);
+  const deceasedValid = !!deceasedID;
 
-    const deceasedValid = !!deceasedID;
+  if (!deceasedValid) {
+    setErrorDeceased('Nama penuh dan nombor IC si mati tidak sepadan.');
+    return;
+  }
 
+  setSuccessMsg('Maklumat si mati telah disahkan!');
+  console.log('Deceased ID:', deceasedID);
 
-    if (!deceasedValid) {
-      setErrorDeceased('Nama penuh dan nombor IC bapa tidak sepadan.');
-    }
+  try {
+    const response = await axios.post('http://localhost:5000/deathapply/1', {
+      citizenID,
+      deceasedID,
+      relationship,
+      deathDate
+    });
 
+    const { data } = response;
 
-    if(!fullname || !icno || !relationship)
-    {
-        Swal.fire('Pastikan semua butiran diisi');
-  return;
-    }
-
-    if (deceasedValid) {
-      setSuccessMsg('Maklumat si mati telah disahkan!');
-      console.log('Deceased ID:', deceasedID);
-      // You can proceed with the next step, e.g., form submission to DB
-
-      try
-      {
-        let response;
-        response = await axios.post('http://localhost:5000/deathapply/1', {
-        citizenID,
-        deceasedID,
-        relationship,
-        deathDate,
-      });
-
-      const { data } = response;
-      
-          Swal.fire({
-            icon: data.success ? 'success' : 'error',
-            title: data.message,
-            confirmButtonText: 'Pergi ke halaman utama',
-          }).then(() => {
-            if (data.success) {
-              navigate('/citizenMenu/index');
-            }
-          });
-
+    Swal.fire({
+      icon: data.success ? 'success' : 'error',
+      title: data.message,
+      confirmButtonText: 'Pergi ke halaman utama',
+    }).then(() => {
+      if (data.success) {
+        navigate('/citizenMenu/index');
       }
-      catch(err)
-      {
-          console.error('Submission error:', err);
-          Swal.fire('Ralat server! Sila cuba lagi.');
-      }
-    }
-  };
+    });
+
+  } catch (err) {
+    console.error('Submission error:', err);
+    Swal.fire('Ralat server! Sila cuba lagi.');
+  }
+};
+
 
 
   useEffect(() => {
@@ -209,25 +206,25 @@ const handleSubmit = async () => {
             </Row>
 
             <Row>
-                                                <Col lg="12">
-                                                    <FormGroup>
-                                                    <label
-                                                        className="form-control-label"
-                                                        htmlFor="input-dob"
-                                                    >
-                                                        Tarikh Kematian
-                                                    </label>
-                                                    <Input
-                                                        className="form-control"
-                                                        id="input-dob"
-                                                        type="date"
-                                                        max={new Date().toISOString().split("T")[0]} // 👈 Set maximum date to today
-                                                        value={deathDate}
-                                                        onChange={(e) => setDeathDate(e.target.value)}
-                                                    />
-                                                    </FormGroup>
-                                                </Col>
-                                            </Row>
+                                                  <Col lg="12">
+                                                      <FormGroup>
+                                                      <label
+                                                          className="form-control-label"
+                                                          htmlFor="input-dob"
+                                                      >
+                                                          Tarikh Kematian
+                                                      </label>
+                                                      <Input
+                                                          className="form-control"
+                                                          id="input-dob"
+                                                          type="date"
+                                                          max={new Date().toISOString().split("T")[0]} // 👈 Set maximum date to today
+                                                          value={deathDate}
+                                                          onChange={(e) => setDeathDate(e.target.value)}
+                                                      />
+                                                      </FormGroup>
+                                                  </Col>
+                                              </Row>
 
             <FormGroup>
               <label

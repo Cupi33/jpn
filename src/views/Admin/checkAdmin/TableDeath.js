@@ -26,17 +26,17 @@ import {
     const appID = queryParams.get('appID');
       
     // Define reusable styles
-    const tableCellStyle = {
-      border: '2px solid #000',
-      fontWeight: 700,
-      fontSize: '1.1rem',
-      padding: '12px'
-    };
+    // const tableCellStyle = {
+    //   border: '2px solid #000',
+    //   fontWeight: 700,
+    //   fontSize: '1.1rem',
+    //   padding: '12px'
+    // };
   
-    const headerCellStyle = {
-      ...tableCellStyle,
-      backgroundColor: '#f8f9fa' // Light gray background for header cells
-    };
+    // const headerCellStyle = {
+    //   ...tableCellStyle,
+    //   backgroundColor: '#f8f9fa' // Light gray background for header cells
+    // };
 
 
    // Fetch application details when component mounts
@@ -107,51 +107,57 @@ if (error) {
                   <h3 className="mb-0" style={{ fontWeight: 700 }}>Semakan Permohonan Pendaftaran Kematian</h3>
                 </CardHeader>
                 <CardBody style={{ padding: '20px' }}>
-                  <table style={{ 
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    border: '2px solid #000'
-                  }}>
+                  {/* Applicant Info */}
+                  <h4 className="mb-3" style={{ fontWeight: 700 }}>Maklumat Pemohon</h4>
+                  <table className="table table-bordered">
                     <tbody>
                       <tr>
-                        <td style={headerCellStyle} width="30%">Nama Pemohon</td>
-                        <td style={tableCellStyle}>{application?.full_name || 'N/A'}</td>
+                        <th width="30%">Nama Pemohon</th>
+                        <td>{application?.full_name || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <td style={headerCellStyle}>Nombor Kad Pengenalan</td>
-                        <td style={tableCellStyle}>{application?.icno || 'N/A'}</td>
+                        <th>Nombor Kad Pengenalan</th>
+                        <td>{application?.icno || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <td style={headerCellStyle}>Nama Si Mati</td>
-                        <td style={tableCellStyle}>{application?.deceased_name || 'N/A'}</td>
+                        <th>Hubungan Dengan Si Mati</th>
+                        <td>{application?.relationship || 'N/A'}</td>
                       </tr>
-                      <tr>
-                        <td style={headerCellStyle}>Nombor Kad Pengenalan Si Mati</td>
-                        <td style={tableCellStyle}>{application?.deceased_icno || 'N/A'}</td>
-                      </tr>
-                      <tr>
-                        <td style={headerCellStyle}>Hubungan Pemohon Dengan Si Mati</td>
-                        <td style={tableCellStyle}>{application?.relationship || 'N/A'}</td>
-                      </tr>
-                      <tr>
-                        <td style={headerCellStyle}>Surat Sokongan</td>
-                        <td style={tableCellStyle}></td>
-                      </tr>                   
                     </tbody>
                   </table>
-                  
-                  <hr style={{ 
-                    borderTop: '2px solid #000',
-                    margin: '20px 0'
-                  }} />
-                  
-                  <div className="d-flex justify-content-between">
-                    <Link to = "/adminApplication/checkDeath">
-                    <Button color="secondary" style={{ fontWeight: 700 }}>Back</Button>
+
+                  {/* Deceased Info */}
+                  <h4 className="mt-4 mb-3" style={{ fontWeight: 700 }}>Maklumat Si Mati</h4>
+                  <table className="table table-bordered">
+                    <tbody>
+                      <tr>
+                        <th width="30%">Nama Si Mati</th>
+                        <td>{application?.deceased_name || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Nombor Kad Pengenalan Si Mati</th>
+                        <td>{application?.deceased_icno || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Surat Sokongan</th>
+                        <td>
+                          {
+                            application?.support_doc
+                              ? <a href={`http://localhost:5000/uploads/${application.support_doc}`} target="_blank" rel="noopener noreferrer">Lihat Dokumen</a>
+                              : 'Tiada dokumen'
+                          }
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div className="d-flex justify-content-between mt-4">
+                    <Link to="/adminApplication/checkDeath">
+                      <Button color="secondary" style={{ fontWeight: 700 }}>Back</Button>
                     </Link>
                     <div>
-                      <Button color="warning" className="mr-2" style={{ fontWeight: 700 }}>Reset</Button>
-                      <Button color="success" style={{ fontWeight: 700 }}>Accept</Button>
+                      <Button color="danger" className="mr-2" style={{ fontWeight: 700 }}>TOLAK</Button>
+                      <Button color="success" style={{ fontWeight: 700 }}>TERIMA</Button>
                     </div>
                   </div>
                 </CardBody>
