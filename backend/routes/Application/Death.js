@@ -87,14 +87,15 @@ router.get('/deathDetails/:appID', async (req, res) => {
     
 
     const result = await callProcedure
-    ('BEGIN display_death_detail(:appID, :full_name, :icno, :deceased_name, :deceased_icno, :relationship); END;',
+    ('BEGIN display_death_detail(:appID, :full_name, :icno, :deceased_name, :deceased_icno, :relationship, :relationship_system); END;',
       {
         appID,
         full_name: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 50 },
         icno: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20 },
         deceased_name: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 50 },
         deceased_icno: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20 },
-        relationship: {dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20}
+        relationship: {dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 30},
+        relationship_system: {dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 30}
 
       }
     );

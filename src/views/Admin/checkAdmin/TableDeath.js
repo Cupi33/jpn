@@ -120,7 +120,7 @@ if (error) {
                         <td>{application?.icno || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <th>Hubungan Dengan Si Mati</th>
+                        <th>Hubungan Dengan Si Mati(Yang didaftar di borang)</th>
                         <td>{application?.relationship || 'N/A'}</td>
                       </tr>
                     </tbody>
