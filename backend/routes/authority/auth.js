@@ -17,10 +17,26 @@ router.post('/login', async (req, res) => {
 
     if (result.rows.length === 0) 
       {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(401).json({ success: false, message: 'Salah username atau kata laluan' });
       }
 
       const user = result.rows[0];
+      const citizenID = user.citizenID;
+
+      const result2 = await execute(
+      `SELECT * 
+        FROM CITIZEN CT
+        JOIN ACCOUNT AC
+        ON CT.CITIZENID = AC.CITIZENID
+        WHERE CT.CITIZENID = :citizenID AND AC.STATUSACCOUNT = 'INACTIVE' 
+        `,
+      [citizenID] 
+    );
+
+    if (result2.rows.length > 0) 
+      {
+      return res.status(401).json({ success: false, message: 'Akaun Tidak Aktif' });
+      }
 
     res.json({
       success: true,
