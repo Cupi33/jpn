@@ -41,84 +41,90 @@ const validateDeceased = async (fullname, icno) => {
         }
 };
 
-const handleSubmit = async () => {
-  const citizenID = sessionStorage.getItem('citizenID');
-  setErrorDeceased('');
-  setSuccessMsg('');
 
-  // ✅ Validation: make sure all required fields are filled
-  if (!fullname || !icno || !relationship || !deathDate) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Pastikan semua ruangan borang diisi',
-      confirmButtonText: 'OK'
-    });
-    return;
-  }
+ const handleSubmit = async () => {
+    const citizenID = sessionStorage.getItem('citizenID');
+    setErrorDeceased('');
+    setSuccessMsg('');
 
-  // ✅ Validate IC and name match
-  const deceasedID = await validateDeceased(fullname, icno);
-  const deceasedValid = !!deceasedID;
+    // Validate required fields
+    if (!fullname || !icno || !relationship || !deathDate) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Pastikan semua ruangan borang diisi',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
 
-  if (!deceasedValid) {
-    setErrorDeceased('Nama penuh dan nombor IC si mati tidak sepadan.');
-    return;
-  }
-
-  setSuccessMsg('Maklumat si mati telah disahkan!');
-  console.log('Deceased ID:', deceasedID);
-
-  try {
-    const response = await axios.post('http://localhost:5000/deathapply/1', {
-      citizenID,
-      deceasedID,
-      relationship,
-      deathDate
-    });
-
-    const { data } = response;
-
-    Swal.fire({
-      icon: data.success ? 'success' : 'error',
-      title: data.message,
-      confirmButtonText: 'Pergi ke halaman utama',
-    }).then(() => {
-      if (data.success) {
-        navigate('/citizenMenu/index');
+    try {
+      // Step 1: Validate deceased exists
+      const deceasedID = await validateDeceased(fullname, icno);
+      if (!deceasedID) {
+        setErrorDeceased('Nama penuh dan nombor IC si mati tidak sepadan.');
+        return;
       }
-    });
 
-  } catch (err) {
-    console.error('Submission error:', err);
-    Swal.fire('Ralat server! Sila cuba lagi.');
-  }
-};
+      // Step 2: Check death application validity
+      const checkResponse = await axios.post('http://localhost:5000/deathapply/checkDeathApp', {
+        icno
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
+      if (!checkResponse.data.success) {
+        Swal.fire({
+          icon: 'warning',
+          title: checkResponse.data.message,
+          confirmButtonText: 'OK'
+        });
+        return;
+      }
 
+      // Step 3: Submit application if all validations pass
+      const response = await axios.post('http://localhost:5000/deathapply/1', {
+        citizenID,
+        deceasedID,
+        relationship,
+        deathDate
+      });
+
+      Swal.fire({
+        icon: response.data.success ? 'success' : 'error',
+        title: response.data.message,
+        confirmButtonText: 'Pergi ke halaman utama',
+      }).then(() => {
+        if (response.data.success) {
+          navigate('/citizenMenu/index');
+        }
+      });
+
+    } catch (err) {
+      console.error('Submission error:', err);
+      Swal.fire('Ralat server! Sila cuba lagi.');
+    }
+  };
 
   useEffect(() => {
-      console.log('Checking session storage...');
-      const storedCitizenID = sessionStorage.getItem('citizenID');
-      const storedUsername = sessionStorage.getItem('username');
-  
-      console.log('Current citizenID:', storedCitizenID);
-      console.log('Current username:', storedUsername);
-  
-      if (storedCitizenID && storedUsername) {
-        setIsLoading(false); // optional: indicate data is loaded
-      } else {
-        navigate('/authCitizen/login');
-      }
-    }, [navigate]);
+    const storedCitizenID = sessionStorage.getItem('citizenID');
+    const storedUsername = sessionStorage.getItem('username');
 
-
-    if (isLoading) {
-      return (
-        <Container className="mt-5 text-center">
-          <h4>Loading...</h4>
-        </Container>
-      );
+    if (storedCitizenID && storedUsername) {
+      setIsLoading(false);
+    } else {
+      navigate('/authCitizen/login');
     }
+  }, [navigate]);
+
+  if (isLoading) {
+    return (
+      <Container className="mt-5 text-center">
+        <h4>Loading...</h4>
+      </Container>
+    );
+  }
 
 
     return (
