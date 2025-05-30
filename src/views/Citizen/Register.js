@@ -19,23 +19,33 @@ const Register = () => {
   const [password, setPassword] = useState('');
 
   const handleRegister = async () => {
-    try {
-      const response = await axios.post('http://localhost:5000/register', {
-        icno, username, password
-      });
+    if (!icno || !username || !password) {
+    alert('Sila isi semua maklumat yang diperlukan');
+    return;
+  }
+  try {
+    const response = await axios.post('http://localhost:5000/register', {
+      icno, username, password
+    });
 
-      if (response.data.success) {
-        console.log("Pendaftaran Akaun Berjaya untuk:", response.data.user.username);
-        alert(`Pendaftaran Akaun Berjaya untuk: ${response.data.user.username}!`);
-      } else {
-        console.log("Pendaftaran gagal:", response.data.message);
-        alert(response.data.message);
-      }
-    } catch (error) {
-      console.error("Server error:", error);
-      alert("Ralat pelayan: Tidak dapat mendaftar akaun.");
+    if (response.data.success) {
+      console.log("Pendaftaran Akaun Berjaya untuk:", response.data.user.username);
+      alert(`Pendaftaran Akaun Berjaya untuk: ${response.data.user.username}!`);
+    } else {
+      console.log("Pendaftaran gagal:", response.data.message);
+      alert(response.data.message);
     }
-  };
+  } catch (error) {
+    console.error("Server error:", error);
+    
+    // Check if it's a validation error from the backend
+    if (error.response && error.response.data && error.response.data.message) {
+      alert(error.response.data.message); // Show the specific backend error message
+    } else {
+      alert("Ralat pelayan: Tidak dapat mendaftar akaun."); // Fallback generic error
+    }
+  }
+};
 
   return (
     <>
@@ -45,23 +55,6 @@ const Register = () => {
             <b>Daftar Akaun</b>
           </div>
           <Form role="form">
-            {/* Username field */}
-            <FormGroup className="mb-3" style={{ marginTop: '20px' }}>
-              <InputGroup className="input-group-alternative">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>
-                    <i className="ni ni-circle-08" />
-                  </InputGroupText>
-                </InputGroupAddon>
-                <Input
-                  placeholder="Username"
-                  type="text"
-                  autoComplete="off"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </InputGroup>
-            </FormGroup>
 
             {/* IC Number field */}
             <FormGroup className="mb-3" style={{ marginTop: '20px' }}>
@@ -77,6 +70,24 @@ const Register = () => {
                   autoComplete="off"
                   value={icno}
                   onChange={(e) => setIcno(e.target.value)}
+                />
+              </InputGroup>
+            </FormGroup>
+
+            {/* Username field */}
+            <FormGroup className="mb-3" style={{ marginTop: '20px' }}>
+              <InputGroup className="input-group-alternative">
+                <InputGroupAddon addonType="prepend">
+                  <InputGroupText>
+                    <i className="ni ni-circle-08" />
+                  </InputGroupText>
+                </InputGroupAddon>
+                <Input
+                  placeholder="Username"
+                  type="text"
+                  autoComplete="off"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                 />
               </InputGroup>
             </FormGroup>

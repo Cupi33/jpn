@@ -76,7 +76,8 @@ router.post('/register', async (req, res) => {
 
     // Step 2: Get citizenID using IC number
     const citizenResult = await execute(
-      `SELECT citizenID FROM citizen WHERE icno = :1`,
+      `SELECT citizenID, get_age(date_of_birth) as "age"
+      FROM citizen WHERE icno = :1`,
       [icno]
     );
 
@@ -86,6 +87,14 @@ router.post('/register', async (req, res) => {
         message: 'Kesilapan Kad Pengenalan'
       });
     }
+
+    // For age validation
+  if (citizenResult.rows[0].age <= 10) {  // Changed to <= for consistency with message
+    return res.status(400).json({
+      success: false,
+      message: 'Rakyat berusia 10 tahun ke bawah tidak layak daftar akaun'
+    });
+  }
 
     const citizenID = citizenResult.rows[0].CITIZENID;
 
