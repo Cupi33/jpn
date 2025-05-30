@@ -87,13 +87,15 @@ router.get('/deathDetails/:appID', async (req, res) => {
     
 
     const result = await callProcedure
-    ('BEGIN display_death_detail(:appID, :full_name, :icno, :deceased_name, :deceased_icno, :relationship, :relationship_system); END;',
+    ('BEGIN display_death_detail(:appID, :full_name, :icno, :registrant_id, :deceased_name, :deceased_icno, :deceased_id, :relationship, :relationship_system); END;',
       {
         appID,
         full_name: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 50 },
         icno: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20 },
+        registrant_id: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER},
         deceased_name: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 50 },
         deceased_icno: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20 },
+        deceased_id: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER},
         relationship: {dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 30},
         relationship_system: {dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 30}
 
@@ -108,6 +110,43 @@ router.get('/deathDetails/:appID', async (req, res) => {
 
   } catch (err) {
     console.error("Error calling procedure:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+router.post('/reviewDeath', async (req, res) => {
+  const {
+    appID,
+    staffID,
+    decision,
+    comments,
+    deceasedID,
+    registrantID,
+  } = req.body;
+
+  try {
+    const result = await callProcedure(
+      `BEGIN REVIEW_DEATH(:appID, :staffID, :decision, :comments, :deceasedID, 
+      :registrantID,  :message); END;`,
+      {
+        appID,
+        staffID,
+        decision,
+        comments: comments || null,
+        deceasedID,
+        registrantID,
+        message: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 20 }
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: result.outBinds.message
+    });
+
+  } catch (err) {
+    console.error("Review error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });

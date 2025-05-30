@@ -7,10 +7,12 @@ import {
     CardBody,
     CardHeader,
     Button,
-    Spinner
+    Spinner,
+    Input
   } from "reactstrap";
-
-  import { Link, useLocation } from "react-router-dom";
+  import { ToastContainer, toast } from 'react-toastify';
+  import 'react-toastify/dist/ReactToastify.css';
+  import { Link, useLocation, useNavigate } from "react-router-dom";
   import { useEffect, useState } from "react";
   import axios from "axios";
   
@@ -20,24 +22,27 @@ import {
     const [isLoading, setIsLoading] = useState(true);
     const [application, setApplication] = useState(null);
     const [error, setError] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const navigate = useNavigate();
 
     // Get appID from URL query parameters
     const queryParams = new URLSearchParams(location.search);
     const appID = queryParams.get('appID');
+    const [comment, setComment] = useState("");
       
-    // Define reusable styles
-    // const tableCellStyle = {
-    //   border: '2px solid #000',
-    //   fontWeight: 700,
-    //   fontSize: '1.1rem',
-    //   padding: '12px'
-    // };
-  
-    // const headerCellStyle = {
-    //   ...tableCellStyle,
-    //   backgroundColor: '#f8f9fa' // Light gray background for header cells
-    // };
+  //stored staffID and username
+    useEffect(() => {
+      const storedStaffID = sessionStorage.getItem('staffID');
+      const storedUsername = sessionStorage.getItem('username');
 
+      if (storedStaffID && storedUsername) {
+        console.log("staffid :", storedStaffID);
+        console.log("username :", storedUsername);
+        setIsLoading(false);
+      } else {
+        navigate('/authAdmin/loginAdmin');
+      }
+    }, [navigate]);
 
    // Fetch application details when component mounts
   useEffect(() => {
@@ -47,6 +52,11 @@ import {
         const response = await axios.get(`http://localhost:5000/deathapply/deathDetails/${appID}`);
         if (response.data.success) {
           setApplication(response.data.data);
+          const registrantID = response.data.data.registrant_id;
+          const deceasedID = response.data.data.deceased_id;
+
+          console.log("registrant id:", registrantID );
+          console.log("deceased id:", deceasedID ) 
         } else {
           setError('Failed to fetch application details');
         }
@@ -97,8 +107,70 @@ if (error) {
     );
   }
   
+  // Add this function before the return statement
+const handleReviewDeath = async (decision) => {
+  setIsSubmitting(true);
+  
+  try {
+    const staffID = sessionStorage.getItem('staffID');
+    const response = await axios.post('http://localhost:5000/deathapply/reviewDeath', {
+      appID: parseInt(appID),
+      staffID: parseInt(staffID),
+      decision,
+      comments: comment,
+      deceasedID: application?.deceased_id,
+      registrantID: application?.registrant_id
+    });
+
+    if (response.data.success) {
+      toast.success(
+        decision === 'ACCEPT' 
+          ? 'Permohonan diterima!' 
+          : 'Permohonan ditolak!', 
+        {
+          position: "top-center",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
+      setTimeout(() => navigate('/adminApplication/checkDeath'), 3000);
+    } else {
+      toast.error(response.data.message || 'Permohonan gagal diproses', {
+        position: "top-center",
+        autoClose: 5000,
+      });
+    }
+  } catch (err) {
+    console.error("Review error:", err);
+    toast.error(
+      err.response?.data?.message || 'Ralat pelayan! Sila cuba lagi.',
+      {
+        position: "top-center",
+        autoClose: 5000,
+      }
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
     return (
       <>
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
         <Container className="mt--7" fluid>
           <Row className="mt-5">
             <Col md="12">
@@ -122,6 +194,10 @@ if (error) {
                       <tr>
                         <th>Hubungan Dengan Si Mati(Yang didaftar di borang)</th>
                         <td>{application?.relationship || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                        <th>Hubungan Dengan Si Mati(Yang disemak oleh sistem)</th>
+                        <td>{application?.relationship_system || 'N/A'}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -148,17 +224,43 @@ if (error) {
                           }
                         </td>
                       </tr>
+                      <td >Komen</td>
+                      <td >
+                        <Input
+                          type="textarea"
+                          value={comment}
+                          onChange={(e) => setComment(e.target.value)}
+                          style={{
+                            width: '100%',
+                            minHeight: '100px',
+                            border: '1px solid #ced4da',
+                            borderRadius: '4px',
+                            padding: '8px'
+                          }}
+                          placeholder="Masukkan komen anda di sini..."
+                        />
+                      </td>
                     </tbody>
                   </table>
 
-                  <div className="d-flex justify-content-between mt-4">
-                    <Link to="/adminApplication/checkDeath">
-                      <Button color="secondary" style={{ fontWeight: 700 }}>Back</Button>
-                    </Link>
-                    <div>
-                      <Button color="danger" className="mr-2" style={{ fontWeight: 700 }}>TOLAK</Button>
-                      <Button color="success" style={{ fontWeight: 700 }}>TERIMA</Button>
-                    </div>
+                  <div>
+                    <Button 
+                      color="danger" 
+                      className="mr-2" 
+                      style={{ fontWeight: 700 }}
+                      onClick={() => handleReviewDeath('REJECT')}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? <Spinner size="sm" /> : 'TOLAK'}
+                    </Button>
+                    <Button 
+                      color="success" 
+                      style={{ fontWeight: 700 }}
+                      onClick={() => handleReviewDeath('ACCEPT')}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? <Spinner size="sm" /> : 'TERIMA'}
+                    </Button>
                   </div>
                 </CardBody>
               </Card>
