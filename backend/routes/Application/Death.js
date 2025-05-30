@@ -114,6 +114,50 @@ router.get('/deathDetails/:appID', async (req, res) => {
   }
 });
 
+router.post('/checkDeathApp', async (req, res) => {
+  const { icno } = req.body;
+
+  if (!icno) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'IC number is required' 
+    });
+  }
+
+  const cleanedICNo = icno.replace(/[^0-9]/g, '');
+  try {
+    const result = await callProcedure(
+      `BEGIN CHECK_DEATH_APP(:cleanedICNo, :message); END;`,
+      {
+        cleanedICNo,
+        message: { dir: oracleDB.BIND_OUT, type: oracleDB.STRING, maxSize: 100 }
+      }
+    );
+
+    const message = result.outBinds.message;
+
+    if (message) {
+      // If there's a message (not null), it means there's an error
+      return res.status(200).json({ 
+        success: false, 
+        message: message 
+      });
+    } else {
+      // If message is null, the checks passed
+      return res.status(200).json({ 
+        success: true, 
+        message: 'Permohonan Layak Dihantar' 
+      });
+    }
+
+  } catch (err) {
+    console.error("Check death application error:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error' 
+    });
+  }
+});
 
 router.post('/reviewDeath', async (req, res) => {
   const {
