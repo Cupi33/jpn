@@ -8,19 +8,49 @@ router.post('/1', async (req, res) => {
   const { citizenID, reasons } = req.body;
 
   try {
-    // Call the stored procedure
+    // ✅ Step 1: Validation (MyKad + Age) before calling procedure
+    if (reasons.toLowerCase() === 'mykid') {
+      // Check if user already has a MYKAD
+      const resultMykad = await execute(
+        `SELECT 1 FROM IC_CARD WHERE CARDTYPE = 'MYKAD' AND citizenID = :citizenID`,
+        [citizenID]
+      );
+
+      if (resultMykad.rows.length > 0) {
+        return res.status(401).json({
+          success: false,
+          message: 'Pengguna sudah pernah mendaftar MyKad'
+        });
+      }
+
+      // Check if user is at least 12 years old
+      const resultAge = await execute(
+        `SELECT get_Age(date_of_birth) AS "age" FROM CITIZEN WHERE citizenID = :citizenID`,
+        [citizenID]
+      );
+
+      const age = resultAge.rows[0].age;
+      if (age < 12) {
+        return res.status(401).json({
+          success: false,
+          message: 'Pengguna belum berusia 12 tahun'
+        });
+      }
+    }
+
+    // ✅ Step 2: Call the stored procedure only if validation passed
     const result = await callProcedure(
       `BEGIN insert_ic_application(:citizenID, :reason, :newaddress, :appID, :icAppID); END;`,
       {
         citizenID,
         reason: reasons,
-        newaddress: null, // No address for this endpoint
+        newaddress: null,
         appID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER },
         icAppID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER }
       }
     );
 
-    // Send success response
+    // ✅ Step 3: Respond success
     res.status(201).json({
       success: true,
       message: 'IC Application sent successfully',
@@ -33,7 +63,7 @@ router.post('/1', async (req, res) => {
   } catch (err) {
     console.error('Application error:', err);
 
-    // Check for Oracle custom trigger error
+    // ✅ Handle Oracle trigger error
     if (err && err.errorNum === 20001) {
       return res.status(400).json({
         success: false,
@@ -41,6 +71,7 @@ router.post('/1', async (req, res) => {
       });
     }
 
+    // ✅ Catch all fallback
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
