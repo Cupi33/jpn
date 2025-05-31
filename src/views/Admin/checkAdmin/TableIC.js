@@ -59,18 +59,7 @@ const notification = (
   const queryParams = new URLSearchParams(location.search);
   const appID = queryParams.get('appID');
 
-  // Define reusable styles
-  const tableCellStyle = {
-    border: '2px solid #000',
-    fontWeight: 700,
-    fontSize: '1.1rem',
-    padding: '12px'
-  };
 
-  const headerCellStyle = {
-    ...tableCellStyle,
-    backgroundColor: '#f8f9fa'
-  };
 
   // Fetch application details when component mounts
   useEffect(() => {
@@ -205,31 +194,31 @@ const notification = (
                   </div>
                 )}
                 
-                <table style={{ 
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  border: '2px solid #000'
-                }}>
+                <table className="table table-bordered">
                   <tbody>
                     <tr>
-                      <td style={headerCellStyle} width="30%">Nama Pemohon</td>
-                      <td style={tableCellStyle}>{application.full_name || 'N/A'}</td>
+                      <td >Nama Pemohon</td>
+                      <td >{application.full_name || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <td style={headerCellStyle}>Nombor Kad Pengenalan</td>
-                      <td style={tableCellStyle}>{application.icno || 'N/A'}</td>
+                      <td >Nombor Kad Pengenalan</td>
+                      <td >{application.icno || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <td style={headerCellStyle}>Sebab Permohonan</td>
-                      <td style={tableCellStyle}>{application.reason_desc || 'N/A'}</td>
+                      <td >Usia Pemohon</td>
+                      <td >{application.age || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <td style={headerCellStyle}>Surat Sokongan</td>
-                      <td style={tableCellStyle}></td>
+                      <td >Sebab Permohonan</td>
+                      <td >{application.reason_desc || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <td style={headerCellStyle}>Komen</td>
-                      <td style={tableCellStyle}>
+                      <td >Surat Sokongan</td>
+                      <td ></td>
+                    </tr>
+                    <tr>
+                      <td >Komen</td>
+                      <td >
                         <Input
                           type="textarea"
                           value={comment}
