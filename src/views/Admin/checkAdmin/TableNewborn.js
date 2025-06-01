@@ -11,6 +11,7 @@ import {
     Input
   } from "reactstrap";
 
+
   import { ToastContainer, toast } from 'react-toastify';
   import 'react-toastify/dist/ReactToastify.css';
   import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -23,6 +24,9 @@ import {
     const [isLoading, setIsLoading] = useState(true);
     const [application, setApplication] = useState(null);
     const [error, setError] = useState(null);
+
+const [isPdfLoading, setIsPdfLoading] = useState(false);
+const [pdfError, setPdfError] = useState(null);
 
     // Get appID from URL query parameters
   const queryParams = new URLSearchParams(location.search);
@@ -79,7 +83,29 @@ import {
     }
   }, [appID]);
 
-
+const handleViewDocument = async () => {
+  setIsPdfLoading(true);
+  setPdfError(null);
+  try {
+    const response = await axios.get(
+      `http://localhost:5000/newbornapply/document/${appID}`,
+      { responseType: 'blob' }
+    );
+    
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  } catch (err) {
+    console.error('Error fetching PDF:', err);
+    setPdfError('Failed to load document');
+    toast.error('Failed to load document', {
+      position: "top-center",
+      autoClose: 3000,
+    });
+  } finally {
+    setIsPdfLoading(false);
+  }
+};
   const handleReviewNewborn = async (decision) => {
     const staffID = sessionStorage.getItem("staffID");
 
@@ -279,10 +305,35 @@ import {
                         <th>Alamat Bayi</th>
                         <td>{application?.ADDRESS || 'N/A'}</td>
                       </tr>
-                      <tr>
-                      <td >Surat Sokongan</td>
-                      <td ></td>
-                    </tr>
+                        <tr>
+                          <td>Surat Sokongan</td>
+                          <td>
+                            <div className="d-flex gap-2">
+                              <Button 
+                                color="primary" 
+                                onClick={handleViewDocument}
+                                disabled={isPdfLoading}
+                                size="sm"
+                              >
+                                {isPdfLoading ? (
+                                  <>
+                                    <Spinner size="sm" /> Loading...
+                                  </>
+                                ) : (
+                                  'View Document'
+                                )}
+                              </Button>
+                              <Button 
+                                color="secondary" 
+                                onClick={() => window.open(`http://localhost:5000/newbornapply/document/${appID}`, '_blank')}
+                                size="sm"
+                              >
+                                Download
+                              </Button>
+                            </div>
+                            {pdfError && <span className="text-danger ml-2">{pdfError}</span>}
+                          </td>
+                        </tr>
                       <tr>
                       <td >Komen</td>
                       <td >
