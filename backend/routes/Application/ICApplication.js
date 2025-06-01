@@ -1,16 +1,20 @@
 import express from 'express';
 import { execute, callProcedure } from "../../config/db.js";
 import oracleDB from 'oracledb';
+import multer from 'multer';
 
 const router = express.Router();
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
-router.post('/1', async (req, res) => {
+// POST /1 - handles 'ha' and 'mykid'
+router.post('/1', upload.single('document'), async (req, res) => {
   const { citizenID, reasons } = req.body;
+  const documentBuffer = req.file?.buffer || null;
 
   try {
-    // ✅ Step 1: Validation (MyKad + Age) before calling procedure
+    // ✅ Step 1: Validation for 'mykid'
     if (reasons.toLowerCase() === 'mykid') {
-      // Check if user already has a MYKAD
       const resultMykad = await execute(
         `SELECT 1 FROM IC_CARD WHERE CARDTYPE = 'MYKAD' AND citizenID = :citizenID`,
         [citizenID]
@@ -23,7 +27,6 @@ router.post('/1', async (req, res) => {
         });
       }
 
-      // Check if user is at least 12 years old
       const resultAge = await execute(
         `SELECT get_Age(date_of_birth) AS "age" FROM CITIZEN WHERE citizenID = :citizenID`,
         [citizenID]
@@ -38,19 +41,19 @@ router.post('/1', async (req, res) => {
       }
     }
 
-    // ✅ Step 2: Call the stored procedure only if validation passed
+    // ✅ Step 2: Call stored procedure
     const result = await callProcedure(
-      `BEGIN insert_ic_application(:citizenID, :reason, :newaddress, :appID, :icAppID); END;`,
+      `BEGIN insert_ic_application(:citizenID, :reason, :newaddress, :document, :appID, :icAppID); END;`,
       {
         citizenID,
         reason: reasons,
         newaddress: null,
+        document: documentBuffer, // only used if 'ha'
         appID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER },
         icAppID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER }
       }
     );
 
-    // ✅ Step 3: Respond success
     res.status(201).json({
       success: true,
       message: 'IC Application sent successfully',
@@ -63,7 +66,6 @@ router.post('/1', async (req, res) => {
   } catch (err) {
     console.error('Application error:', err);
 
-    // ✅ Handle Oracle trigger error
     if (err && err.errorNum === 20001) {
       return res.status(400).json({
         success: false,
@@ -71,28 +73,27 @@ router.post('/1', async (req, res) => {
       });
     }
 
-    // ✅ Catch all fallback
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
 
 router.post('/2', async (req, res) => {
   const { citizenID, address } = req.body;
 
   try {
-    // Call the stored procedure
     const result = await callProcedure(
-      `BEGIN insert_ic_application(:citizenID, :reason, :newaddress, :appID, :icAppID); END;`,
+      `BEGIN insert_ic_application(:citizenID, :reason, :newaddress, :document, :appID, :icAppID); END;`,
       {
         citizenID,
-        reason: 'ta', // Hardcoded reason for address change
+        reason: 'ta',
         newaddress: address,
+        document: null, // no document for 'ta'
         appID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER },
         icAppID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER }
       }
     );
 
-    // Update address in citizen table
     await execute(
       `UPDATE CITIZEN
        SET address = :1
@@ -102,7 +103,6 @@ router.post('/2', async (req, res) => {
 
     await execute('COMMIT');
 
-    // Send success response
     res.status(201).json({
       success: true,
       message: 'IC Application sent successfully',
@@ -115,7 +115,6 @@ router.post('/2', async (req, res) => {
   } catch (err) {
     console.error('Application error:', err);
 
-    // Check for Oracle custom trigger error
     if (err && err.errorNum === 20001) {
       return res.status(400).json({
         success: false,
@@ -126,6 +125,7 @@ router.post('/2', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
 
 router.get('/tableIC', async (req, res) => {
   try {

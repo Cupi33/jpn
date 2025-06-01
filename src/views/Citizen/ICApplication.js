@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 const ICApplication = () => {
     const [selectedReason, setSelectedReason] = useState(''); // 👈 create state to track the selected reason
     const navigate = useNavigate();
+    const [reportFile, setReportFile] = useState(null); // 🆕 handle uploaded file
     const handleReasonChange = (e) => {
         setSelectedReason(e.target.value);
     };
@@ -25,18 +26,40 @@ const handleSubmit = async () => {
 
   try {
     let response;
+
     if (selectedReason === 'ta') {
       if (!address.trim()) {
         Swal.fire('Sila masukkan alamat baru.');
         return;
       }
-      // POST to /2
+
+      // POST to /2 with JSON
       response = await axios.post('http://localhost:5000/icapply/2', {
         citizenID,
         address
       });
+
+    } else if (selectedReason === 'ha') {
+      // Validate file presence
+      if (!reportFile) {
+        Swal.fire('Sila muat naik surat laporan PDRM.');
+        return;
+      }
+
+      // POST to /1 with FormData
+      const formData = new FormData();
+      formData.append('citizenID', citizenID);
+      formData.append('reasons', selectedReason);
+      formData.append('document', reportFile);
+
+      response = await axios.post('http://localhost:5000/icapply/1', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
     } else {
-      // POST to /1
+      // POST to /1 without file
       response = await axios.post('http://localhost:5000/icapply/1', {
         citizenID,
         reasons: selectedReason
@@ -58,16 +81,15 @@ const handleSubmit = async () => {
   } catch (err) {
     console.error('Submission error:', err);
 
-  // Check if backend provided a friendly error message
-  if (err.response && err.response.data && err.response.data.message) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Permohonan Ditolak',
-      text: err.response.data.message,
-    });
-  } else {
-    Swal.fire('Ralat server! Sila cuba lagi.');
-  }
+    if (err.response && err.response.data && err.response.data.message) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Permohonan Ditolak',
+        text: err.response.data.message,
+      });
+    } else {
+      Swal.fire('Ralat server! Sila cuba lagi.');
+    }
   }
 };
 
@@ -174,8 +196,9 @@ const handleSubmit = async () => {
                                                                 className="form-control"
                                                                 id="upload-report"
                                                                 type="file"
-                                                                accept=".pdf,.jpg,.jpeg,.png"
-                                                            />
+                                                                accept=".pdf"
+                                                                onChange={(e) => setReportFile(e.target.files[0])}
+                                                              />
                                                         </FormGroup>
                                                     </Col>
                                                 </Row>
