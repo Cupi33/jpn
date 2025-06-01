@@ -1,11 +1,22 @@
 import express from 'express';
 import { execute, callProcedure } from "../../config/db.js";
 import oracleDB from 'oracledb';
+import multer from 'multer';
+
 
 const router = express.Router();
 
-router.post('/1', async (req, res) => {
-  const {citizenID, fatherID,motherID,babyName,gender,dob,religion,race,address } = req.body;
+// Setup multer for memory storage (no file system saving)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+router.post('/1', upload.single('document'), async (req, res) => {
+  const {
+    citizenID, fatherID, motherID, babyName, gender,
+    dob, religion, race, address
+  } = req.body;
+
+  const documentBuffer = req.file ? req.file.buffer : null;
 
   try {
     // Step 1: Get next appID from application sequence
@@ -23,19 +34,21 @@ router.post('/1', async (req, res) => {
     const nbAppIDResult = await execute(`SELECT newborn_application_seq.NEXTVAL AS nbAppID FROM dual`);
     const nbAppID = nbAppIDResult.rows[0].NBAPPID;
 
-    // Step 4: Insert into newborn_application with its own nbAppID, and link to appID
+    // Step 4: Insert into newborn_application with document
     await execute(
-  `INSERT INTO NEWBORN_APPLICATION(nbAppID, APPID, fatherID, motherID,
-    babyName, gender, date_of_birth, religion, race, address)
-   VALUES (:1, :2, :3, :4, :5, :6, TO_DATE(:7, 'YYYY-MM-DD'), :8, :9, :10)`,
-  [nbAppID, appID, fatherID, motherID, babyName, gender,
-    dob, religion, race, address]
-);
+      `INSERT INTO NEWBORN_APPLICATION
+        (nbAppID, APPID, fatherID, motherID, babyName, gender, date_of_birth, religion, race, address, document_detail)
+       VALUES
+        (:1, :2, :3, :4, :5, :6, TO_DATE(:7, 'YYYY-MM-DD'), :8, :9, :10, :11)`,
+      [
+        nbAppID, appID, fatherID, motherID,
+        babyName, gender, dob, religion,
+        race, address, documentBuffer
+      ],
+      { autoCommit: true }
+    );
 
-    // Step 5: Commit
-    await execute('COMMIT');
-
-    // Step 6: Send success response
+    // Step 5: Send success response
     res.status(201).json({
       success: true,
       message: 'Newborn Application sent successfully',
@@ -240,4 +253,67 @@ router.post('/reviewNewborn', async (req, res) => {
   }
 });
 
+router.get('/document/:appid', async (req, res) => {
+  let connection;
+  try {
+    // Get a dedicated connection for this operation
+    connection = await oracleDB.getConnection({
+      user: "cupi",
+      password: "password",
+      connectString: "127.0.0.1:10521/jpn"
+    });
+
+    const result = await connection.execute(
+      `SELECT document_detail FROM newborn_application WHERE appid = :1`,
+      [req.params.appid],
+      { outFormat: oracleDB.OUT_FORMAT_OBJECT }
+    );
+
+    if (!result.rows.length || !result.rows[0].DOCUMENT_DETAIL) {
+      return res.status(404).send('No document found');
+    }
+
+    const blob = result.rows[0].DOCUMENT_DETAIL;
+    
+    // Approach 1: Try getData() first (for newer oracledb versions)
+    if (typeof blob.getData === 'function') {
+      try {
+        const data = await blob.getData();
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=document_${req.params.appid}.pdf`);
+        return res.send(data);
+      } catch (getDataError) {
+        console.log('getData() failed, falling back to streaming:', getDataError.message);
+        // Continue to streaming approach
+      }
+    }
+
+    // Approach 2: Streaming fallback
+    return new Promise((resolve) => {
+      let chunks = [];
+      blob.setEncoding('binary');
+      
+      blob.on('data', (chunk) => chunks.push(Buffer.from(chunk, 'binary')));
+      blob.on('end', () => {
+        const pdfBuffer = Buffer.concat(chunks);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=document_${req.params.appid}.pdf`);
+        res.send(pdfBuffer);
+        connection.close().catch(console.error);
+        resolve();
+      });
+      blob.on('error', (err) => {
+        console.error('BLOB stream error:', err);
+        res.status(500).send('Error streaming document');
+        connection.close().catch(console.error);
+        resolve();
+      });
+    });
+
+  } catch (err) {
+    console.error('Document retrieval error:', err);
+    res.status(500).send('Error fetching document');
+    if (connection) connection.close().catch(console.error);
+  }
+});
 export default router;

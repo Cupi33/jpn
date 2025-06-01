@@ -280,6 +280,10 @@ import {
                         <td>{application?.ADDRESS || 'N/A'}</td>
                       </tr>
                       <tr>
+                      <td >Surat Sokongan</td>
+                      <td ></td>
+                    </tr>
+                      <tr>
                       <td >Komen</td>
                       <td >
                         <Input

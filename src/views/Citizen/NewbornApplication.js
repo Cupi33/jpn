@@ -18,6 +18,7 @@ const NewbornApplication = () => {
     const [fatherICNO,setFatherICNO] = useState('');
     const [motherFullname,setMotherFullName] = useState('');
     const [motherICNO,setMotherICNO] = useState('');
+    const [document_detail, setDocument_Detail] = useState('');
     
     const [errorFather, setErrorFather] = useState('');
     const [errorMother, setErrorMother] = useState('');
@@ -95,17 +96,26 @@ const handleSubmit = async () => {
   console.log('Father ID:', fatherID);
   console.log('Mother ID:', motherID);
 
+  // Create FormData for file upload
+  const formData = new FormData();
+  formData.append('citizenID', citizenID);
+  formData.append('fatherID', fatherID);
+  formData.append('motherID', motherID);
+  formData.append('babyName', fullname.trim());
+  formData.append('gender', gender);
+  formData.append('dob', dob);
+  formData.append('religion', religion);
+  formData.append('race', race);
+  formData.append('address', address.trim());
+  if (document_detail) {
+    formData.append('document', document_detail); // This matches the multer field name
+  }
+
   try {
-    const response = await axios.post('http://localhost:5000/newbornapply/1', {
-      citizenID,
-      fatherID,
-      motherID,
-      babyName: fullname.trim(),
-      gender,
-      dob,
-      religion,
-      race,
-      address: address.trim()
+    const response = await axios.post('http://localhost:5000/newbornapply/1', formData, {
+       headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     });
 
     const { data } = response;
@@ -305,22 +315,22 @@ useEffect(() => {
                                     </Col>
                                 </Row>
 
-
-                                <FormGroup>
-                                <label
+                                    <FormGroup>
+                                    <label
                                         className="form-control-label"
-                                        htmlFor="upload-police-report"
-                                > 
-                                    Sijil Lahir Daripada Hospital
-                                </label>
-                                <Input
-                                    className="form-control"
-                                    id="upload-hospital-report"
-                                    type="file"
-                                    accept=".pdf,.jpg,.jpeg,.png" // Accept only certain file types
-                                />
-                            </FormGroup>
-
+                                        htmlFor="upload-hospital-report"
+                                    > 
+                                        Sijil Lahir Daripada Hospital
+                                    </label>
+                                    <Input
+                                        className="form-control"
+                                        id="upload-hospital-report"
+                                        type="file"
+                                        accept=".pdf"
+                                        onChange={(e) => setDocument_Detail(e.target.files[0])} // store File object
+                                    />
+                                    </FormGroup>
+-
                             </div>
                             </Form>
                         </Col>
