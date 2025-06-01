@@ -24,6 +24,8 @@ import {
     const [isLoading, setIsLoading] = useState(true);
     const [application, setApplication] = useState(null);
     const [error, setError] = useState(null);
+    const appType = "NEWBORN"; // initialize appType
+
 
 const [isPdfLoading, setIsPdfLoading] = useState(false);
 const [pdfError, setPdfError] = useState(null);
@@ -86,19 +88,38 @@ const [pdfError, setPdfError] = useState(null);
 const handleViewDocument = async () => {
   setIsPdfLoading(true);
   setPdfError(null);
+
   try {
     const response = await axios.get(
-      `http://localhost:5000/newbornapply/document/${appID}`,
-      { responseType: 'blob' }
+      `http://localhost:5000/newbornapply/document/${appID}?appType=${appType}`,
+      { responseType: 'blob', validateStatus: false } // 👈 this is important
     );
-    
+
+    // Handle 404 manually
+    if (response.status === 404) {
+      toast.warning('Dokumen Tidak Dijumpai', {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      return; // stop further execution
+    }
+
+    // If other errors, or empty blob
+    if (!response.data || response.data.size === 0) {
+      toast.warning('Dokumen Tidak Dijumpai', {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      return;
+    }
+
     const blob = new Blob([response.data], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
+
   } catch (err) {
     console.error('Error fetching PDF:', err);
-    setPdfError('Failed to load document');
-    toast.error('Failed to load document', {
+    toast.error('Ralat ketika memuatkan dokumen.', {
       position: "top-center",
       autoClose: 3000,
     });
@@ -106,6 +127,8 @@ const handleViewDocument = async () => {
     setIsPdfLoading(false);
   }
 };
+
+
   const handleReviewNewborn = async (decision) => {
     const staffID = sessionStorage.getItem("staffID");
 

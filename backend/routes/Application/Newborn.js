@@ -254,9 +254,26 @@ router.post('/reviewNewborn', async (req, res) => {
 });
 
 router.get('/document/:appid', async (req, res) => {
+  const { appid } = req.params;
+  const { appType } = req.query; // NEWBORN, IC, DEATH
   let connection;
+
+  // Determine table name based on appType
+  let tableName;
+  switch ((appType || '').toUpperCase()) {
+    case 'IC':
+      tableName = 'ic_application';
+      break;
+    case 'DEATH':
+      tableName = 'death_application';
+      break;
+    case 'NEWBORN':
+    default:
+      tableName = 'newborn_application';
+      break;
+  }
+
   try {
-    // Get a dedicated connection for this operation
     connection = await oracleDB.getConnection({
       user: "cupi",
       password: "password",
@@ -264,8 +281,8 @@ router.get('/document/:appid', async (req, res) => {
     });
 
     const result = await connection.execute(
-      `SELECT document_detail FROM newborn_application WHERE appid = :1`,
-      [req.params.appid],
+      `SELECT document_detail FROM ${tableName} WHERE appid = :1`,
+      [appid],
       { outFormat: oracleDB.OUT_FORMAT_OBJECT }
     );
 
@@ -274,30 +291,29 @@ router.get('/document/:appid', async (req, res) => {
     }
 
     const blob = result.rows[0].DOCUMENT_DETAIL;
-    
-    // Approach 1: Try getData() first (for newer oracledb versions)
+
+    // Try getData() method
     if (typeof blob.getData === 'function') {
       try {
         const data = await blob.getData();
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=document_${req.params.appid}.pdf`);
+        res.setHeader('Content-Disposition', `attachment; filename=document_${appid}.pdf`);
         return res.send(data);
-      } catch (getDataError) {
-        console.log('getData() failed, falling back to streaming:', getDataError.message);
-        // Continue to streaming approach
+      } catch (err) {
+        console.log('getData() failed, falling back to stream:', err.message);
       }
     }
 
-    // Approach 2: Streaming fallback
+    // Stream fallback
     return new Promise((resolve) => {
       let chunks = [];
       blob.setEncoding('binary');
-      
+
       blob.on('data', (chunk) => chunks.push(Buffer.from(chunk, 'binary')));
       blob.on('end', () => {
         const pdfBuffer = Buffer.concat(chunks);
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=document_${req.params.appid}.pdf`);
+        res.setHeader('Content-Disposition', `attachment; filename=document_${appid}.pdf`);
         res.send(pdfBuffer);
         connection.close().catch(console.error);
         resolve();
@@ -316,4 +332,5 @@ router.get('/document/:appid', async (req, res) => {
     if (connection) connection.close().catch(console.error);
   }
 });
+
 export default router;
