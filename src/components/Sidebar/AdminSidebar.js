@@ -113,11 +113,12 @@ const AdminSidebar = (props) => {
         </button>
         {/* Brand */}
         {logo ? (
-          <NavbarBrand className="pt-0" {...navbarBrandProps}>
+          <NavbarBrand className="pt-0"  style={{ height: 'auto' }} {...navbarBrandProps}>
             <img
               alt={logo.imgAlt}
               className="navbar-brand-img"
               src={logo.imgSrc}
+              style={{ width: '150px', height: '310px'}}
             />
           </NavbarBrand>
         ) : null}
