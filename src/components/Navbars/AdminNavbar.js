@@ -70,16 +70,6 @@ const AdminNavbar = () => {
                   <span className="nav-link-inner--text">Log Keluar</span>
                 </NavLink>
               </NavItem>
-              <NavItem>
-                <NavLink
-                  className="nav-link-icon"
-                  to="/citizenMenu/user-profile"
-                  tag={Link}
-                >
-                  <i className="ni ni-single-02" />
-                  <span className="nav-link-inner--text">Profil Pengguna</span>
-                </NavLink>
-              </NavItem>
             </Nav>
           </UncontrolledCollapse>
         </Container>
