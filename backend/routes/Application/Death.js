@@ -1,11 +1,21 @@
 import express from 'express';
 import { execute,callProcedure } from "../../config/db.js";
 import oracleDB from 'oracledb';
+import multer from 'multer';
 
 const router = express.Router();
 
-router.post('/1', async (req, res) => {
-  const { citizenID, deceasedID, relationship,deathDate } = req.body;
+// Setup multer for memory storage (no file system saving)
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+router.post('/1', upload.single('document'), async (req, res) => {
+  const { citizenID, deceasedID, relationship, deathDate } = req.body;
+  const documentBuffer = req.file?.buffer || null; // Get the uploaded file buffer
+
+  // Debugging: Log the file information
+  console.log('Uploaded file:', req.file);
+  console.log('Document buffer exists:', !!documentBuffer);
 
   try {
     // Step 1: Get next appID from application sequence
@@ -23,12 +33,12 @@ router.post('/1', async (req, res) => {
     const deathIDResult = await execute(`SELECT death_application_seq.NEXTVAL AS deathAppID FROM dual`);
     const deathAppID = deathIDResult.rows[0].DEATHAPPID;
 
-    // Step 4: Insert into ic_application with its own icAppID, and link to appID
+    // Step 4: Insert into DEATH_APPLICATION including the document
     await execute(
       `INSERT INTO DEATH_APPLICATION
-      (deathAppID, appID, deceasedID , relationship,deathDate)
-      values (:1,:2,:3,:4,TO_DATE(:5,'yyyy-mm-dd'))`,
-      [deathAppID, appID, deceasedID, relationship, deathDate]
+        (deathAppID, appID, deceasedID, relationship, deathDate, DOCUMENT_DETAIL)
+       VALUES (:1, :2, :3, :4, TO_DATE(:5, 'yyyy-mm-dd'), :6)`,
+      [deathAppID, appID, deceasedID, relationship, deathDate, documentBuffer]
     );
 
     // Step 5: Commit

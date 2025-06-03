@@ -41,71 +41,72 @@ const validateDeceased = async (fullname, icno) => {
         }
 };
 
+const handleSubmit = async () => {
+  const citizenID = sessionStorage.getItem('citizenID');
+  setErrorDeceased('');
+  setSuccessMsg('');
 
- const handleSubmit = async () => {
-    const citizenID = sessionStorage.getItem('citizenID');
-    setErrorDeceased('');
-    setSuccessMsg('');
+  if (!fullname || !icno || !relationship || !deathDate) {
+    Swal.fire({ icon: 'warning', title: 'Pastikan semua ruangan borang diisi', confirmButtonText: 'OK' });
+    return;
+  }
 
-    // Validate required fields
-    if (!fullname || !icno || !relationship || !deathDate) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Pastikan semua ruangan borang diisi',
-        confirmButtonText: 'OK'
-      });
+  try {
+    const deceasedID = await validateDeceased(fullname, icno);
+    if (!deceasedID) {
+      setErrorDeceased('Nama penuh dan nombor IC si mati tidak sepadan.');
       return;
     }
 
-    try {
-      // Step 1: Validate deceased exists
-      const deceasedID = await validateDeceased(fullname, icno);
-      if (!deceasedID) {
-        setErrorDeceased('Nama penuh dan nombor IC si mati tidak sepadan.');
-        return;
-      }
+    const checkResponse = await axios.post('http://localhost:5000/deathapply/checkDeathApp', {
+      icno
+    }, {
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-      // Step 2: Check death application validity
-      const checkResponse = await axios.post('http://localhost:5000/deathapply/checkDeathApp', {
-        icno
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!checkResponse.data.success) {
-        Swal.fire({
-          icon: 'warning',
-          title: checkResponse.data.message,
-          confirmButtonText: 'OK'
-        });
-        return;
-      }
-
-      // Step 3: Submit application if all validations pass
-      const response = await axios.post('http://localhost:5000/deathapply/1', {
-        citizenID,
-        deceasedID,
-        relationship,
-        deathDate
-      });
-
-      Swal.fire({
-        icon: response.data.success ? 'success' : 'error',
-        title: response.data.message,
-        confirmButtonText: 'Pergi ke halaman utama',
-      }).then(() => {
-        if (response.data.success) {
-          navigate('/citizenMenu/index');
-        }
-      });
-
-    } catch (err) {
-      console.error('Submission error:', err);
-      Swal.fire('Ralat server! Sila cuba lagi.');
+    if (!checkResponse.data.success) {
+      Swal.fire({ icon: 'warning', title: checkResponse.data.message, confirmButtonText: 'OK' });
+      return;
     }
-  };
+
+    // Create FormData object
+    const formData = new FormData();
+    formData.append('citizenID', citizenID);
+    formData.append('deceasedID', deceasedID);
+    formData.append('relationship', relationship);
+    formData.append('deathDate', deathDate);
+
+    // Get the file input
+    const fileInput = document.getElementById('upload-police-report');
+    if (fileInput.files.length > 0) {
+      formData.append('document', fileInput.files[0]); // Make sure 'document' matches the multer field name
+    } else {
+      Swal.fire({ icon: 'warning', title: 'Sila muat naik Surat Kematian', confirmButtonText: 'OK' });
+      return;
+    }
+
+    // Send the request with proper headers
+    const response = await axios.post('http://localhost:5000/deathapply/1', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data' // This is crucial
+      }
+    });
+
+    Swal.fire({
+      icon: response.data.success ? 'success' : 'error',
+      title: response.data.message,
+      confirmButtonText: 'Pergi ke halaman utama',
+    }).then(() => {
+      if (response.data.success) {
+        navigate('/citizenMenu/index');
+      }
+    });
+
+  } catch (err) {
+    console.error('Submission error:', err);
+    Swal.fire('Ralat server! Sila cuba lagi.');
+  }
+};
 
   useEffect(() => {
     const storedCitizenID = sessionStorage.getItem('citizenID');
@@ -243,7 +244,7 @@ const validateDeceased = async (fullname, icno) => {
                 className="form-control"
                 id="upload-police-report"
                 type="file"
-                accept=".pdf,.jpg,.jpeg,.png" // Accept only certain file types
+                accept=".pdf" // Accept only certain file types
               />
            </FormGroup>
 
