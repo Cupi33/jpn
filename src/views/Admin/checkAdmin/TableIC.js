@@ -22,25 +22,26 @@ const TableIC = () => {
   const [application, setApplication] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const [comment, setComment] = useState(""); // State for comment input
-  const [isSubmitting, setIsSubmitting] = useState(false); // State for submit loading
-  const [submitError, setSubmitError] = useState(null); // State for submit errors
+  const [comment, setComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
 
-  // Add this component just before your return statement
-const notification = (
-  <ToastContainer
-    position="top-center"
-    autoClose={3000}
-    hideProgressBar={false}
-    newestOnTop
-    closeOnClick
-    rtl={false}
-    pauseOnFocusLoss
-    draggable
-    pauseOnHover
-    theme="colored"
-  />
-);
+  const notification = (
+    <ToastContainer
+      position="top-center"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="colored"
+    />
+  );
 
   useEffect(() => {
     const storedStaffID = sessionStorage.getItem('staffID');
@@ -55,13 +56,9 @@ const notification = (
     }
   }, [navigate]);
 
-  // Get appID from URL query parameters
   const queryParams = new URLSearchParams(location.search);
   const appID = queryParams.get('appID');
 
-
-
-  // Fetch application details when component mounts
   useEffect(() => {
     const fetchApplicationDetails = async () => {
       try {
@@ -88,51 +85,87 @@ const notification = (
     }
   }, [appID]);
 
-  const handleReview = async (decision) => {
-  setIsSubmitting(true);
-  setSubmitError(null);
-  
-  try {
-    const staffID = sessionStorage.getItem('staffID');
-    
-    const response = await axios.post('http://localhost:5000/icapply/reviewIC', {
-      appID: parseInt(appID),
-      staffID: parseInt(staffID),
-      decision,
-      comments: comment,
-      address: application.address
-    });
+  const handleViewDocument = async () => {
+    setIsPdfLoading(true);
+    setPdfError(null);
 
-    if (response.data.success) {
-      toast.success(
-        decision === 'ACCEPT' 
-          ? 'Permohonan diterima!' 
-          : 'Permohonan ditolak!', 
-        {
-          position: "top-center",
-          autoClose: 3000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/newbornapply/document/${appID}?appType=IC`,
+        { 
+          responseType: 'blob',
+          headers: {
+            'Content-Type': 'application/pdf',
+          }
         }
       );
-      setTimeout(() => navigate('/adminApplication/checkIC'), 3000);
-    } else {
-      setSubmitError(response.data.message || 'Failed to submit review');
-    }
-  } catch (err) {
-    toast.error(
-      err.response?.data?.message || 'Server error during review submission',
-      {
-        position: "top-center",
-        autoClose: 5000,
+
+      if (response.status === 200) {
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      } else {
+        toast.error('Dokumen tidak dijumpai', {
+          position: "top-center",
+          autoClose: 3000,
+        });
       }
-    );
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    } catch (err) {
+      console.error('Error fetching PDF:', err);
+      toast.error('Ralat ketika memuatkan dokumen', {
+        position: "top-center",
+        autoClose: 3000,
+      });
+    } finally {
+      setIsPdfLoading(false);
+    }
+  };
+
+  const handleReview = async (decision) => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
+    try {
+      const staffID = sessionStorage.getItem('staffID');
+      
+      const response = await axios.post('http://localhost:5000/icapply/reviewIC', {
+        appID: parseInt(appID),
+        staffID: parseInt(staffID),
+        decision,
+        comments: comment,
+        address: application.address
+      });
+
+      if (response.data.success) {
+        toast.success(
+          decision === 'ACCEPT' 
+            ? 'Permohonan diterima!' 
+            : 'Permohonan ditolak!', 
+          {
+            position: "top-center",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          }
+        );
+        setTimeout(() => navigate('/adminApplication/checkIC'), 3000);
+      } else {
+        setSubmitError(response.data.message || 'Failed to submit review');
+      }
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || 'Server error during review submission',
+        {
+          position: "top-center",
+          autoClose: 5000,
+        }
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -167,18 +200,18 @@ const notification = (
 
   return (
     <>
-    <ToastContainer
-      position="top-center"
-      autoClose={3000}
-      hideProgressBar={false}
-      newestOnTop
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme="colored"
-    />
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
       <Container className="mt--7" fluid>
         <Row className="mt-5">
           <Col md="12">
@@ -197,28 +230,56 @@ const notification = (
                 <table className="table table-bordered">
                   <tbody>
                     <tr>
-                      <td >Nama Pemohon</td>
-                      <td >{application.full_name || 'N/A'}</td>
+                      <td>Nama Pemohon</td>
+                      <td>{application.full_name || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <td >Nombor Kad Pengenalan</td>
-                      <td >{application.icno || 'N/A'}</td>
+                      <td>Nombor Kad Pengenalan</td>
+                      <td>{application.icno || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <td >Usia Pemohon</td>
-                      <td >{application.age || 'N/A'}</td>
+                      <td>Usia Pemohon</td>
+                      <td>{application.age || 'N/A'}</td>
                     </tr>
                     <tr>
-                      <td >Sebab Permohonan</td>
-                      <td >{application.reason_desc || 'N/A'}</td>
+                      <td>Sebab Permohonan</td>
+                      <td>{application.reason_desc || 'N/A'}</td>
                     </tr>
+                    {/* Conditionally render document row only for 'ha' reason */}
+                    {application.reason === 'ha' && (
+                      <tr>
+                        <td>Surat Laporan Polis</td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <Button 
+                              color="primary" 
+                              onClick={handleViewDocument}
+                              disabled={isPdfLoading}
+                              size="sm"
+                            >
+                              {isPdfLoading ? (
+                                <>
+                                  <Spinner size="sm" /> Loading...
+                                </>
+                              ) : (
+                                'View Document'
+                              )}
+                            </Button>
+                            <Button 
+                              color="secondary" 
+                              onClick={() => window.open(`http://localhost:5000/newbornapply/document/${appID}?appType=IC`, '_blank')}
+                              size="sm"
+                            >
+                              Download
+                            </Button>
+                          </div>
+                          {pdfError && <span className="text-danger ml-2">{pdfError}</span>}
+                        </td>
+                      </tr>
+                    )}
                     <tr>
-                      <td >Surat Sokongan</td>
-                      <td ></td>
-                    </tr>
-                    <tr>
-                      <td >Komen</td>
-                      <td >
+                      <td>Komen</td>
+                      <td>
                         <Input
                           type="textarea"
                           value={comment}
