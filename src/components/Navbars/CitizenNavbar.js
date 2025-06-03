@@ -49,25 +49,9 @@ const CitizenNavbar = () => {
             </div>
             <Nav className="ml-auto" navbar>
               <NavItem>
-                <NavLink className="nav-link-icon" to="/" tag={Link}>
+                <NavLink className="nav-link-icon" to="/citizenMenu/index" tag={Link}>
                   <i className="ni ni-planet" />
                   <span className="nav-link-inner--text">Dashboard</span>
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink
-                  className="nav-link-icon"
-                  to="/authCitizen/register"
-                  tag={Link}
-                >
-                  <i className="ni ni-single-02" />
-                  <span className="nav-link-inner--text">Profil</span>
-                </NavLink>
-              </NavItem>
-              <NavItem>
-                <NavLink className="nav-link-icon" to="/authCitizen/login" tag={Link}>
-                  <i className="ni ni-key-25" />
-                  <span className="nav-link-inner--text">Log Keluar</span>
                 </NavLink>
               </NavItem>
               <NavItem>
@@ -78,6 +62,12 @@ const CitizenNavbar = () => {
                 >
                   <i className="ni ni-single-02" />
                   <span className="nav-link-inner--text">Profil Pengguna</span>
+                </NavLink>
+              </NavItem>
+                            <NavItem>
+                <NavLink className="nav-link-icon" to="/authCitizen/login" tag={Link}>
+                  <i className="ni ni-key-25" />
+                  <span className="nav-link-inner--text">Log Keluar</span>
                 </NavLink>
               </NavItem>
             </Nav>
