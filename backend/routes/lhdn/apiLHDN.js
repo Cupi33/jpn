@@ -1,7 +1,7 @@
 import express from 'express';
-import { execute, callProcedure } from "../../config/db.js";
-import oracleDB from 'oracledb';
-import multer from 'multer';
+import { execute } from "../../config/db.js";
+// import oracleDB from 'oracledb';
+// import multer from 'multer';
 
 const router = express.Router();
 
@@ -10,8 +10,7 @@ router.post('/profile', async (req, res) => {
 
   try {
     const result = await execute(
-      `SELECT full_name as "fullname", address AS "address"  
-        FROM citizen
+      `SELECT * FROM BASIC_INFO_LHDN
         WHERE icno = :icno`,
       [icno]  
     );
@@ -25,10 +24,11 @@ router.post('/profile', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Qeury Retrieval successful',
+      message: 'Query Retrieval successful',
       user: {
-        fullname: user.fullname,         // match your table columns
-        address: user.address,
+        fullname: user.FULLNAME,         // match your table columns
+        address: user.ADDRESS,
+        status: user.STATUS
       }
     });
 
