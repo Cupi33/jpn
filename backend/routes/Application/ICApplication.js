@@ -43,16 +43,20 @@ router.post('/1', upload.single('document'), async (req, res) => {
 
     // ✅ Step 2: Call stored procedure
     const result = await callProcedure(
-      `BEGIN insert_ic_application(:citizenID, :reason, :newaddress, :document, :appID, :icAppID); END;`,
-      {
-        citizenID,
-        reason: reasons,
-        newaddress: null,
-        document: documentBuffer, // only used if 'ha'
-        appID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER },
-        icAppID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER }
-      }
-    );
+  `BEGIN insert_ic_application(:citizenID, :reason, :newaddress, :document, :appID, :icAppID); END;`,
+  {
+    citizenID,
+    reason: reasons,
+    newaddress: null,
+    document:
+      reasons.toLowerCase() === 'ha'
+        ? documentBuffer
+        : Buffer.from(''), // 🛠️ fix: always pass a valid BLOB
+    appID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER },
+    icAppID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER }
+  }
+);
+
 
     res.status(201).json({
       success: true,
@@ -88,7 +92,7 @@ router.post('/2', async (req, res) => {
         citizenID,
         reason: 'ta',
         newaddress: address,
-        document: null, // no document for 'ta'
+        document: Buffer.from(''), // no document for 'ta'
         appID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER },
         icAppID: { dir: oracleDB.BIND_OUT, type: oracleDB.NUMBER }
       }
