@@ -24,6 +24,10 @@ import {
     const [error, setError] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
+    const appType = "DEATH"; // initialize appType
+
+    const [isPdfLoading, setIsPdfLoading] = useState(false);
+    const [pdfError, setPdfError] = useState(null);
 
     // Get appID from URL query parameters
     const queryParams = new URLSearchParams(location.search);
@@ -74,6 +78,49 @@ import {
       setIsLoading(false);
     }
   }, [appID]); 
+
+  const handleViewDocument = async () => {
+  setIsPdfLoading(true);
+  setPdfError(null);
+
+  try {
+    const response = await axios.get(
+      `http://localhost:5000/newbornapply/document/${appID}?appType=${appType}`,
+      { responseType: 'blob', validateStatus: false } // 👈 this is important
+    );
+
+    // Handle 404 manually
+    if (response.status === 404) {
+      toast.warning('Dokumen Tidak Dijumpai', {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      return; // stop further execution
+    }
+
+    // If other errors, or empty blob
+    if (!response.data || response.data.size === 0) {
+      toast.warning('Dokumen Tidak Dijumpai', {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      return;
+    }
+
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+
+  } catch (err) {
+    console.error('Error fetching PDF:', err);
+    toast.error('Ralat ketika memuatkan dokumen.', {
+      position: "top-center",
+      autoClose: 3000,
+    });
+  } finally {
+    setIsPdfLoading(false);
+  }
+};
 
 
   if (isLoading) {
@@ -215,15 +262,34 @@ const handleReviewDeath = async (decision) => {
                         <td>{application?.deceased_icno || 'N/A'}</td>
                       </tr>
                       <tr>
-                        <th>Surat Sokongan</th>
-                        <td>
-                          {
-                            application?.support_doc
-                              ? <a href={`http://localhost:5000/uploads/${application.support_doc}`} target="_blank" rel="noopener noreferrer">Lihat Dokumen</a>
-                              : 'Tiada dokumen'
-                          }
-                        </td>
-                      </tr>
+                          <td>Surat Sokongan</td>
+                          <td>
+                            <div className="d-flex gap-2">
+                              <Button 
+                                color="primary" 
+                                onClick={handleViewDocument}
+                                disabled={isPdfLoading}
+                                size="sm"
+                              >
+                                {isPdfLoading ? (
+                                  <>
+                                    <Spinner size="sm" /> Loading...
+                                  </>
+                                ) : (
+                                  'View Document'
+                                )}
+                              </Button>
+                              <Button 
+                                color="secondary" 
+                                onClick={() => window.open(`http://localhost:5000/newbornapply/document/${appID}?appType=DEATH`, '_blank')}
+                                size="sm"
+                              >
+                                Download
+                              </Button>
+                            </div>
+                            {pdfError && <span className="text-danger ml-2">{pdfError}</span>}
+                          </td>
+                        </tr>
                       <td >Komen</td>
                       <td >
                         <Input
