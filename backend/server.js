@@ -6,7 +6,8 @@ import generalStat from './routes/stats/generalStat.js'
 import ICApplication from './routes/Application/ICApplication.js'
 import NewbornApplication from './routes/Application/Newborn.js'
 import DeathApplication from './routes/Application/Death.js'
-import LHDNApi from './routes/lhdn/apiLHDN.js'
+import LHDNApi from './routes/govApi/apiLHDN.js'
+import THApi from './routes/govApi/apiTH.js'
 
 const app = express();
 app.use(cors(
@@ -25,6 +26,7 @@ app.use('/icapply',ICApplication);
 app.use('/newbornapply',NewbornApplication);
 app.use('/deathapply',DeathApplication);
 app.use('/lhdnApi',LHDNApi);
+app.use('/thApi',THApi);
 
 const PORT = 5000;
 app.listen(PORT, '0.0.0.0', () => {
