@@ -9,11 +9,19 @@ import {
     InputGroup,
     Col,
   } from "reactstrap";
-  import { useState } from "react";
+  import { useState, useEffect } from "react";
   import axios from "axios";
   import { useNavigate } from "react-router-dom";
 
   const Login = () => {
+
+    // Clear any existing session data when login page loads
+    useEffect(() => {
+  sessionStorage.removeItem('staffID');
+  sessionStorage.removeItem('username');
+  console.log('Both username and staffID have been removed');
+}, []);
+
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation, Route, Routes, Navigate } from "react-router-dom";
+import { useLocation, Route, Routes, Navigate, useNavigate } from "react-router-dom";
 import { Container } from "reactstrap";
 
 // core components
@@ -11,6 +11,17 @@ import routes from "routes.js";
 const AdminMenu = (props) => {
   const mainContent = React.useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Add logout function
+  const handleLogout = () => {
+    // Clear session storage
+    sessionStorage.removeItem('staffID');
+    sessionStorage.removeItem('username');
+    
+    // Redirect to login page
+    navigate('/authAdmin/loginAdmin');
+  };
 
   React.useEffect(() => {
     document.documentElement.scrollTop = 0;
@@ -31,33 +42,29 @@ const AdminMenu = (props) => {
     });
   };
 
-
   return (
     <>
-            <AdminSidebar
-            {...props}
-            routes={routes}
-            logo={{
-              innerLink: "/adminMenu/dashboard",
-              imgSrc: require("../assets/img/icons/common/logo.png"),
-              imgAlt: "...",
-              imgProps: {
-                style: {
-                  width: "150px", // Adjust this value as needed
-                  height: "auto" // Maintain aspect ratio
-                }
-              }
-            }}
-          />
+      <AdminSidebar
+        {...props}
+        routes={routes}
+        logo={{
+          innerLink: "/adminMenu/dashboard",
+          imgSrc: require("../assets/img/icons/common/logo.png"),
+          imgAlt: "...",
+          imgProps: {
+            style: {
+              width: "150px",
+              height: "auto"
+            }
+          }
+        }}
+        onLogout={handleLogout} // Pass logout function to sidebar
+      />
       <div
         className="main-content"
         ref={mainContent}
         style={{ minHeight: "100vh", overflowY: "auto", paddingBottom: "2rem" }}
       >
-        {/* <AdminNavbar
-          {...props}
-          brandText={getBrandText(props?.location?.pathname)}
-        /> */}
         <Routes>
           {getRoutes(routes)}
           <Route path="*" element={<Navigate to="/adminMenu/dashboard" replace />} />
