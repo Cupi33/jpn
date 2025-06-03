@@ -5,6 +5,7 @@ import { useLocation, Route, Routes, Navigate } from "react-router-dom";
 import { Container, Row, Col } from "reactstrap";
 
 // core components
+import AuthNavbar from "components/Navbars/CitizenNavbar.js";
 import AuthFooter from "components/Footers/AuthFooter.js";
 
 import routes from "routes.js";
@@ -27,7 +28,7 @@ const Citizen = (props) => {
 
   const getRoutes = (routes) => {
     return routes.map((prop, key) => {
-      if (prop.layout === "/authCitizen") {
+      if (prop.layout === "/plainCitizen") {
         return (
           <Route path={prop.path} element={prop.component} key={key} exact />
         );
@@ -40,6 +41,7 @@ const Citizen = (props) => {
   return (
     <>
       <div className="main-content" ref={mainContent}>
+        <AuthNavbar />
         <div className="header bg-gradient-info py-7 py-lg-8">
           <Container>
             <div className="header-body text-center mb-7">

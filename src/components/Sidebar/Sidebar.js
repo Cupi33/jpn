@@ -85,10 +85,10 @@ const Sidebar = (props) => {
 
   const sidebarRoutes = routes.filter(route => {
     // Include all applicationCitizen routes
-    if (route.group === "citizenMenu") return true;
+    if (route.group === "citizenMenu" ) return true;
   
     // Include only MenuUtama from authCitizen
-    if (route.group === "authCitizen" && route.path === "/MenuUtama") return true;
+    if (route.group === "PlainCitizen" && route.path === "/MenuUtama") return true;
   
     // Exclude everything else
     return false;

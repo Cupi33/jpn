@@ -70,12 +70,6 @@ const routeGroups = {
     layout: "/authCitizen",
     routes: [
       {
-        path: "/MenuUtama",
-        name: "Menu Utama",
-        icon: "ni ni-shop text-green",
-        component: <MenuUtama />,
-      },
-      {
         path: "/login",
         name: "Login",
         icon: "ni ni-key-25 text-info",
@@ -86,6 +80,17 @@ const routeGroups = {
         name: "Register",
         icon: "ni ni-circle-08 text-pink",
         component: <Register />,
+      },
+    ],
+  },
+  PlainCitizen: {
+    layout: "/plainCitizen",
+    routes: [
+      {
+        path: "/MenuUtama",
+        name: "Menu Utama",
+        icon: "ni ni-shop text-green",
+        component: <MenuUtama />,
       },
     ],
   },
