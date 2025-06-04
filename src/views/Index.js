@@ -12,12 +12,12 @@ import {
 } from "reactstrap";
 import axios from "axios";
 import Header from "components/Headers/Header.js";
-import InboxModal from "./InboxModal"; // Create this file
+import InboxModal from "./InboxModal";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [pendingApps, setPendingApps] = useState([]);
-  const [reviewedApps, setReviewedApps] = useState([]); // Dummy for now
+  const [reviewedApps, setReviewedApps] = useState([]);
   const [modalData, setModalData] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -26,9 +26,12 @@ const Index = () => {
     const citizenID = sessionStorage.getItem("citizenID");
     const username = sessionStorage.getItem("username");
 
+    console.log('citizenID : ', citizenID);
+    console.log('username : ', username);
+
     if (citizenID && username) {
       fetchPendingApplications(citizenID);
-      loadReviewedApps(); // use dummy
+      fetchReviewedApplications(citizenID);
     } else {
       navigate("/authCitizen/login");
     }
@@ -46,28 +49,28 @@ const Index = () => {
         setPendingApps([]);
       }
     } catch (error) {
-      console.error("Error fetching inbox:", error);
+      console.error("Error fetching pending apps:", error);
       setPendingApps([]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const loadReviewedApps = () => {
-    setReviewedApps([
-      {
-        appID: 101,
-        appType: "Kelahiran",
-        appDate: "2024-04-10",
-        reviewDate: "2024-04-15",
-      },
-      {
-        appID: 102,
-        appType: "Kematian",
-        appDate: "2024-03-05",
-        reviewDate: "2024-03-12",
-      },
-    ]);
+  const fetchReviewedApplications = async (citizenID) => {
+    try {
+      const response = await axios.post("http://localhost:5000/inbox/listReview", {
+        citizenID,
+      });
+
+      if (response.data.success) {
+        setReviewedApps(response.data.users);
+      } else {
+        setReviewedApps([]);
+      }
+    } catch (error) {
+      console.error("Error fetching reviewed apps:", error);
+      setReviewedApps([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const openModal = (data) => {
@@ -124,7 +127,9 @@ const Index = () => {
                 <h3>Siap Disemak</h3>
               </CardHeader>
               <CardBody>
-                {reviewedApps.length === 0 ? (
+                {isLoading ? (
+                  <p>Memuatkan...</p>
+                ) : reviewedApps.length === 0 ? (
                   <p>Tiada permohonan yang telah disemak.</p>
                 ) : (
                   <Table responsive className="align-items-center table-flush">
@@ -133,6 +138,7 @@ const Index = () => {
                         <th>Jenis Permohonan</th>
                         <th>Tarikh Dihantar</th>
                         <th>Tarikh Disemak</th>
+                        <th>Keputusan</th>
                         <th></th>
                       </tr>
                     </thead>
@@ -142,6 +148,7 @@ const Index = () => {
                           <td>{app.appType}</td>
                           <td>{new Date(app.appDate).toLocaleDateString("ms-MY")}</td>
                           <td>{new Date(app.reviewDate).toLocaleDateString("ms-MY")}</td>
+                          <td>{app.decision}</td>
                           <td>
                             <Button size="sm" color="info" onClick={() => openModal(app)}>
                               Lihat Butiran
