@@ -17,7 +17,8 @@ router.post('/listPending', async (req, res) => {
   try {
     const result = await execute(
       `SELECT * FROM info_inbox_pending
-      WHERE citizenID = :1`,
+      WHERE citizenID = :1
+      ORDER BY APPDATE DESC`,
       [citizenID]  
     );
 
@@ -30,8 +31,8 @@ router.post('/listPending', async (req, res) => {
 
     // Map all rows to user objects
     const users = result.rows.map(user => ({
-      appID: user.FULLNAME,
-      appDate: user.ICNO,
+      appID: user.APPID,
+      appDate: user.APPDATE,
       appType: user.APPTYPE,
       citizenID: user.CITIZENID
     }));
