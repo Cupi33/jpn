@@ -10,13 +10,14 @@ import {
   Col,
   Table,
 } from "reactstrap";
+import axios from "axios";
 import Header from "components/Headers/Header.js";
-import InboxModal from "./InboxModal"; // You’ll create this
+import InboxModal from "./InboxModal"; // Create this file
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [inReview, setInReview] = useState([]);
-  const [reviewed, setReviewed] = useState([]);
+  const [pendingApps, setPendingApps] = useState([]);
+  const [reviewedApps, setReviewedApps] = useState([]); // Dummy for now
   const [modalData, setModalData] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -26,33 +27,53 @@ const Index = () => {
     const username = sessionStorage.getItem("username");
 
     if (citizenID && username) {
-      setIsLoading(false);
-
-      // Simulated fetch
-      setInReview([
-        { id: 1, type: "Kematian", dateSent: "2024-06-01" },
-        { id: 2, type: "Kelahiran", dateSent: "2024-06-02" },
-      ]);
-      setReviewed([
-        { id: 3, type: "Kematian", dateSent: "2024-05-20", reviewDate: "2024-06-01" },
-      ]);
+      fetchPendingApplications(citizenID);
+      loadReviewedApps(); // use dummy
     } else {
       navigate("/authCitizen/login");
     }
   }, [navigate]);
 
+  const fetchPendingApplications = async (citizenID) => {
+    try {
+      const response = await axios.post("http://localhost:5000/inbox/listPending", {
+        citizenID,
+      });
+
+      if (response.data.success) {
+        setPendingApps(response.data.users);
+      } else {
+        setPendingApps([]);
+      }
+    } catch (error) {
+      console.error("Error fetching inbox:", error);
+      setPendingApps([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadReviewedApps = () => {
+    setReviewedApps([
+      {
+        appID: 101,
+        appType: "Kelahiran",
+        appDate: "2024-04-10",
+        reviewDate: "2024-04-15",
+      },
+      {
+        appID: 102,
+        appType: "Kematian",
+        appDate: "2024-03-05",
+        reviewDate: "2024-03-12",
+      },
+    ]);
+  };
+
   const openModal = (data) => {
     setModalData(data);
     setModalOpen(true);
   };
-
-  if (isLoading) {
-    return (
-      <Container className="mt-5 text-center">
-        <h4>Memuatkan...</h4>
-      </Container>
-    );
-  }
 
   return (
     <>
@@ -60,68 +81,84 @@ const Index = () => {
       <Container className="mt--7" fluid>
         <Row>
           <Col xl="12">
+            {/* Dalam Semakan */}
             <Card className="shadow mb-4">
-              <CardHeader><h3>Dalam Semakan</h3></CardHeader>
+              <CardHeader>
+                <h3>Dalam Semakan</h3>
+              </CardHeader>
               <CardBody>
-                <Table responsive className="align-items-center table-flush">
-                  <thead className="thead-light">
-                    <tr>
-                      <th>Jenis Permohonan</th>
-                      <th>Tarikh Dihantar</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {inReview.map((app) => (
-                      <tr key={app.id}>
-                        <td>{app.type}</td>
-                        <td>{app.dateSent}</td>
-                        <td>
-                          <Button size="sm" color="info" onClick={() => openModal(app)}>
-                            Lihat Butiran
-                          </Button>
-                        </td>
+                {isLoading ? (
+                  <p>Memuatkan...</p>
+                ) : pendingApps.length === 0 ? (
+                  <p>Tiada permohonan dalam semakan.</p>
+                ) : (
+                  <Table responsive className="align-items-center table-flush">
+                    <thead className="thead-light">
+                      <tr>
+                        <th>Jenis Permohonan</th>
+                        <th>Tarikh Dihantar</th>
+                        <th></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </Table>
+                    </thead>
+                    <tbody>
+                      {pendingApps.map((app) => (
+                        <tr key={app.appID}>
+                          <td>{app.appType}</td>
+                          <td>{new Date(app.appDate).toLocaleDateString("ms-MY")}</td>
+                          <td>
+                            <Button size="sm" color="info" onClick={() => openModal(app)}>
+                              Lihat Butiran
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                )}
               </CardBody>
             </Card>
 
+            {/* Siap Disemak */}
             <Card className="shadow">
-              <CardHeader><h3>Siap Disemak</h3></CardHeader>
+              <CardHeader>
+                <h3>Siap Disemak</h3>
+              </CardHeader>
               <CardBody>
-                <Table responsive className="align-items-center table-flush">
-                  <thead className="thead-light">
-                    <tr>
-                      <th>Jenis Permohonan</th>
-                      <th>Tarikh Dihantar</th>
-                      <th>Tarikh Semakan</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reviewed.map((app) => (
-                      <tr key={app.id}>
-                        <td>{app.type}</td>
-                        <td>{app.dateSent}</td>
-                        <td>{app.reviewDate}</td>
-                        <td>
-                          <Button size="sm" color="info" onClick={() => openModal(app)}>
-                            Lihat Butiran
-                          </Button>
-                        </td>
+                {reviewedApps.length === 0 ? (
+                  <p>Tiada permohonan yang telah disemak.</p>
+                ) : (
+                  <Table responsive className="align-items-center table-flush">
+                    <thead className="thead-light">
+                      <tr>
+                        <th>Jenis Permohonan</th>
+                        <th>Tarikh Dihantar</th>
+                        <th>Tarikh Disemak</th>
+                        <th></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </Table>
+                    </thead>
+                    <tbody>
+                      {reviewedApps.map((app) => (
+                        <tr key={app.appID}>
+                          <td>{app.appType}</td>
+                          <td>{new Date(app.appDate).toLocaleDateString("ms-MY")}</td>
+                          <td>{new Date(app.reviewDate).toLocaleDateString("ms-MY")}</td>
+                          <td>
+                            <Button size="sm" color="info" onClick={() => openModal(app)}>
+                              Lihat Butiran
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                )}
               </CardBody>
             </Card>
           </Col>
         </Row>
       </Container>
 
-      {/* Detail Modal */}
+      {/* Modal */}
       {modalOpen && (
         <InboxModal
           data={modalData}

@@ -54,5 +54,55 @@ router.post('/listPending', async (req, res) => {
   }
 });
 
+router.post('/listReview', async (req, res) => {
+  const { citizenID } = req.body;
+
+  if (!citizenID) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'citizenID is required in the request body' 
+    });
+  }
+
+  try {
+    const result = await execute(
+      `SELECT * FROM info_inbox_review
+      WHERE citizenid = :1  
+      ORDER BY APPDATE DESC`,
+      [citizenID]  
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        success: true, 
+        message: 'Tiada Permohonan yang telah siap disemak' 
+      });
+    }
+
+    // Map all rows to user objects with Malay decision translation
+    const users = result.rows.map(user => ({
+      appID: user.APPID,
+      appDate: user.APPDATE,
+      appType: user.APPTYPE,
+      reviewDate: user.REVIEWDATE,
+      decision: user.DECISION === 'ACCEPT' ? 'TERIMA' : 'TOLAK' // Translate here
+    }));
+
+    res.json({
+      success: true,
+      message: 'Query Retrieval successful',
+      count: users.length,
+      users: users
+    });
+
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error',
+      error: err.message 
+    });
+  }
+});
 
 export default router;
