@@ -60,6 +60,72 @@ router.post('/1', upload.single('document'), async (req, res) => {
   }
 });
 
+router.post('/checkICName', async (req, res) => {
+  const { fullname, icno, registrantID } = req.body;
+
+  // Sanitize inputs
+  const cleanedFullname = fullname.replace(/_/g, ' ').trim().toUpperCase();
+  const cleanedICNo = icno.replace(/[^0-9]/g, '');
+
+  console.log('registrantid: ', registrantID);
+
+  try {
+    const result = await execute(
+      `SELECT citizenID AS "citizenID", is_alive(citizenID) AS status
+       FROM citizen 
+       WHERE icno = :1
+       AND UPPER(full_name) = :2`,
+      [cleanedICNo, cleanedFullname]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(200).json({  // Changed from 404 to 200
+        success: false,
+        match: false,
+        message: 'Unmatch icno and full name',
+      });
+    }
+
+    const user = result.rows[0];
+
+    if (user.STATUS === 'MATI') {
+      return res.status(200).json({  // Changed from 400 to 200
+        success: false,
+        match: false,
+        message: 'Nama sudah didaftar Mati',
+      });
+    }
+
+    console.log('citizenid: ', user.citizenID);
+
+    if (String(user.citizenID) === String(registrantID)) {
+    return res.status(200).json({
+      success: false,
+      match: false,
+      message: 'Diri Sendiri',
+  });
+}
+
+
+    res.json({
+      success: true,
+      match: true,
+      message: 'Match icno and full name',
+      user: {
+        citizenID: user.citizenID,
+      },
+    });
+
+  } catch (err) {
+    console.error('Query error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+    });
+  }
+});
+
+
 router.get('/tableDeath', async (req, res) => {
   try {
     const query = `

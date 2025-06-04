@@ -20,25 +20,56 @@ const handleRelationshipChange = (e) => {
 const [errorDeceased, setErrorDeceased] = useState('');
 const [successMsg, setSuccessMsg] = useState('');
 
+useEffect(() => {
+    const storedCitizenID = sessionStorage.getItem('citizenID');
+    const storedUsername = sessionStorage.getItem('username');
+
+    console.log('citizenID: ', storedCitizenID);
+    console.log('username: ', storedUsername);
+    if (storedCitizenID && storedUsername) {
+      setIsLoading(false);
+    } else {
+      navigate('/authCitizen/login');
+    }
+  }, [navigate]);
+
 const validateDeceased = async (fullname, icno) => {
-        try {
-            const response = await axios.post('http://localhost:5000/newbornapply/checkICName', {
-            fullname: fullname.toUpperCase(), // Ensure consistent casing
-            icno
-            }, {
-            headers: {
-                'Content-Type': 'application/json'
-            }
-            });
-            
-            console.log('Validation response:', response.data); // Add logging
-            return response.data.success ? response.data.user.citizenID : null;
+  const registrantID = sessionStorage.getItem('citizenID');
+  try {
+    const response = await axios.post('http://localhost:5000/deathapply/checkICName', {
+      fullname: fullname.toUpperCase(),
+      icno,
+      registrantID
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Validation response:', response.data);
+    
+    // Handle all responses
+    if (response.data.success) {
+      return response.data.user.citizenID;
+    } else {
+      // Map backend messages to user-friendly messages
+      const errorMessages = {
+        'Unmatch icno and full name': 'Nama penuh dan nombor IC si mati tidak sepadan.',
+        'Nama sudah didaftar Mati': 'Nama sudah didaftar Mati.',
+        'Diri Sendiri': 
+          'Anda tidak boleh membuat permohonan pendaftaran kematian untuk diri sendiri.'
+      };
+      console.log('Message from backend:', response.data.message);
 
+      setErrorDeceased(errorMessages[response.data.message] || response.data.message || 'Ralat pengesahan maklumat si mati.');
+      return null;
+    }
 
-        } catch (error) {
-            console.error('Validation error:', error.response?.data || error.message);
-            return false;
-        }
+  } catch (error) {
+    console.error('Validation error:', error);
+    setErrorDeceased('Ralat server semasa pengesahan. Sila cuba lagi.');
+    return null;
+  }
 };
 
 const handleSubmit = async () => {
@@ -54,10 +85,11 @@ const handleSubmit = async () => {
   try {
     const deceasedID = await validateDeceased(fullname, icno);
     if (!deceasedID) {
-      setErrorDeceased('Nama penuh dan nombor IC si mati tidak sepadan.');
+      // Error message is already set by validateDeceased
       return;
     }
 
+    
     const checkResponse = await axios.post('http://localhost:5000/deathapply/checkDeathApp', {
       icno
     }, {
@@ -69,6 +101,7 @@ const handleSubmit = async () => {
       return;
     }
 
+    // Rest of your submission code remains the same...
     // Create FormData object
     const formData = new FormData();
     formData.append('citizenID', citizenID);
@@ -79,16 +112,15 @@ const handleSubmit = async () => {
     // Get the file input
     const fileInput = document.getElementById('upload-police-report');
     if (fileInput.files.length > 0) {
-      formData.append('document', fileInput.files[0]); // Make sure 'document' matches the multer field name
+      formData.append('document', fileInput.files[0]);
     } else {
       Swal.fire({ icon: 'warning', title: 'Sila muat naik Surat Kematian', confirmButtonText: 'OK' });
       return;
     }
 
-    // Send the request with proper headers
     const response = await axios.post('http://localhost:5000/deathapply/1', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data' // This is crucial
+        'Content-Type': 'multipart/form-data'
       }
     });
 
@@ -107,17 +139,6 @@ const handleSubmit = async () => {
     Swal.fire('Ralat server! Sila cuba lagi.');
   }
 };
-
-  useEffect(() => {
-    const storedCitizenID = sessionStorage.getItem('citizenID');
-    const storedUsername = sessionStorage.getItem('username');
-
-    if (storedCitizenID && storedUsername) {
-      setIsLoading(false);
-    } else {
-      navigate('/authCitizen/login');
-    }
-  }, [navigate]);
 
   if (isLoading) {
     return (
