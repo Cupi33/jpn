@@ -79,7 +79,7 @@ router.post('/checkICName', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(200).json({  // Changed from 404 to 200
+      return res.status(200).json({
         success: false,
         match: false,
         message: 'Unmatch icno and full name',
@@ -89,7 +89,7 @@ router.post('/checkICName', async (req, res) => {
     const user = result.rows[0];
 
     if (user.STATUS === 'MATI') {
-      return res.status(200).json({  // Changed from 400 to 200
+      return res.status(200).json({
         success: false,
         match: false,
         message: 'Nama sudah didaftar Mati',
@@ -99,14 +99,29 @@ router.post('/checkICName', async (req, res) => {
     console.log('citizenid: ', user.citizenID);
 
     if (String(user.citizenID) === String(registrantID)) {
-    return res.status(200).json({
-      success: false,
-      match: false,
-      message: 'Diri Sendiri',
-  });
-}
+      return res.status(200).json({
+        success: false,
+        match: false,
+        message: 'Diri Sendiri',
+      });
+    }
 
+    // 🔍 Final validation: Check if there's already a pending death application
+    const checkPending = await execute(
+      `SELECT * FROM check_once_apply_death 
+       WHERE DECEASEDID = :1 AND STATUS = 'PENDING'`,
+      [user.citizenID]
+    );
 
+    if (checkPending.rows.length > 0) {
+      return res.status(200).json({
+        success: false,
+        match: false,
+        message: 'Permohonan kematian untuk orang ini telah dihantar dan sedang diproses.',
+      });
+    }
+
+    // ✅ Passed all checks
     res.json({
       success: true,
       match: true,
