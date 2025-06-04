@@ -8,6 +8,7 @@ import NewbornApplication from './routes/Application/Newborn.js'
 import DeathApplication from './routes/Application/Death.js'
 import LHDNApi from './routes/govApi/apiLHDN.js'
 import THApi from './routes/govApi/apiTH.js'
+import InboxApi from './routes/Inbox/inbox.js'
 
 const app = express();
 app.use(cors(
@@ -27,6 +28,7 @@ app.use('/newbornapply',NewbornApplication);
 app.use('/deathapply',DeathApplication);
 app.use('/lhdnApi',LHDNApi);
 app.use('/thApi',THApi);
+app.use('/inbox',InboxApi);
 
 const PORT = 5000;
 app.listen(PORT, '0.0.0.0', () => {
