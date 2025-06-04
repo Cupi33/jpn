@@ -5,7 +5,8 @@ import { useLocation, Route, Routes, Navigate } from "react-router-dom";
 import { Container, Row } from "reactstrap";
 
 // core components
-import ApplicationNavbar from "components/Navbars/ApplicationNavbar.js";
+// import ApplicationNavbar from "components/Navbars/ApplicationNavbar.js";
+import CitizenNavbar from "components/Navbars/CitizenNavbar";
 import AuthFooter from "components/Footers/AuthFooter.js";
 
 import routes from "routes.js";
@@ -44,7 +45,7 @@ const ApplicationCitizen = (props) => {
   return (
     <>
       <div className="main-content" ref={mainContent}>
-        <ApplicationNavbar />
+        <CitizenNavbar />
         <div className="header bg-gradient-info py-7 py-lg-8">
           <div className="separator separator-bottom separator-skew zindex-100">
             <svg
