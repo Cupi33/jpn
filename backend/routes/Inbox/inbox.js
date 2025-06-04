@@ -105,4 +105,84 @@ router.post('/listReview', async (req, res) => {
   }
 });
 
+router.post('/listDeathPending', async (req, res) => {
+  const { appID } = req.body;
+
+  if (!appID) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'appID is required in the request body' 
+    });
+  }
+
+  try {
+    const result = await execute(
+      `SELECT * FROM LIST_DEATH_INFO_PENDING
+      WHERE appID = :1
+      ORDER BY APPDATE DESC`,
+      [appID]  
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        success: true, 
+        message: 'Tiada Permohonan yang sedang diproses' 
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result.rows // ⬅️ This returns an array of rows
+    });
+
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error',
+      error: err.message 
+    });
+  }
+});
+
+router.post('/listDeathReview', async (req, res) => {
+  const { appID } = req.body;
+
+  if (!appID) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'appID is required in the request body' 
+    });
+  }
+
+  try {
+    const result = await execute(
+      `SELECT * FROM LIST_DEATH_INFO_REVIEW
+      WHERE appID = :1
+      ORDER BY APPDATE DESC`,
+      [appID]  
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        success: true, 
+        message: 'Tiada Permohonan yang sedang diproses' 
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result.rows // ⬅️ This returns an array of rows
+    });
+    
+  } catch (err) {
+    console.error('Database error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error',
+      error: err.message 
+    });
+  }
+});
+
 export default router;
