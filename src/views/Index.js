@@ -73,10 +73,18 @@ const Index = () => {
     }
   };
 
-  const openModal = (data) => {
-    setModalData(data);
-    setModalOpen(true);
-  };
+  // In Index.js
+
+ const openModal = (app, section) => {
+  console.log("App object:", app);
+  setModalData({
+    appID: app.appID,
+    appType: app.appType,
+    statusSection: section, // 'dalamSemakan' or 'siapDisemak'
+  });
+  setModalOpen(true);
+};
+
 
   return (
     <>
@@ -109,8 +117,8 @@ const Index = () => {
                           <td>{app.appType}</td>
                           <td>{new Date(app.appDate).toLocaleDateString("ms-MY")}</td>
                           <td>
-                            <Button size="sm" color="info" onClick={() => openModal(app)}>
-                              Lihat Butiran
+                            <Button size="sm" color="info" onClick={() => openModal(app, "dalamSemakan")}>
+                               Lihat Butiran
                             </Button>
                           </td>
                         </tr>
@@ -150,9 +158,10 @@ const Index = () => {
                           <td>{new Date(app.reviewDate).toLocaleDateString("ms-MY")}</td>
                           <td>{app.decision}</td>
                           <td>
-                            <Button size="sm" color="info" onClick={() => openModal(app)}>
-                              Lihat Butiran
+                            <Button size="sm" color="info" onClick={() => openModal(app, "siapDisemak")}>
+                               Lihat Butiran
                             </Button>
+
                           </td>
                         </tr>
                       ))}
