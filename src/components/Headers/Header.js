@@ -1,25 +1,35 @@
-
-
 // reactstrap components
 import axios from "axios";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardBody, CardTitle, Container, Row, Col } from "reactstrap";
 
 const Header = () => {
-const [statData, setStatData] = useState(null); 
+  const [statData, setStatData] = useState(null);
+
+  console.log("1. Header component is rendering or re-rendering.");
 
   useEffect(() => {
+    console.log("2. useEffect is running - API call will be made. This should only happen ONCE per mount.");
+
+    // CHANGED: from .post to .get and removed the request body
     axios
-    .post("http://localhost:5000/stat/general",{ "test" :"data"})
-    .then((response) => {
-      if (response.data.success) {
-        setStatData(response.data.stat);
-      } else {
-        console.error("Failed to fetch statistic data:", response.data.message);
-      }
-    })
-  }
-)
+      .get("http://localhost:5000/stat/general") 
+      .then((response) => {
+        if (response.data.success) {
+          setStatData(response.data.stat);
+        } else {
+          console.error("Failed to fetch statistic data:", response.data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching statistic data:", error);
+      });
+    
+    // This is a cleanup function. It runs when the component unmounts.
+    return () => {
+        console.log("3. Header component is UNMOUNTING."); 
+    };
+  }, []); // The empty array is correct.
 
   return (
     <>
@@ -40,8 +50,7 @@ const [statData, setStatData] = useState(null);
                           JUMLAH RAKYAT MALAYSIA BERDAFTAR
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
-                          {/* 4,000,000 */}
-                          {statData?.jumlah_rakyat || "Loading..."}
+                          {statData?.jumlah_rakyat ?? "Loading..."}
                         </span>
                       </div>
                       <Col className="col-auto">
@@ -62,12 +71,11 @@ const [statData, setStatData] = useState(null);
                           tag="h5"
                           className="text-uppercase text-muted mb-0"
                         >
-                          Purata Umur Rakyat Malaysia 
+                          Purata Umur Rakyat Malaysia
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
-                          {/* 35 */}
-                          {statData?.purata_umur || "Loading..."}
-                          </span>
+                          {statData?.purata_umur ?? "Loading..."}
+                        </span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-warning text-white rounded-circle shadow">
@@ -90,9 +98,8 @@ const [statData, setStatData] = useState(null);
                           JUMLAH KEMATIAN TAHUN INI
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
-                        {statData?.jumlah_kematian !== undefined ? statData.jumlah_kematian : "Loading..."}
-
-                          </span>
+                          {statData?.jumlah_kematian ?? "Loading..."}
+                        </span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-yellow text-white rounded-circle shadow">
@@ -115,8 +122,8 @@ const [statData, setStatData] = useState(null);
                           JUMLAH KES KEHILANGAN KAD PENGENALAN
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
-                        {statData?.kad_hilang || "Loading..."}
-                          </span>
+                          {statData?.kad_hilang ?? "Loading..."}
+                        </span>
                       </div>
                       <Col className="col-auto">
                         <div className="icon icon-shape bg-info text-white rounded-circle shadow">
@@ -128,7 +135,9 @@ const [statData, setStatData] = useState(null);
                       <span className="text-success mr-2">
                         <i className="fas fa-arrow-up" /> 12%
                       </span>{" "}
-                      <span className="text-nowrap">Berbanding tahun lepas</span>
+                      <span className="text-nowrap">
+                        Berbanding tahun lepas
+                      </span>
                     </p>
                   </CardBody>
                 </Card>

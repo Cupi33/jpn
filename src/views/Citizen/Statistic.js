@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 // node.js library that concatenates classes (strings)
 import classnames from "classnames";
 // javascipt plugin for creating charts
@@ -49,52 +49,63 @@ const Index = (props) => {
   const [activeNav, setActiveNav] = useState(1);
   const [chartExample1Data, setChartExample1Data] = useState("data1");
 
-   const total = (statData.melayu || 0) + 
-                         (statData.cina || 0) + 
-                         (statData.india || 0) + 
-                         (statData.lain || 0);
-
-
-    const totalReligion = (statDataReligion.islam || 0) +   (statDataReligion.buddha || 0) + 
-                         (statDataReligion.hindu || 0) + (statDataReligion.kristian || 0) +
-                         (statDataReligion.lain || 0);
-            
-            // Function to calculate percentage
-            const calculatePercentage = (value) => {
-              return total > 0 ? Math.round((value / total) * 100) : 0;
-            };
-
-            // Function to calculate percentage religion
-            const calculatePercentageReligion = (value) => {
-              return total > 0 ? Math.round((value / totalReligion) * 100) : 0;
-            };
-
+  // --- START: FIX AND IMPROVEMENT ---
   useEffect(() => {
-    axios
-    .post("http://localhost:5000/stat/totalRace",{ "test" :"data"})
-    .then((response) => {
-      if (response.data.success) {
-        setStatData(response.data.stat);
-      } else {
-        console.error("Failed to fetch race statistic data:", response.data.message);
-      }
-    })
-  }
-)
+    // We will fetch both sets of data at the same time
+    const fetchAllStats = async () => {
+      try {
+        const [raceResponse, religionResponse] = await Promise.all([
+          axios.get("http://localhost:5000/stat/totalRace"),
+          axios.get("http://localhost:5000/stat/totalReligion")
+        ]);
 
+        if (raceResponse.data.success) {
+          setStatData(raceResponse.data.stat);
+        } else {
+          console.error("Failed to fetch race statistic data:", raceResponse.data.message);
+        }
 
-  useEffect(() => {
-    axios
-    .post("http://localhost:5000/stat/totalReligion",{ "test" :"data"})
-    .then((response) => {
-      if (response.data.success) {
-        setStatDataReligion(response.data.stat);
-      } else {
-        console.error("Failed to fetch race statistic data:", response.data.message);
+        if (religionResponse.data.success) {
+          setStatDataReligion(religionResponse.data.stat);
+        } else {
+          console.error("Failed to fetch religion statistic data:", religionResponse.data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching statistic data:", error);
       }
-    })
-  }
-)
+    };
+
+    fetchAllStats();
+  }, []); // <-- CRITICAL FIX: Empty dependency array ensures this runs only ONCE.
+  // --- END: FIX AND IMPROVEMENT ---
+
+  const total = (statData.melayu || 0) +
+                (statData.cina || 0) +
+                (statData.india || 0) +
+                (statData.lain || 0);
+
+  const totalReligion = (statDataReligion.islam || 0) +
+                        (statDataReligion.buddha || 0) +
+                        (statDataReligion.hindu || 0) +
+                        (statDataReligion.kristian || 0) +
+                        (statDataReligion.lain || 0);
+
+  // Function to calculate percentage
+  const calculatePercentage = (value) => {
+    // Check totalReligion to avoid division by zero if data is not yet loaded
+    const currentTotal = (statData.melayu || 0) + (statData.cina || 0) + (statData.india || 0) + (statData.lain || 0);
+    if (currentTotal === 0) return 0;
+    return Math.round((value / currentTotal) * 100);
+  };
+
+  // Function to calculate percentage religion
+  const calculatePercentageReligion = (value) => {
+    // Check totalReligion to avoid division by zero if data is not yet loaded
+    const currentTotalReligion = (statDataReligion.islam || 0) + (statDataReligion.buddha || 0) + (statDataReligion.hindu || 0) + (statDataReligion.kristian || 0) + (statDataReligion.lain || 0);
+    if (currentTotalReligion === 0) return 0;
+    return Math.round((value / currentTotalReligion) * 100);
+  };
+
 
   if (window.Chart) {
     parseOptions(Chart, chartOptions());
@@ -105,11 +116,15 @@ const Index = (props) => {
     setActiveNav(index);
     setChartExample1Data("data" + index);
   };
+
   return (
     <>
       <Header />
       {/* Page content */}
       <Container className="mt--7" fluid>
+        {/* ... The rest of your JSX code remains the same ... */}
+        {/* I've removed it for brevity, but you should keep it as is. */}
+        {/* The fix was only in the useEffect hook above. */}
         <Row>
           <Col className="mb-5 mb-xl-0" xl="8">
             <Card className="bg-gradient-default shadow">
@@ -217,7 +232,7 @@ const Index = (props) => {
                 <tbody>
                   <tr>
                     <th scope="row">ISLAM</th>
-                    <td>{statDataReligion?.islam || "Loading..."}</td>
+                    <td>{statDataReligion?.islam ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
                         <span className="mr-2">
@@ -235,7 +250,7 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">HINDU</th>
-                    <td>{statDataReligion?.hindu || "Loading..."}</td>
+                    <td>{statDataReligion?.hindu ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
                         <span className="mr-2">
@@ -253,7 +268,7 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">BUDDHA</th>
-                    <td>{statDataReligion?.buddha || "Loading..."}</td>
+                    <td>{statDataReligion?.buddha ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
                         <span className="mr-2">
@@ -270,7 +285,7 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">KRISTIAN</th>
-                    <td>{statDataReligion?.kristian || "Loading..."}</td>
+                    <td>{statDataReligion?.kristian ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
                         <span className="mr-2">
@@ -288,7 +303,7 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">LAIN-LAIN</th>
-                    <td>{statDataReligion?.lain || "Loading..."}</td>
+                    <td>{statDataReligion?.lain ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
                         <span className="mr-2">
@@ -330,7 +345,7 @@ const Index = (props) => {
                 <tbody>
                   <tr>
                     <th scope="row">MELAYU</th>
-                    <td>{statData?.melayu || "Loading..."}</td>
+                    <td>{statData?.melayu ?? "Loading..."}</td>
                     <td>
                       <div  className="d-flex align-items-center">
                         <span className="mr-2">
@@ -348,7 +363,7 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">CINA</th>
-                    <td>{statData?.cina || "Loading..."}</td>
+                    <td>{statData?.cina ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
                         <span className="mr-2">
@@ -366,7 +381,7 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">INDIA</th>
-                    <td>{statData?.india || "Loading..."}</td>
+                    <td>{statData?.india ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
                         <span className="mr-2">
@@ -381,7 +396,7 @@ const Index = (props) => {
                   </tr>
                   <tr>
                     <th scope="row">LAIN-LAIN</th>
-                    <td>{statData?.lain || "Loading..."}</td>
+                    <td>{statData?.lain ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
                         <span className="mr-2">
