@@ -1,3 +1,5 @@
+// charts.js
+
 /*!
 
 =========================================================
@@ -306,8 +308,8 @@ function parseOptions(parent, options) {
   }
 }
 
-// Example 1 of Chart inside src/views/Index.js (Sales value - Card)
-let chartExample1 = {
+// --- CHART 1: LINE CHART (Sales value) ---
+let lineChartExample = {
   options: {
     scales: {
       yAxes: [
@@ -367,22 +369,60 @@ let chartExample1 = {
   },
 };
 
-// Example 2 of Chart inside src/views/Index.js (Total orders - Card)
-let chartExample2 = {
+
+// --- CHART 2: PIE CHART (Race/Bangsa) ---
+let pieChartExample = {
+  options: {
+    legend: {
+      display: true,
+      position: 'top', 
+    },
+    tooltips: {
+      callbacks: {
+        label: function (item, data) {
+          var label = data.labels[item.index] || "";
+          var value = data.datasets[0].data[item.index];
+          var content = "";
+          if (label) {
+            content += label + ": ";
+          }
+          content += value;
+          return content;
+        },
+      },
+    },
+  },
+  data: {
+    labels: ["Melayu", "Cina", "India", "Lain-lain"],
+    datasets: [
+      {
+        label: "Bangsa",
+        data: [0, 0, 0, 0],
+        backgroundColor: [
+            colors.theme.success,
+            colors.theme.warning,
+            colors.theme.primary,
+            colors.theme.danger,
+        ],
+        borderColor: colors.white,
+      },
+    ],
+  },
+};
+
+// --- CHART 3: BAR CHART (Age Group/Umur) ---
+let barChartExample = {
   options: {
     scales: {
       yAxes: [
         {
           ticks: {
-            callback: function (value) {
-              if (!(value % 10)) {
-                //return '$' + value + 'k'
-                return value;
-              }
-            },
           },
         },
       ],
+    },
+    legend: {
+        display: false,
     },
     tooltips: {
       callbacks: {
@@ -400,20 +440,23 @@ let chartExample2 = {
     },
   },
   data: {
-    labels: ["2020", "2021", "2022", "2023", "2024", "2025"],
+    labels: ["0-12", "13-22", "23-35", "36-45", "46-55", "56+"],
     datasets: [
       {
-        label: "newborn",
-        data: [25000, 20000, 30000, 22000, 17000, 29000],
+        label: "Penduduk",
+        data: [0, 0, 0, 0, 0, 0],
         maxBarThickness: 10,
+        backgroundColor: colors.theme.info,
       },
     ],
   },
 };
 
+// --- CORRECTED EXPORTS ---
 module.exports = {
-  chartOptions, // used inside src/views/Index.js
-  parseOptions, // used inside src/views/Index.js
-  chartExample1, // used inside src/views/Index.js
-  chartExample2, // used inside src/views/Index.js
+  chartOptions,
+  parseOptions,
+  lineChartExample, // Exporting with the correct name
+  pieChartExample,  // Exporting with the correct name
+  barChartExample,  // Exporting with the correct name
 };

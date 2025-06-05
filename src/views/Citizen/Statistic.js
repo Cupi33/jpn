@@ -1,3 +1,5 @@
+// Statistic.js
+
 import axios from "axios";
 import { useEffect, useState } from "react";
 // node.js library that concatenates classes (strings)
@@ -5,7 +7,7 @@ import classnames from "classnames";
 // javascipt plugin for creating charts
 import Chart from "chart.js";
 // react plugin used to create charts
-import { Line, Bar } from "react-chartjs-2";
+import { Line, Pie, Bar } from "react-chartjs-2";
 // reactstrap components
 import {
   Card,
@@ -25,96 +27,104 @@ import {
 import {
   chartOptions,
   parseOptions,
-  chartExample1,
-  chartExample2,
+  lineChartExample, // The "Sales" line chart
+  pieChartExample,  // The "Race" pie chart
+  barChartExample,  // The "Age" bar chart
 } from "variables/charts.js";
 
 import Header from "components/Headers/Header.js";
 
 const Index = (props) => {
-  const [statData, setStatData] = useState({
-    melayu: 0,
-    cina: 0,
-    india: 0,
-    lain: 0
-  });
-  const [statDataReligion, setStatDataReligion] = useState({
-    islam: 0,
-    buddha: 0,
-    hindu: 0,
-    kristian: 0,
-    lain: 0
-  });
+  // State for Race and Religion tables
+  const [statData, setStatData] = useState({ melayu: 0, cina: 0, india: 0, lain: 0 });
+  const [statDataReligion, setStatDataReligion] = useState({ islam: 0, buddha: 0, hindu: 0, kristian: 0, lain: 0 });
 
+  // --- STATE FOR CHARTS ---
+
+  // State for the top Line Chart ("Sales")
   const [activeNav, setActiveNav] = useState(1);
   const [chartExample1Data, setChartExample1Data] = useState("data1");
+  
+  // State for the Pie Chart (Race)
+  const [racePieChartData, setRacePieChartData] = useState(pieChartExample.data);
 
-  // --- START: FIX AND IMPROVEMENT ---
+  // State for the Bar Chart (Age Group)
+  const [ageGroupStat, setAgeGroupStat] = useState(null);
+  const [ageGroupChartData, setAgeGroupChartData] = useState(barChartExample.data);
+
+  // This useEffect fetches all initial data when the component mounts
   useEffect(() => {
-    // We will fetch both sets of data at the same time
     const fetchAllStats = async () => {
       try {
-        const [raceResponse, religionResponse] = await Promise.all([
-          axios.get("http://localhost:5000/stat/totalRace"),
-          axios.get("http://localhost:5000/stat/totalReligion")
-        ]);
+        const [raceResponse, religionResponse, ageGroupResponse] =
+          await Promise.all([
+            axios.get("http://localhost:5000/stat/totalRace"),
+            axios.get("http://localhost:5000/stat/totalReligion"),
+            axios.get("http://localhost:5000/stat/ageGroup"),
+          ]);
 
-        if (raceResponse.data.success) {
-          setStatData(raceResponse.data.stat);
-        } else {
-          console.error("Failed to fetch race statistic data:", raceResponse.data.message);
-        }
+        if (raceResponse.data.success) setStatData(raceResponse.data.stat);
+        if (religionResponse.data.success) setStatDataReligion(religionResponse.data.stat);
+        if (ageGroupResponse.data.success) setAgeGroupStat(ageGroupResponse.data.stat);
 
-        if (religionResponse.data.success) {
-          setStatDataReligion(religionResponse.data.stat);
-        } else {
-          console.error("Failed to fetch religion statistic data:", religionResponse.data.message);
-        }
       } catch (error) {
-        console.error("Error fetching statistic data:", error);
+        console.error("Error fetching one or more statistic endpoints:", error);
       }
     };
 
     fetchAllStats();
-  }, []); // <-- CRITICAL FIX: Empty dependency array ensures this runs only ONCE.
-  // --- END: FIX AND IMPROVEMENT ---
+  }, []); // Empty dependency array ensures this runs only ONCE.
 
-  const total = (statData.melayu || 0) +
-                (statData.cina || 0) +
-                (statData.india || 0) +
-                (statData.lain || 0);
+  // --- USEEFFECTS TO UPDATE CHARTS WITH API DATA ---
 
-  const totalReligion = (statDataReligion.islam || 0) +
-                        (statDataReligion.buddha || 0) +
-                        (statDataReligion.hindu || 0) +
-                        (statDataReligion.kristian || 0) +
-                        (statDataReligion.lain || 0);
+  // This useEffect updates the PIE chart when race data (statData) arrives
+  useEffect(() => {
+    if (statData && (statData.melayu > 0 || statData.cina > 0 || statData.india > 0 || statData.lain > 0)) { 
+      const dataForChart = [statData.melayu, statData.cina, statData.india, statData.lain];
+      setRacePieChartData((prevData) => ({
+        ...prevData,
+        datasets: [{ ...prevData.datasets[0], data: dataForChart }],
+      }));
+    }
+  }, [statData]);
 
-  // Function to calculate percentage
-  const calculatePercentage = (value) => {
-    // Check totalReligion to avoid division by zero if data is not yet loaded
-    const currentTotal = (statData.melayu || 0) + (statData.cina || 0) + (statData.india || 0) + (statData.lain || 0);
-    if (currentTotal === 0) return 0;
-    return Math.round((value / currentTotal) * 100);
-  };
-
-  // Function to calculate percentage religion
-  const calculatePercentageReligion = (value) => {
-    // Check totalReligion to avoid division by zero if data is not yet loaded
-    const currentTotalReligion = (statDataReligion.islam || 0) + (statDataReligion.buddha || 0) + (statDataReligion.hindu || 0) + (statDataReligion.kristian || 0) + (statDataReligion.lain || 0);
-    if (currentTotalReligion === 0) return 0;
-    return Math.round((value / currentTotalReligion) * 100);
-  };
-
+  // This useEffect updates the BAR chart when age group data (ageGroupStat) arrives
+  useEffect(() => {
+    if (ageGroupStat) {
+      const dataForChart = [
+        ageGroupStat['0-12'], ageGroupStat['13-22'], ageGroupStat['23-35'],
+        ageGroupStat['36-45'], ageGroupStat['46-55'], ageGroupStat['56+'],
+      ];
+      setAgeGroupChartData((prevData) => ({
+        ...prevData,
+        datasets: [{ ...prevData.datasets[0], data: dataForChart }],
+      }));
+    }
+  }, [ageGroupStat]);
 
   if (window.Chart) {
     parseOptions(Chart, chartOptions());
   }
 
+  // Handler for the Line Chart's "Month/Week" toggle
   const toggleNavs = (e, index) => {
     e.preventDefault();
     setActiveNav(index);
     setChartExample1Data("data" + index);
+  };
+
+  // Function to calculate percentage for race
+  const calculatePercentage = (value) => {
+    const total = (statData.melayu || 0) + (statData.cina || 0) + (statData.india || 0) + (statData.lain || 0);
+    if (total === 0) return 0;
+    return Math.round((value / total) * 100);
+  };
+
+  // Function to calculate percentage for religion
+  const calculatePercentageReligion = (value) => {
+    const totalReligion = (statDataReligion.islam || 0) + (statDataReligion.buddha || 0) + (statDataReligion.hindu || 0) + (statDataReligion.kristian || 0) + (statDataReligion.lain || 0);
+    if (totalReligion === 0) return 0;
+    return Math.round((value / totalReligion) * 100);
   };
 
   return (
@@ -122,11 +132,9 @@ const Index = (props) => {
       <Header />
       {/* Page content */}
       <Container className="mt--7" fluid>
-        {/* ... The rest of your JSX code remains the same ... */}
-        {/* I've removed it for brevity, but you should keep it as is. */}
-        {/* The fix was only in the useEffect hook above. */}
+        {/* --- ROW FOR THE LINE CHART --- */}
         <Row>
-          <Col className="mb-5 mb-xl-0" xl="8">
+          <Col className="mb-5 mb-xl-0" xl="12"> {/* CORRECTED: Takes full width */}
             <Card className="bg-gradient-default shadow">
               <CardHeader className="bg-transparent">
                 <Row className="align-items-center">
@@ -168,56 +176,66 @@ const Index = (props) => {
                 </Row>
               </CardHeader>
               <CardBody>
-                {/* Chart */}
                 <div className="chart">
                   <Line
-                    data={chartExample1[chartExample1Data]}
-                    options={chartExample1.options}
-                    getDatasetAtEvent={(e) => console.log(e)}
+                    data={lineChartExample[chartExample1Data]}
+                    options={lineChartExample.options}
                   />
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* --- ROW FOR THE DEMOGRAPHIC CHARTS --- */}
+        <Row className="mt-5">
+          {/* PIE CHART (RACE) */}
+          <Col xl="6" className="mb-5 mb-xl-0">
+            <Card className="shadow h-100"> {/* Added h-100 to make cards same height */}
+              <CardHeader className="bg-transparent">
+                <Row className="align-items-center">
+                  <div className="col">
+                    <h6 className="text-uppercase text-muted ls-1 mb-1">DEMOGRAFI</h6>
+                    <h2 className="mb-0">Jumlah Penduduk Mengikut Bangsa</h2>
+                  </div>
+                </Row>
+              </CardHeader>
+              <CardBody>
+                <div className="chart" style={{ height: "350px" }}>
+                  <Pie data={racePieChartData} options={pieChartExample.options} />
                 </div>
               </CardBody>
             </Card>
           </Col>
 
-        </Row>
-        <Row className="mt-4">
-           
-           <Card className="shadow">
+          {/* BAR CHART (AGE) */}
+          <Col xl="6">
+            <Card className="shadow h-100"> {/* Added h-100 to make cards same height */}
               <CardHeader className="bg-transparent">
                 <Row className="align-items-center">
                   <div className="col">
-                    <h6 className="text-uppercase text-muted ls-1 mb-1">
-                      5 TAHUN TERAKHIR
-                    </h6>
-                    <h2 className="mb-0">Jumlah Kelahiran Bayi</h2>
+                    <h6 className="text-uppercase text-muted ls-1 mb-1">DEMOGRAFI</h6>
+                    <h2 className="mb-0">Jumlah Penduduk Mengikut Umur</h2>
                   </div>
                 </Row>
               </CardHeader>
               <CardBody>
-                {/* Chart */}
-                <div className="chart" style={{ height: "400px", width: "100.000000000001%" }}>
-                  <Bar
-                    data={chartExample2.data}
-                    options={chartExample2.options}
-                  />
+                <div className="chart" style={{ height: "350px" }}>
+                  <Bar data={ageGroupChartData} options={barChartExample.options} />
                 </div>
               </CardBody>
             </Card>
-          
-          
-          </Row>
-        <Row className="mt-5">
-          <Col className="mb-5 mb-xl-0" xl="8">
           </Col>
-          <Col xl="6">
+        </Row>
+        
+        {/* --- ROW FOR THE TABLES --- */}
+        <Row className="mt-5">
+          <Col xl="6" className="mb-5 mb-xl-0">
             <Card className="shadow">
               <CardHeader className="border-0">
                 <Row className="align-items-center">
                   <div className="col">
                     <h3 className="mb-0">PERATUSAN KEPERCAYAAN DI MALAYSIA</h3>
-                  </div>
-                  <div className="col text-right">
                   </div>
                 </Row>
               </CardHeader>
@@ -235,16 +253,8 @@ const Index = (props) => {
                     <td>{statDataReligion?.islam ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">
-                          {calculatePercentageReligion(statDataReligion.islam)}%
-                          </span>
-                        <div>
-                          <Progress
-                            max="100"
-                            value={calculatePercentageReligion(statDataReligion.islam)}
-                            barClassName="bg-gradient-danger"
-                          />
-                        </div>
+                        <span className="mr-2">{calculatePercentageReligion(statDataReligion.islam)}%</span>
+                        <div><Progress max="100" value={calculatePercentageReligion(statDataReligion.islam)} barClassName="bg-gradient-success" /></div>
                       </div>
                     </td>
                   </tr>
@@ -253,16 +263,8 @@ const Index = (props) => {
                     <td>{statDataReligion?.hindu ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">
-                          {calculatePercentageReligion(statDataReligion.hindu)}%
-                          </span>
-                        <div>
-                          <Progress
-                            max="100"
-                            value={calculatePercentageReligion(statDataReligion.hindu)}
-                            barClassName="bg-gradient-success"
-                          />
-                        </div>
+                        <span className="mr-2">{calculatePercentageReligion(statDataReligion.hindu)}%</span>
+                        <div><Progress max="100" value={calculatePercentageReligion(statDataReligion.hindu)} barClassName="bg-gradient-warning" /></div>
                       </div>
                     </td>
                   </tr>
@@ -271,15 +273,8 @@ const Index = (props) => {
                     <td>{statDataReligion?.buddha ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">
-                          {calculatePercentageReligion(statDataReligion.buddha)}%
-                          </span>
-                        <div>
-                          <Progress
-                           max="100"
-                            value={calculatePercentageReligion(statDataReligion.buddha)} 
-                           />
-                        </div>
+                        <span className="mr-2">{calculatePercentageReligion(statDataReligion.buddha)}%</span>
+                        <div><Progress max="100" value={calculatePercentageReligion(statDataReligion.buddha)} /></div>
                       </div>
                     </td>
                   </tr>
@@ -288,16 +283,8 @@ const Index = (props) => {
                     <td>{statDataReligion?.kristian ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">
-                          {calculatePercentageReligion(statDataReligion.kristian)}%
-                          </span>
-                        <div>
-                          <Progress
-                            max="100"
-                            value={calculatePercentageReligion(statDataReligion.kristian)}
-                            barClassName="bg-gradient-danger"
-                          />
-                        </div>
+                        <span className="mr-2">{calculatePercentageReligion(statDataReligion.kristian)}%</span>
+                        <div><Progress max="100" value={calculatePercentageReligion(statDataReligion.kristian)} barClassName="bg-gradient-info" /></div>
                       </div>
                     </td>
                   </tr>
@@ -306,16 +293,8 @@ const Index = (props) => {
                     <td>{statDataReligion?.lain ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">
-                          {calculatePercentageReligion(statDataReligion.lain)}%
-                          </span>
-                        <div>
-                          <Progress
-                            max="100"
-                            value={calculatePercentageReligion(statDataReligion.lain)}
-                            barClassName="bg-gradient-danger"
-                          />
-                        </div>
+                        <span className="mr-2">{calculatePercentageReligion(statDataReligion.lain)}%</span>
+                        <div><Progress max="100" value={calculatePercentageReligion(statDataReligion.lain)} barClassName="bg-gradient-danger" /></div>
                       </div>
                     </td>
                   </tr>
@@ -324,13 +303,11 @@ const Index = (props) => {
             </Card>
           </Col>
           <Col xl="6">
-          <Card className="shadow">
+            <Card className="shadow">
               <CardHeader className="border-0">
                 <Row className="align-items-center">
                   <div className="col">
                     <h3 className="mb-0">PERATUSAN BANGSA DI MALAYSIA</h3>
-                  </div>
-                  <div className="col text-right">
                   </div>
                 </Row>
               </CardHeader>
@@ -347,17 +324,9 @@ const Index = (props) => {
                     <th scope="row">MELAYU</th>
                     <td>{statData?.melayu ?? "Loading..."}</td>
                     <td>
-                      <div  className="d-flex align-items-center">
-                        <span className="mr-2">
-                          {calculatePercentage(statData.melayu)}%
-                        </span>
-                        <div>
-                          <Progress
-                            max="100"
-                            value={calculatePercentage(statData.melayu)}
-                            barClassName="bg-gradient-danger"
-                          />
-                        </div>
+                      <div className="d-flex align-items-center">
+                        <span className="mr-2">{calculatePercentage(statData.melayu)}%</span>
+                        <div><Progress max="100" value={calculatePercentage(statData.melayu)} barClassName="bg-gradient-success" /></div>
                       </div>
                     </td>
                   </tr>
@@ -366,16 +335,8 @@ const Index = (props) => {
                     <td>{statData?.cina ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">
-                          {calculatePercentage(statData.cina)}%
-                          </span>
-                        <div>
-                          <Progress
-                            max="100"
-                            value={calculatePercentage(statData.cina)}
-                            barClassName="bg-gradient-success"
-                          />
-                        </div>
+                        <span className="mr-2">{calculatePercentage(statData.cina)}%</span>
+                        <div><Progress max="100" value={calculatePercentage(statData.cina)} barClassName="bg-gradient-warning" /></div>
                       </div>
                     </td>
                   </tr>
@@ -384,13 +345,8 @@ const Index = (props) => {
                     <td>{statData?.india ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">
-                          {calculatePercentage(statData.india)}%
-                          </span>
-                        <div>
-                          <Progress max="100"
-                           value={calculatePercentage(statData.india)} />
-                        </div>
+                        <span className="mr-2">{calculatePercentage(statData.india)}%</span>
+                        <div><Progress max="100" value={calculatePercentage(statData.india)} /></div>
                       </div>
                     </td>
                   </tr>
@@ -399,16 +355,8 @@ const Index = (props) => {
                     <td>{statData?.lain ?? "Loading..."}</td>
                     <td>
                       <div className="d-flex align-items-center">
-                        <span className="mr-2">
-                          {calculatePercentage(statData.lain)}%
-                          </span>
-                        <div>
-                          <Progress
-                            max="100"
-                            value={calculatePercentage(statData.lain)}
-                            barClassName="bg-gradient-danger"
-                          />
-                        </div>
+                        <span className="mr-2">{calculatePercentage(statData.lain)}%</span>
+                        <div><Progress max="100" value={calculatePercentage(statData.lain)} barClassName="bg-gradient-danger" /></div>
                       </div>
                     </td>
                   </tr>

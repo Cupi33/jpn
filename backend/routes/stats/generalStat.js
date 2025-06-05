@@ -50,7 +50,7 @@ router.get('/general', async (req, res) => {
   }
 });
 
-// CHANGED: from router.post to router.get
+
 router.get('/totalRace', async (req, res) => {
   try {
     console.log('Executing /totalRace query...');
@@ -86,7 +86,7 @@ router.get('/totalRace', async (req, res) => {
   }
 });
 
-// CHANGED: from router.post to router.get
+
 router.get('/totalReligion', async (req, res) => {
   try {
     console.log('Executing /totalReligion query...');
@@ -122,5 +122,45 @@ router.get('/totalReligion', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+
+router.get('/ageGroup', async (req, res) => {
+  try {
+    const result = await execute(`
+      SELECT *
+      FROM PEOPLE_AGE_GROUP
+    `);
+
+    if (!result || !result.rows) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    // Initialize group counters with descriptive keys
+    const ageCounts = {
+      '0-12': 0,
+      '13-22': 0,
+      '23-35': 0,
+      '36-45': 0,
+      '46-55': 0,
+      '56+': 0
+    };
+
+    // Map AGE_GROUP values from the view directly to our keys
+    result.rows.forEach(row => {
+      const group = row.AGE_GROUP;
+      const count = row.TOTAL_PEOPLE;
+      if (group in ageCounts) {
+        ageCounts[group] = count;
+      }
+    });
+
+    res.json({ success: true, message: 'Query Successful', stat: ageCounts });
+
+  } catch (err) {
+    console.error('Retrieval error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 
 export default router;
