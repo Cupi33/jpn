@@ -162,5 +162,40 @@ router.get('/ageGroup', async (req, res) => {
   }
 });
 
+router.get('/genderDistribution', async (req, res) => {
+  try {
+    console.log('Executing /genderDistribution query...');
+    const result = await execute(`
+      SELECT GENDER, TOTAL_COUNT, PERCENTAGE
+      FROM PERCENTAGE_GENDER
+    `);
+
+    if (!result || !result.rows) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const genderStats = {
+      LELAKI: { count: 0, percentage: 0 },
+      PEREMPUAN: { count: 0, percentage: 0 }
+    };
+    
+    result.rows.forEach(row => {
+      const genderKey = row.GENDER; 
+      if (genderKey === 'LELAKI' || genderKey === 'PEREMPUAN') {
+        genderStats[genderKey] = {
+          count: row.TOTAL_COUNT,
+          percentage: row.PERCENTAGE
+        };
+      }
+    });
+
+    res.json({ success: true, message: 'Query Successful', stat: genderStats });
+
+  } catch (err) {
+    console.error('Retrieval error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 
 export default router;
