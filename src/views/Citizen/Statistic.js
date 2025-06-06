@@ -34,6 +34,23 @@ import {
 
 import Header from "components/Headers/Header.js";
 
+// *** NEW: Helper function to calculate Y-axis scale ***
+const getAxisConfig = (maxVal) => {
+  if (maxVal <= 0) return { suggestedMax: 10, stepSize: 2 };
+  if (maxVal <= 10) return { suggestedMax: 10, stepSize: 2 };
+  if (maxVal <= 30) return { suggestedMax: 30, stepSize: 5 };
+  if (maxVal <= 50) return { suggestedMax: 50, stepSize: 10 };
+  if (maxVal <= 100) return { suggestedMax: 100, stepSize: 20 };
+  
+  // For larger numbers, calculate a step size that creates 4-6 ticks
+  const step = Math.ceil(maxVal / 5); // Aim for 5 ticks
+  const roundedStep = Math.ceil(step / 10) * 10; // Round step up to nearest 10
+  const finalMax = Math.ceil(maxVal / roundedStep) * roundedStep; // Round max up to match the step
+
+  return { suggestedMax: finalMax, stepSize: roundedStep };
+};
+
+
 const Index = (props) => {
   // State for Race and Religion tables
   const [statData, setStatData] = useState({ melayu: 0, cina: 0, india: 0, lain: 0 });
@@ -41,13 +58,15 @@ const Index = (props) => {
 
   // --- STATE FOR CHARTS ---
 
-  // *** NEW: State for the top Line Chart (Births/Deaths) ***
+  // State for the top Line Chart (Births/Deaths)
   const [activeNav, setActiveNav] = useState(1); // 1 for Deaths, 2 for Births
-  const [deathData, setDeathData] = useState(null); // To store raw API data for deaths
-  const [birthData, setBirthData] = useState(null); // To store raw API data for births
-  const [birthDeathChartData, setBirthDeathChartData] = useState({}); // To hold the formatted data for the chart
+  const [deathData, setDeathData] = useState(null);
+  const [birthData, setBirthData] = useState(null);
+  const [birthDeathChartData, setBirthDeathChartData] = useState({});
+  // *** NEW: State for the dynamic line chart options ***
+  const [lineChartOptions, setLineChartOptions] = useState(lineChartExample.options);
   
-  // *** NEW: State for the Gender Pie Chart ***
+  // State for the Gender Pie Chart
   const [genderStat, setGenderStat] = useState(null);
   const [genderChartData, setGenderChartData] = useState(genderPieChartExample.data);
 
@@ -59,7 +78,6 @@ const Index = (props) => {
   useEffect(() => {
     const fetchAllStats = async () => {
       try {
-        // *** UPDATED: Added totalDeath and totalBorn to the API calls ***
         const [
           raceResponse, 
           religionResponse, 
@@ -80,8 +98,6 @@ const Index = (props) => {
         if (religionResponse.data.success) setStatDataReligion(religionResponse.data.stat);
         if (ageGroupResponse.data.success) setAgeGroupStat(ageGroupResponse.data.stat);
         if (genderResponse.data.success) setGenderStat(genderResponse.data.stat);
-        
-        // *** NEW: Set state for birth and death data ***
         if (deathResponse.data.success) setDeathData(deathResponse.data.stat);
         if (birthResponse.data.success) setBirthData(birthResponse.data.stat);
 
@@ -95,9 +111,8 @@ const Index = (props) => {
 
   // --- USEEFFECTS TO UPDATE CHARTS WITH API DATA ---
 
-  // *** NEW: This useEffect updates the LINE chart when birth/death data arrives or the toggle is clicked ***
+  // This useEffect updates the LINE chart when birth/death data arrives or the toggle is clicked
   useEffect(() => {
-    // Wait until both data sets are fetched from the API
     if (!deathData || !birthData) {
       return;
     }
@@ -109,16 +124,14 @@ const Index = (props) => {
     if (activeNav === 1) { // Show Deaths
       dataToShow = deathData;
       chartLabel = "Total Deaths";
-      chartColor = "rgba(245, 54, 92, 0.6)"; // A reddish color
+      chartColor = "rgba(245, 54, 92, 0.6)";
     } else { // Show Births
       dataToShow = birthData;
       chartLabel = "Total Births";
-      chartColor = "rgba(24, 119, 242, 0.6)"; // A bluish color
+      chartColor = "rgba(24, 119, 242, 0.6)";
     }
 
-    // The API returns data like { "2022": 5, "2023": 10 }. We need to convert this
-    // into separate arrays for labels (years) and data (counts).
-    const labels = Object.keys(dataToShow).sort(); // Sort years chronologically
+    const labels = Object.keys(dataToShow).sort();
     const values = labels.map(year => dataToShow[year]);
 
     setBirthDeathChartData({
@@ -128,18 +141,27 @@ const Index = (props) => {
           label: chartLabel,
           data: values,
           borderColor: chartColor,
-          // You can add more styling here if you want
         },
       ],
     });
 
-  }, [deathData, birthData, activeNav]); // Rerun this effect when data arrives or the toggle changes
+    // *** NEW: Calculate and set the dynamic chart options ***
+    const maxDataValue = values.length > 0 ? Math.max(...values) : 10;
+    const { suggestedMax, stepSize } = getAxisConfig(maxDataValue);
+
+    // Deep copy and update options to avoid mutation issues
+    const newOptions = JSON.parse(JSON.stringify(lineChartExample.options));
+    newOptions.scales.yAxes[0].ticks.stepSize = stepSize;
+    newOptions.scales.yAxes[0].suggestedMax = suggestedMax;
+    setLineChartOptions(newOptions);
 
 
-  // This useEffect updates the PIE chart when gender data (genderStat) arrives
+  }, [deathData, birthData, activeNav]);
+
+
+  // This useEffect updates the PIE chart when gender data arrives
    useEffect(() => {
     if (genderStat) {
-      // Use the keys "LELAKI" and "PEREMPUAN" from your corrected API
       const dataForChart = [genderStat.LELAKI.count, genderStat.PEREMPUAN.count];
       setGenderChartData((prevData) => ({
         ...prevData,
@@ -148,7 +170,7 @@ const Index = (props) => {
     }
   }, [genderStat]);
 
-  // This useEffect updates the BAR chart when age group data (ageGroupStat) arrives
+  // This useEffect updates the BAR chart when age group data arrives
   useEffect(() => {
     if (ageGroupStat) {
       const dataForChart = [
@@ -166,11 +188,10 @@ const Index = (props) => {
     parseOptions(Chart, chartOptions());
   }
 
-  // *** UPDATED: Handler for the Line Chart's toggle buttons ***
+  // Handler for the Line Chart's toggle buttons
   const toggleNavs = (e, index) => {
     e.preventDefault();
     setActiveNav(index);
-    // The useEffect hook for the line chart will handle the data update automatically
   };
 
   // Function to calculate percentage for race
@@ -202,14 +223,12 @@ const Index = (props) => {
                     <h6 className="text-uppercase text-light ls-1 mb-1">
                       Overview
                     </h6>
-                    {/* *** UPDATED: Dynamic chart title *** */}
                     <h2 className="text-white mb-0">
                       {activeNav === 1 ? 'Annual Deaths' : 'Annual Births'}
                     </h2>
                   </div>
                   <div className="col">
                     <Nav className="justify-content-end" pills>
-                      {/* *** UPDATED: Button for Deaths *** */}
                       <NavItem>
                         <NavLink
                           className={classnames("py-2 px-3", {
@@ -222,7 +241,6 @@ const Index = (props) => {
                           <span className="d-md-none">D</span>
                         </NavLink>
                       </NavItem>
-                      {/* *** UPDATED: Button for Births *** */}
                       <NavItem>
                         <NavLink
                           className={classnames("py-2 px-3", {
@@ -242,10 +260,10 @@ const Index = (props) => {
               </CardHeader>
               <CardBody>
                 <div className="chart">
-                  {/* *** UPDATED: Line chart now uses dynamic state *** */}
+                  {/* *** UPDATED: Line chart now uses DYNAMIC options *** */}
                   <Line
                     data={birthDeathChartData}
-                    options={lineChartExample.options}
+                    options={lineChartOptions}
                     getDatasetAtEvent={(e) => console.log(e)}
                   />
                 </div>
@@ -256,7 +274,6 @@ const Index = (props) => {
 
          {/* --- ROW FOR THE DEMOGRAPHIC CHARTS --- */}
         <Row className="mt-5">
-          {/* *** PIE CHART (GENDER) - REPLACED THE RACE CHART *** */}
           <Col xl="6" className="mb-5 mb-xl-0">
             <Card className="shadow h-100">
               <CardHeader className="bg-transparent">
@@ -274,10 +291,8 @@ const Index = (props) => {
               </CardBody>
             </Card>
           </Col>
-
-          {/* BAR CHART (AGE) */}
           <Col xl="6">
-            <Card className="shadow h-100"> {/* Added h-100 to make cards same height */}
+            <Card className="shadow h-100">
               <CardHeader className="bg-transparent">
                 <Row className="align-items-center">
                   <div className="col">

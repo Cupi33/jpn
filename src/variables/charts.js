@@ -1,22 +1,4 @@
-// charts.js
 
-/*!
-
-=========================================================
-* Argon Dashboard React - v1.2.4
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/argon-dashboard-react
-* Copyright 2024 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/argon-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
 const Chart = require("chart.js");
 //
 // Chart extension for making the bars rounded
@@ -308,7 +290,7 @@ function parseOptions(parent, options) {
   }
 }
 
-// --- CHART 1: LINE CHART (Sales value) ---
+// --- CHART 1: LINE CHART (Generic, Cleaned Up) ---
 let lineChartExample = {
   options: {
     scales: {
@@ -319,9 +301,10 @@ let lineChartExample = {
             zeroLineColor: colors.gray[900],
           },
           ticks: {
+            // *** UPDATED: Simple callback that just returns the value ***
             callback: function (value) {
-              if (!(value % 10)) {
-                return "$" + value + "k";
+              if (Number.isInteger(value)) {
+                return value;
               }
             },
           },
@@ -330,6 +313,7 @@ let lineChartExample = {
     },
     tooltips: {
       callbacks: {
+        // *** UPDATED: Simple label that just shows the value ***
         label: function (item, data) {
           var label = data.datasets[item.datasetIndex].label || "";
           var yLabel = item.yLabel;
@@ -339,33 +323,18 @@ let lineChartExample = {
             content += label;
           }
 
-          content += "$" + yLabel + "k";
+          content += " " + yLabel;
           return content;
         },
       },
     },
   },
+  // Data properties are no longer needed here as they will be provided by the component
   data1: (canvas) => {
-    return {
-      labels: ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-      datasets: [
-        {
-          label: "Performance",
-          data: [0, 20, 10, 30, 15, 40, 20, 60, 60],
-        },
-      ],
-    };
+    return { labels: [], datasets: [{ label: "Performance", data: [] }] };
   },
   data2: (canvas) => {
-    return {
-      labels: ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-      datasets: [
-        {
-          label: "Performance",
-          data: [0, 20, 5, 25, 10, 30, 15, 40, 40],
-        },
-      ],
-    };
+    return { labels: [], datasets: [{ label: "Performance", data: [] }] };
   },
 };
 
