@@ -1,3 +1,5 @@
+// src/views/admin/dashboardAdmin.js
+
 import { useState } from "react";
 // node.js library that concatenates classes (strings)
 import classnames from "classnames";
@@ -23,13 +25,13 @@ import {
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// core components
+// *** UPDATED IMPORT: Point to the new chartAdmin.js file ***
 import {
   chartOptions,
   parseOptions,
   chartExample1,
   chartExample2,
-} from "variables/charts.js";
+} from "variables/chartAdmin.js"; // <-- THE ONLY CHANGE NEEDED
 
 import AdminHeader from "components/Headers/AdminHeader";
 
@@ -40,8 +42,8 @@ const Index = (props) => {
   useEffect(() => {
     // Get user data from sessionStorage
     console.log('Checking session storage...');
-  console.log('Current staffID:', sessionStorage.getItem('staffID'));
-  console.log('Current username:', sessionStorage.getItem('username'));
+    console.log('Current staffID:', sessionStorage.getItem('staffID'));
+    console.log('Current username:', sessionStorage.getItem('username'));
     const storedStaffID = sessionStorage.getItem('staffID');
     const storedUsername = sessionStorage.getItem('username');
 
