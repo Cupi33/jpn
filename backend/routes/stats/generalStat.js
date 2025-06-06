@@ -197,5 +197,63 @@ router.get('/genderDistribution', async (req, res) => {
   }
 });
 
+router.get('/totalDeath', async (req, res) => {
+  try {
+    console.log('Executing /totalDeath query...');
+    const result = await execute(`
+      SELECT YEAR, TOTAL_DEATHS
+      FROM TOTAL_DEATH
+    `);
 
+    // The view might return no rows if there are no deaths in the specified period.
+    // This is valid, so we'll return an empty stat object.
+    if (!result || !result.rows) {
+      console.log('Query for /totalDeath returned no results.');
+      return res.json({ success: true, message: 'Query Successful, no deaths recorded in the period.', stat: {} });
+    }
+
+    const deathCounts = {};
+    
+    result.rows.forEach(row => {
+      // Column names from Oracle are typically uppercase unless quoted
+      deathCounts[row.YEAR] = row.TOTAL_DEATHS;
+    });
+
+    res.json({ success: true, message: 'Query Successful', stat: deathCounts });
+
+  } catch (err) {
+    console.error('Retrieval error for /totalDeath:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
+router.get('/totalBorn', async (req, res) => {
+  try {
+    console.log('Executing /totalBorn query...');
+    const result = await execute(`
+      SELECT YEAR, TOTAL_BIRTHS
+      FROM TOTAL_BORN
+    `);
+
+    // The TOTAL_BORN view should always return rows, so an empty result is an error.
+    if (!result || !result.rows || !result.rows.length) {
+      console.error('Query for /totalBorn returned no results, which is unexpected.');
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const bornCounts = {};
+    
+    result.rows.forEach(row => {
+      // Column names from Oracle are typically uppercase unless quoted
+      bornCounts[row.YEAR] = row.TOTAL_BIRTHS;
+    });
+
+    res.json({ success: true, message: 'Query Successful', stat: bornCounts });
+
+  } catch (err) {
+    console.error('Retrieval error for /totalBorn:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 export default router;
