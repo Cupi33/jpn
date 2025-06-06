@@ -27,10 +27,9 @@ import {
 import {
   chartOptions,
   parseOptions,
-  lineChartExample, // The "Sales" line chart
-  // pieChartExample,  // The "Race" pie chart
+  lineChartExample, // We will use its options but provide our own data
   barChartExample, 
-  genderPieChartExample // The "Age" bar chart
+  genderPieChartExample
 } from "variables/charts.js";
 
 import Header from "components/Headers/Header.js";
@@ -42,9 +41,11 @@ const Index = (props) => {
 
   // --- STATE FOR CHARTS ---
 
-  // State for the top Line Chart ("Sales")
-  const [activeNav, setActiveNav] = useState(1);
-  const [chartExample1Data, setChartExample1Data] = useState("data1");
+  // *** NEW: State for the top Line Chart (Births/Deaths) ***
+  const [activeNav, setActiveNav] = useState(1); // 1 for Deaths, 2 for Births
+  const [deathData, setDeathData] = useState(null); // To store raw API data for deaths
+  const [birthData, setBirthData] = useState(null); // To store raw API data for births
+  const [birthDeathChartData, setBirthDeathChartData] = useState({}); // To hold the formatted data for the chart
   
   // *** NEW: State for the Gender Pie Chart ***
   const [genderStat, setGenderStat] = useState(null);
@@ -58,18 +59,31 @@ const Index = (props) => {
   useEffect(() => {
     const fetchAllStats = async () => {
       try {
-        const [raceResponse, religionResponse, ageGroupResponse, genderResponse] = 
-          await Promise.all([
+        // *** UPDATED: Added totalDeath and totalBorn to the API calls ***
+        const [
+          raceResponse, 
+          religionResponse, 
+          ageGroupResponse, 
+          genderResponse,
+          deathResponse,
+          birthResponse,
+        ] = await Promise.all([
             axios.get("http://localhost:5000/stat/totalRace"),
             axios.get("http://localhost:5000/stat/totalReligion"),
             axios.get("http://localhost:5000/stat/ageGroup"),
             axios.get("http://localhost:5000/stat/genderDistribution"), 
+            axios.get("http://localhost:5000/stat/totalDeath"),
+            axios.get("http://localhost:5000/stat/totalBorn"),
           ]);
 
         if (raceResponse.data.success) setStatData(raceResponse.data.stat);
         if (religionResponse.data.success) setStatDataReligion(religionResponse.data.stat);
         if (ageGroupResponse.data.success) setAgeGroupStat(ageGroupResponse.data.stat);
-        if (genderResponse.data.success) setGenderStat(genderResponse.data.stat); // Set gender state
+        if (genderResponse.data.success) setGenderStat(genderResponse.data.stat);
+        
+        // *** NEW: Set state for birth and death data ***
+        if (deathResponse.data.success) setDeathData(deathResponse.data.stat);
+        if (birthResponse.data.success) setBirthData(birthResponse.data.stat);
 
       } catch (error) {
         console.error("Error fetching one or more statistic endpoints:", error);
@@ -80,6 +94,47 @@ const Index = (props) => {
   }, []); 
 
   // --- USEEFFECTS TO UPDATE CHARTS WITH API DATA ---
+
+  // *** NEW: This useEffect updates the LINE chart when birth/death data arrives or the toggle is clicked ***
+  useEffect(() => {
+    // Wait until both data sets are fetched from the API
+    if (!deathData || !birthData) {
+      return;
+    }
+
+    let dataToShow;
+    let chartLabel;
+    let chartColor;
+
+    if (activeNav === 1) { // Show Deaths
+      dataToShow = deathData;
+      chartLabel = "Total Deaths";
+      chartColor = "rgba(245, 54, 92, 0.6)"; // A reddish color
+    } else { // Show Births
+      dataToShow = birthData;
+      chartLabel = "Total Births";
+      chartColor = "rgba(24, 119, 242, 0.6)"; // A bluish color
+    }
+
+    // The API returns data like { "2022": 5, "2023": 10 }. We need to convert this
+    // into separate arrays for labels (years) and data (counts).
+    const labels = Object.keys(dataToShow).sort(); // Sort years chronologically
+    const values = labels.map(year => dataToShow[year]);
+
+    setBirthDeathChartData({
+      labels: labels,
+      datasets: [
+        {
+          label: chartLabel,
+          data: values,
+          borderColor: chartColor,
+          // You can add more styling here if you want
+        },
+      ],
+    });
+
+  }, [deathData, birthData, activeNav]); // Rerun this effect when data arrives or the toggle changes
+
 
   // This useEffect updates the PIE chart when gender data (genderStat) arrives
    useEffect(() => {
@@ -111,11 +166,11 @@ const Index = (props) => {
     parseOptions(Chart, chartOptions());
   }
 
-  // Handler for the Line Chart's "Month/Week" toggle
+  // *** UPDATED: Handler for the Line Chart's toggle buttons ***
   const toggleNavs = (e, index) => {
     e.preventDefault();
     setActiveNav(index);
-    setChartExample1Data("data" + index);
+    // The useEffect hook for the line chart will handle the data update automatically
   };
 
   // Function to calculate percentage for race
@@ -139,7 +194,7 @@ const Index = (props) => {
       <Container className="mt--7" fluid>
         {/* --- ROW FOR THE LINE CHART --- */}
         <Row>
-          <Col className="mb-5 mb-xl-0" xl="12"> {/* CORRECTED: Takes full width */}
+          <Col className="mb-5 mb-xl-0" xl="12">
             <Card className="bg-gradient-default shadow">
               <CardHeader className="bg-transparent">
                 <Row className="align-items-center">
@@ -147,10 +202,14 @@ const Index = (props) => {
                     <h6 className="text-uppercase text-light ls-1 mb-1">
                       Overview
                     </h6>
-                    <h2 className="text-white mb-0">Sales value</h2>
+                    {/* *** UPDATED: Dynamic chart title *** */}
+                    <h2 className="text-white mb-0">
+                      {activeNav === 1 ? 'Annual Deaths' : 'Annual Births'}
+                    </h2>
                   </div>
                   <div className="col">
                     <Nav className="justify-content-end" pills>
+                      {/* *** UPDATED: Button for Deaths *** */}
                       <NavItem>
                         <NavLink
                           className={classnames("py-2 px-3", {
@@ -159,10 +218,11 @@ const Index = (props) => {
                           href="#pablo"
                           onClick={(e) => toggleNavs(e, 1)}
                         >
-                          <span className="d-none d-md-block">Month</span>
-                          <span className="d-md-none">M</span>
+                          <span className="d-none d-md-block">Deaths</span>
+                          <span className="d-md-none">D</span>
                         </NavLink>
                       </NavItem>
+                      {/* *** UPDATED: Button for Births *** */}
                       <NavItem>
                         <NavLink
                           className={classnames("py-2 px-3", {
@@ -172,8 +232,8 @@ const Index = (props) => {
                           href="#pablo"
                           onClick={(e) => toggleNavs(e, 2)}
                         >
-                          <span className="d-none d-md-block">Week</span>
-                          <span className="d-md-none">W</span>
+                          <span className="d-none d-md-block">Births</span>
+                          <span className="d-md-none">B</span>
                         </NavLink>
                       </NavItem>
                     </Nav>
@@ -182,9 +242,11 @@ const Index = (props) => {
               </CardHeader>
               <CardBody>
                 <div className="chart">
+                  {/* *** UPDATED: Line chart now uses dynamic state *** */}
                   <Line
-                    data={lineChartExample[chartExample1Data]}
+                    data={birthDeathChartData}
                     options={lineChartExample.options}
+                    getDatasetAtEvent={(e) => console.log(e)}
                   />
                 </div>
               </CardBody>
