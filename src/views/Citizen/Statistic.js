@@ -28,8 +28,9 @@ import {
   chartOptions,
   parseOptions,
   lineChartExample, // The "Sales" line chart
-  pieChartExample,  // The "Race" pie chart
-  barChartExample,  // The "Age" bar chart
+  // pieChartExample,  // The "Race" pie chart
+  barChartExample, 
+  genderPieChartExample // The "Age" bar chart
 } from "variables/charts.js";
 
 import Header from "components/Headers/Header.js";
@@ -45,8 +46,9 @@ const Index = (props) => {
   const [activeNav, setActiveNav] = useState(1);
   const [chartExample1Data, setChartExample1Data] = useState("data1");
   
-  // State for the Pie Chart (Race)
-  const [racePieChartData, setRacePieChartData] = useState(pieChartExample.data);
+  // *** NEW: State for the Gender Pie Chart ***
+  const [genderStat, setGenderStat] = useState(null);
+  const [genderChartData, setGenderChartData] = useState(genderPieChartExample.data);
 
   // State for the Bar Chart (Age Group)
   const [ageGroupStat, setAgeGroupStat] = useState(null);
@@ -56,16 +58,18 @@ const Index = (props) => {
   useEffect(() => {
     const fetchAllStats = async () => {
       try {
-        const [raceResponse, religionResponse, ageGroupResponse] =
+        const [raceResponse, religionResponse, ageGroupResponse, genderResponse] = 
           await Promise.all([
             axios.get("http://localhost:5000/stat/totalRace"),
             axios.get("http://localhost:5000/stat/totalReligion"),
             axios.get("http://localhost:5000/stat/ageGroup"),
+            axios.get("http://localhost:5000/stat/genderDistribution"), 
           ]);
 
         if (raceResponse.data.success) setStatData(raceResponse.data.stat);
         if (religionResponse.data.success) setStatDataReligion(religionResponse.data.stat);
         if (ageGroupResponse.data.success) setAgeGroupStat(ageGroupResponse.data.stat);
+        if (genderResponse.data.success) setGenderStat(genderResponse.data.stat); // Set gender state
 
       } catch (error) {
         console.error("Error fetching one or more statistic endpoints:", error);
@@ -73,20 +77,21 @@ const Index = (props) => {
     };
 
     fetchAllStats();
-  }, []); // Empty dependency array ensures this runs only ONCE.
+  }, []); 
 
   // --- USEEFFECTS TO UPDATE CHARTS WITH API DATA ---
 
-  // This useEffect updates the PIE chart when race data (statData) arrives
-  useEffect(() => {
-    if (statData && (statData.melayu > 0 || statData.cina > 0 || statData.india > 0 || statData.lain > 0)) { 
-      const dataForChart = [statData.melayu, statData.cina, statData.india, statData.lain];
-      setRacePieChartData((prevData) => ({
+  // This useEffect updates the PIE chart when gender data (genderStat) arrives
+   useEffect(() => {
+    if (genderStat) {
+      // Use the keys "LELAKI" and "PEREMPUAN" from your corrected API
+      const dataForChart = [genderStat.LELAKI.count, genderStat.PEREMPUAN.count];
+      setGenderChartData((prevData) => ({
         ...prevData,
         datasets: [{ ...prevData.datasets[0], data: dataForChart }],
       }));
     }
-  }, [statData]);
+  }, [genderStat]);
 
   // This useEffect updates the BAR chart when age group data (ageGroupStat) arrives
   useEffect(() => {
@@ -187,22 +192,22 @@ const Index = (props) => {
           </Col>
         </Row>
 
-        {/* --- ROW FOR THE DEMOGRAPHIC CHARTS --- */}
+         {/* --- ROW FOR THE DEMOGRAPHIC CHARTS --- */}
         <Row className="mt-5">
-          {/* PIE CHART (RACE) */}
+          {/* *** PIE CHART (GENDER) - REPLACED THE RACE CHART *** */}
           <Col xl="6" className="mb-5 mb-xl-0">
-            <Card className="shadow h-100"> {/* Added h-100 to make cards same height */}
+            <Card className="shadow h-100">
               <CardHeader className="bg-transparent">
                 <Row className="align-items-center">
                   <div className="col">
                     <h6 className="text-uppercase text-muted ls-1 mb-1">DEMOGRAFI</h6>
-                    <h2 className="mb-0">Jumlah Penduduk Mengikut Bangsa</h2>
+                    <h2 className="mb-0">Jumlah Penduduk Mengikut Jantina</h2>
                   </div>
                 </Row>
               </CardHeader>
               <CardBody>
                 <div className="chart" style={{ height: "350px" }}>
-                  <Pie data={racePieChartData} options={pieChartExample.options} />
+                  <Pie data={genderChartData} options={genderPieChartExample.options} />
                 </div>
               </CardBody>
             </Card>

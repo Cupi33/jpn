@@ -452,6 +452,45 @@ let barChartExample = {
   },
 };
 
+
+let genderPieChartExample = {
+  options: {
+    legend: {
+      display: true,
+      position: 'top', 
+    },
+    tooltips: {
+      callbacks: {
+        label: function (item, data) {
+          var label = data.labels[item.index] || "";
+          var value = data.datasets[0].data[item.index];
+          var content = "";
+          if (label) {
+            content += label + ": ";
+          }
+          content += value.toLocaleString(); // Format number with commas
+          return content;
+        },
+      },
+    },
+  },
+  data: {
+    labels: ["Lelaki", "Perempuan"],
+    datasets: [
+      {
+        label: "Jantina",
+        data: [0, 0],
+        backgroundColor: [
+            colors.theme.info,   // Blue for LELAKI
+            colors.theme.primary // Purple/Pink for PEREMPUAN
+        ],
+        borderColor: colors.white,
+      },
+    ],
+  },
+};
+
+
 // --- CORRECTED EXPORTS ---
 module.exports = {
   chartOptions,
@@ -459,4 +498,5 @@ module.exports = {
   lineChartExample, // Exporting with the correct name
   pieChartExample,  // Exporting with the correct name
   barChartExample,  // Exporting with the correct name
+  genderPieChartExample,
 };
