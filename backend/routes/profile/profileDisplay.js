@@ -111,5 +111,27 @@ router.get('/get-picture/:citizenID', async (req, res) => {
   }
 });
 
+router.put('/remove-picture', async (req, res) => {
+  const { citizenID } = req.body;
+
+  if (!citizenID) {
+    return res.status(400).json({ success: false, message: 'citizenID is required.' });
+  }
+
+  try {
+    // Set the PROFILE_PIC column to NULL for the given citizenID
+    const sql = `UPDATE ACCOUNT SET PROFILE_PIC = NULL WHERE CITIZENID = :id`;
+    const result = await execute(sql, [citizenID]);
+
+    if (result.rowsAffected === 0) {
+      return res.status(404).json({ success: false, message: 'Account not found for the given citizenID.' });
+    }
+
+    res.json({ success: true, message: 'Gambar profil berjaya dibuang' });
+  } catch (err) {
+    console.error('Error removing profile picture:', err);
+    res.status(500).json({ success: false, message: 'Proses membuang gambar profil gagal' });
+  }
+});
 
 export default router;

@@ -28,7 +28,7 @@ const Profile = () => {
   
   // State for Change Username Modal
   const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
-  // 👇 State for the new Change Password Modal
+  // State for the new Change Password Modal
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const fileInputRef = useRef(null);
@@ -70,7 +70,7 @@ const Profile = () => {
           const imageUrl = URL.createObjectURL(pictureResponse.data);
           setProfilePicUrl(imageUrl);
         } else {
-          setProfilePicUrl(require("../../assets/img/theme/team-4-800x800.jpg"));
+          setProfilePicUrl(require("../../assets/img/theme/user.png"));
         }
 
       } catch (error) {
@@ -126,13 +126,46 @@ const Profile = () => {
     fileInputRef.current.click();
   };
 
-  // Toggler for username modal
+  // 👇 NEW HANDLER FUNCTION FOR THE "BUANG" BUTTON 👇
+  const handleRemovePicture = async () => {
+    // Ask for confirmation first
+    const result = await Swal.fire({
+        title: 'Anda pasti?',
+        text: "Anda akan membuang gambar profil anda.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, buang!',
+        cancelButtonText: 'Batal'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await axios.put('http://localhost:5000/profile/remove-picture', { citizenID });
+
+            if(response.data.success) {
+                Swal.fire(
+                    'Dibuang!',
+                    'Gambar profil anda telah dibuang.',
+                    'success'
+                );
+                // Reset the image to the default one
+                setProfilePicUrl(require("../../assets/img/theme/team-4-800x800.jpg"));
+            } else {
+                Swal.fire('Gagal', response.data.message, 'error');
+            }
+        } catch (error) {
+            console.error("Error removing profile picture:", error);
+            Swal.fire('Ralat', 'Proses membuang gambar profil gagal. Sila cuba lagi.', 'error');
+        }
+    }
+  };
+
   const toggleChangeUsernameModal = () => setIsUsernameModalOpen(!isUsernameModalOpen);
   
-  // 👇 Toggler for the new password modal
   const toggleChangePasswordModal = () => setIsPasswordModalOpen(!isPasswordModalOpen);
 
-  // Handler for successful username update
   const handleUsernameUpdated = (updatedUsername) => {
     setUsername(updatedUsername);
     sessionStorage.setItem("username", updatedUsername);
@@ -178,7 +211,8 @@ const Profile = () => {
                       <Button className="mr-4" color="info" onClick={handleUbahProfilClick} size="sm">
                         Ubah Profil
                       </Button>
-                      <Button className="float-right" color="default" onClick={(e) => e.preventDefault()} size="sm">
+                      {/* 👇 UPDATED BUTTON ONCLICK HANDLER 👇 */}
+                      <Button className="float-right" color="danger" onClick={handleRemovePicture} size="sm">
                         Buang
                       </Button>
                     </div>
@@ -196,7 +230,6 @@ const Profile = () => {
                         <Button className="mx-2" color="primary" onClick={toggleChangeUsernameModal} size="sm">
                           Ubah Username
                         </Button>
-                        {/* 👇 Updated button to open the new password modal */}
                         <Button className="mx-2" color="secondary" onClick={toggleChangePasswordModal} size="sm">
                           Ubah Kata Laluan
                         </Button>
@@ -253,7 +286,7 @@ const Profile = () => {
         onUsernameUpdate={handleUsernameUpdated}
       />
 
-      {/* 👇 Render the new password modal component */}
+      {/* Render the new password modal component */}
       <ChangePasswordModal 
         isOpen={isPasswordModalOpen}
         toggle={toggleChangePasswordModal}

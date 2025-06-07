@@ -11,7 +11,7 @@ const UserHeader = ({ name = "User" }) => {
         style={{
           minHeight: "600px",
           backgroundImage:
-            "url(" + require("../../assets/img/theme/profile-cover.jpg") + ")",
+            "url(" + require("../../assets/img/theme/family.jpg") + ")",
           backgroundSize: "cover",
           backgroundPosition: "center top",
         }}
