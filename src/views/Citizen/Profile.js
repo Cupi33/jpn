@@ -51,7 +51,14 @@ const Profile = () => {
 
   return (
     <>
-      <UserHeader />
+      {/* 
+        THIS IS THE ONLY LINE THAT CHANGES.
+        We pass the 'fullname' from our 'profileData' state to the 'name' prop of UserHeader.
+        The `?` (optional chaining) prevents errors if profileData is still null (loading).
+        We provide the 'username' as a fallback while the full name is loading.
+      */}
+      <UserHeader name={profileData?.fullname || username} />
+      
       <Container className="mt--7" fluid>
         <Row>
           <Col className="order-xl-2 mb-5 mb-xl-0" xl="4">

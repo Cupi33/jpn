@@ -1,7 +1,9 @@
 // reactstrap components
 import { Button, Container, Row, Col } from "reactstrap";
 
-const UserHeader = () => {
+// 1. Accept a "name" prop. We give it a default value of "User"
+//    in case nothing is passed to it.
+const UserHeader = ({ name = "User" }) => {
   return (
     <>
       <div
@@ -20,10 +22,10 @@ const UserHeader = () => {
         <Container className="d-flex align-items-center" fluid>
           <Row>
             <Col lg="7" md="10">
-              <h1 className="display-2 text-white">Hello Jesse</h1>
+              {/* 2. Use the "name" prop here instead of the hardcoded "Jesse". */}
+              <h1 className="display-2 text-white">Hello {name}</h1>
               <p className="text-white mt-0 mb-5">
-                This is your profile page. You can see the progress you've made
-                with your work and manage your projects or assigned tasks
+                Ini merupakan halaman bagi maklumat peribadi pengguna
               </p>
               <Button
                 color="info"
