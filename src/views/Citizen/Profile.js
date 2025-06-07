@@ -14,7 +14,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import UserHeader from "components/Headers/UserHeader.js";
-import Swal from 'sweetalert2'; // 👈 1. Import SweetAlert2
+import Swal from 'sweetalert2';
+// 👇 Import the new modal component
+import ChangeUsernameModal from "../../components/Modals/ChangeUsername";
 
 const Profile = () => {
   const [citizenID, setCitizenID] = useState("");
@@ -22,11 +24,13 @@ const Profile = () => {
   const [profileData, setProfileData] = useState(null);
   const [profilePicUrl, setProfilePicUrl] = useState(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
+  
+  // 👇 State to control the modal visibility
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
-  // Bahagian useEffect ini sudah betul dan tidak perlu diubah.
   useEffect(() => {
     const storedCitizenID = sessionStorage.getItem("citizenID");
     const storedUsername = sessionStorage.getItem("username");
@@ -77,7 +81,6 @@ const Profile = () => {
     fetchData();
   }, [navigate]);
 
-  // 👇 2. Di dalam fungsi ini, kita akan menggantikan semua 'alert'.
   const handlePictureUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -92,29 +95,26 @@ const Profile = () => {
       const response = await axios.put('http://localhost:5000/profile/upload-picture', formData);
       
       if (response.data.success) {
-        // 'alert' untuk mesej BERJAYA digantikan dengan SweetAlert
         Swal.fire({
           icon: 'success',
           title: 'Berjaya!',
-          text: 'Gambar profil berjaya dimuat naik', // Teks asal dikekalkan
+          text: 'Gambar profil berjaya dimuat naik',
           timer: 2000,
           showConfirmButton: false
         });
       } else {
-        // 'alert' untuk mesej GAGAL (dari API) digantikan dengan SweetAlert
         Swal.fire({
           icon: 'error',
           title: 'Gagal',
-          text: 'Gambar profil gagal dimuat naik: ' + response.data.message // Teks asal dikekalkan
+          text: 'Gambar profil gagal dimuat naik: ' + response.data.message
         });
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      // 'alert' untuk mesej RALAT (dari network/server) digantikan dengan SweetAlert
       Swal.fire({
         icon: 'error',
         title: 'Ralat',
-        text: 'Isu Memuat Naik gambar profil. Sila cuba sebentar lagi.' // Teks asal diubah suai sedikit untuk lebih jelas
+        text: 'Isu Memuat Naik gambar profil. Sila cuba sebentar lagi.'
       });
     }
   };
@@ -123,7 +123,16 @@ const Profile = () => {
     fileInputRef.current.click();
   };
 
-  // Bahagian JSX di bawah ini tidak perlu diubah.
+  // 👇 Function to toggle the modal
+  const toggleChangeUsernameModal = () => setIsModalOpen(!isModalOpen);
+  
+  // 👇 Function to handle successful username update from the modal
+  const handleUsernameUpdated = (updatedUsername) => {
+    setUsername(updatedUsername);
+    sessionStorage.setItem("username", updatedUsername);
+  };
+
+
   return (
     <>
       <UserHeader name={profileData?.fullname || username} />
@@ -136,7 +145,7 @@ const Profile = () => {
             </Col>
           ) : (
             <>
-              {/* ... Semua kandungan JSX sedia ada anda yang sudah betul ... */}
+              {/* ... All existing correct JSX ... */}
               <Col className="order-xl-2 mb-5 mb-xl-0" xl="4">
                 <Card className="card-profile shadow">
                   <Row className="justify-content-center">
@@ -179,7 +188,8 @@ const Profile = () => {
                       <h7>Username</h7>
                       <h3>{username}<span className="font-weight-light"></span></h3>
                       <div className="d-flex justify-content-center mt-3 mb-4">
-                        <Button className="mx-2" color="primary" onClick={(e) => e.preventDefault()} size="sm">
+                        {/* 👇 Updated button to open the modal */}
+                        <Button className="mx-2" color="primary" onClick={toggleChangeUsernameModal} size="sm">
                           Ubah Username
                         </Button>
                         <Button className="mx-2" color="secondary" onClick={(e) => e.preventDefault()} size="sm">
@@ -228,6 +238,15 @@ const Profile = () => {
           )}
         </Row>
       </Container>
+      
+      {/* 👇 Render the modal component here. It is invisible by default. */}
+      <ChangeUsernameModal
+        isOpen={isModalOpen}
+        toggle={toggleChangeUsernameModal}
+        citizenID={citizenID}
+        currentUsername={username}
+        onUsernameUpdate={handleUsernameUpdated}
+      />
     </>
   );
 };
