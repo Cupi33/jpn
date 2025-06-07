@@ -156,5 +156,47 @@ router.post('/loginStaff', async (req, res) => {
   }
 });
 
+router.post('/changeUsername', async (req, res) => {
+  const { username, citizenID} = req.body;
+
+  try {
+    const result = await execute(
+      `SELECT *
+        FROM account 
+        WHERE username = :1 `,
+      [username]  
+    );
+
+    if (result.rows.length > 0) 
+      {
+      return res.status(401).json({ success: false, message: 'Username sudah diguna penggua lain' });
+      }
+
+
+      const result2 = await execute(
+      `UPDATE ACCOUNT
+      SET username = :1
+      WHERE CITIZENID = :2
+        `,
+      [username, citizenID] 
+    );
+
+    if (result2.rowsAffected === 0) {
+  return res.status(404).json({
+    success: false,
+    message: 'Citizen ID tidak dijumpai atau tiada perubahan berlaku',
+  });
+}
+
+    res.json({
+      success: true,
+      message: 'Username berjaya diubah',
+    });
+
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 export default router;

@@ -13,7 +13,6 @@ const router = express.Router();
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// --- NO CHANGES TO THIS ROUTE ---
 router.post('/profile', async (req, res) => {
   const { citizenID } = req.body;
   try {
