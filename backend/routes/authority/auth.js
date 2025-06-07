@@ -199,4 +199,48 @@ router.post('/changeUsername', async (req, res) => {
   }
 });
 
+router.post('/changePassword', async (req, res) => {
+  const { oldpassword, newpassword, username } = req.body;
+
+  try {
+    // Step 1: Check if old password matches
+    const result = await execute(
+      `SELECT * FROM account WHERE username = :1 AND password = :2`,
+      [username, oldpassword]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Salah kata laluan' });
+    }
+
+    if(oldpassword === newpassword)
+    {
+      return res.status(401).json({ success: false, message: 'Sila gunakan kata laluan yang berbeza daripada kata laluan sebelumnya' });
+    }
+
+    // Step 2: Update the password
+    const result2 = await execute(
+      `UPDATE account SET password = :1 WHERE username = :2`,
+      [newpassword, username]
+    );
+
+    if (result2.rowsAffected === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'USERNAME TIDAK DIJUMPAI',
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Kata laluan berjaya diubah',
+    });
+
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
 export default router;

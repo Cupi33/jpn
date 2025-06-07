@@ -15,8 +15,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import UserHeader from "components/Headers/UserHeader.js";
 import Swal from 'sweetalert2';
-// 👇 Import the new modal component
+// 👇 Import both modal components
 import ChangeUsernameModal from "../../components/Modals/ChangeUsername";
+import ChangePasswordModal from "../../components/Modals/changePassword";
 
 const Profile = () => {
   const [citizenID, setCitizenID] = useState("");
@@ -25,8 +26,10 @@ const Profile = () => {
   const [profilePicUrl, setProfilePicUrl] = useState(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
   
-  // 👇 State to control the modal visibility
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // State for Change Username Modal
+  const [isUsernameModalOpen, setIsUsernameModalOpen] = useState(false);
+  // 👇 State for the new Change Password Modal
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
@@ -123,15 +126,17 @@ const Profile = () => {
     fileInputRef.current.click();
   };
 
-  // 👇 Function to toggle the modal
-  const toggleChangeUsernameModal = () => setIsModalOpen(!isModalOpen);
+  // Toggler for username modal
+  const toggleChangeUsernameModal = () => setIsUsernameModalOpen(!isUsernameModalOpen);
   
-  // 👇 Function to handle successful username update from the modal
+  // 👇 Toggler for the new password modal
+  const toggleChangePasswordModal = () => setIsPasswordModalOpen(!isPasswordModalOpen);
+
+  // Handler for successful username update
   const handleUsernameUpdated = (updatedUsername) => {
     setUsername(updatedUsername);
     sessionStorage.setItem("username", updatedUsername);
   };
-
 
   return (
     <>
@@ -188,11 +193,11 @@ const Profile = () => {
                       <h7>Username</h7>
                       <h3>{username}<span className="font-weight-light"></span></h3>
                       <div className="d-flex justify-content-center mt-3 mb-4">
-                        {/* 👇 Updated button to open the modal */}
                         <Button className="mx-2" color="primary" onClick={toggleChangeUsernameModal} size="sm">
                           Ubah Username
                         </Button>
-                        <Button className="mx-2" color="secondary" onClick={(e) => e.preventDefault()} size="sm">
+                        {/* 👇 Updated button to open the new password modal */}
+                        <Button className="mx-2" color="secondary" onClick={toggleChangePasswordModal} size="sm">
                           Ubah Kata Laluan
                         </Button>
                       </div>
@@ -239,13 +244,20 @@ const Profile = () => {
         </Row>
       </Container>
       
-      {/* 👇 Render the modal component here. It is invisible by default. */}
+      {/* Render the username modal component */}
       <ChangeUsernameModal
-        isOpen={isModalOpen}
+        isOpen={isUsernameModalOpen}
         toggle={toggleChangeUsernameModal}
         citizenID={citizenID}
         currentUsername={username}
         onUsernameUpdate={handleUsernameUpdated}
+      />
+
+      {/* 👇 Render the new password modal component */}
+      <ChangePasswordModal 
+        isOpen={isPasswordModalOpen}
+        toggle={toggleChangePasswordModal}
+        username={username}
       />
     </>
   );
