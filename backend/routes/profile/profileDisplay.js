@@ -83,7 +83,7 @@ router.get('/get-picture/:citizenID', async (req, res) => {
 
     // This check will now work correctly because result.rows[0] is an object.
     if (!result.rows || result.rows.length === 0 || !result.rows[0].PROFILE_PIC) {
-      return res.status(404).send('Profile picture not found.');
+      return res.status(404).send('Gambar Profil Tidak Dijumpai');
     }
 
     const lob = result.rows[0].PROFILE_PIC;

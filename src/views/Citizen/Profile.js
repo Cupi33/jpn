@@ -9,32 +9,31 @@ import {
   Container,
   Row,
   Col,
-  Spinner // 👈 1. Import Spinner for a better loading indicator
+  Spinner
 } from "reactstrap";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import UserHeader from "components/Headers/UserHeader.js";
+import Swal from 'sweetalert2'; // 👈 1. Import SweetAlert2
 
 const Profile = () => {
   const [citizenID, setCitizenID] = useState("");
   const [username, setUsername] = useState("");
   const [profileData, setProfileData] = useState(null);
-
-  // 👇 2. Initialize the picture URL to null and add a loading state.
   const [profilePicUrl, setProfilePicUrl] = useState(null);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
 
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
-  // 👇 3. Refactor useEffect to coordinate all data fetching before rendering.
+  // Bahagian useEffect ini sudah betul dan tidak perlu diubah.
   useEffect(() => {
     const storedCitizenID = sessionStorage.getItem("citizenID");
     const storedUsername = sessionStorage.getItem("username");
 
     if (!storedCitizenID || !storedUsername) {
       navigate("/authCitizen/login");
-      return; // Exit early if not logged in
+      return;
     }
 
     setCitizenID(storedCitizenID);
@@ -42,45 +41,35 @@ const Profile = () => {
 
     const fetchData = async () => {
       try {
-        // Create promises for both API calls
         const profileDataPromise = axios.post("http://localhost:5000/profile/profile", { citizenID: storedCitizenID });
-        
-        // We add a .catch to the picture promise. This is important!
-        // It prevents Promise.all from failing if the picture just doesn't exist (404).
         const profilePicturePromise = axios.get(`http://localhost:5000/profile/get-picture/${storedCitizenID}`, { responseType: 'blob' })
           .catch(error => {
-            console.log("No profile picture found, will use default.");
-            return null; // Instead of an error, we return null.
+            console.log("Tiada gambar profil yang dijumpai");
+            return null;
           });
 
-        // Use Promise.all to wait for both fetches to complete
         const [profileResponse, pictureResponse] = await Promise.all([
           profileDataPromise,
           profilePicturePromise
         ]);
 
-        // Process the results now that we have them both
         if (profileResponse.data.success) {
           setProfileData(profileResponse.data.user);
         } else {
-          console.error("Failed to fetch profile data:", profileResponse.data.message);
+          console.error("Gagal mendapatkan gambar profil dari database:", profileResponse.data.message);
         }
 
         if (pictureResponse) {
-          // If pictureResponse is not null, a picture was found
           const imageUrl = URL.createObjectURL(pictureResponse.data);
           setProfilePicUrl(imageUrl);
         } else {
-          // If pictureResponse is null, use the default picture
           setProfilePicUrl(require("../../assets/img/theme/team-4-800x800.jpg"));
         }
 
       } catch (error) {
         console.error("An unexpected error occurred during data fetching:", error);
-        // In case of a major error, still use the default picture
         setProfilePicUrl(require("../../assets/img/theme/team-4-800x800.jpg"));
       } finally {
-        // VERY IMPORTANT: Set loading to false after all operations are done.
         setIsProfileLoading(false);
       }
     };
@@ -88,24 +77,45 @@ const Profile = () => {
     fetchData();
   }, [navigate]);
 
-  // This function doesn't need to change
+  // 👇 2. Di dalam fungsi ini, kita akan menggantikan semua 'alert'.
   const handlePictureUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
+
     setProfilePicUrl(URL.createObjectURL(file));
+
     const formData = new FormData();
     formData.append('profilePic', file);
     formData.append('citizenID', citizenID);
+
     try {
       const response = await axios.put('http://localhost:5000/profile/upload-picture', formData);
+      
       if (response.data.success) {
-        alert('Profile picture updated successfully!');
+        // 'alert' untuk mesej BERJAYA digantikan dengan SweetAlert
+        Swal.fire({
+          icon: 'success',
+          title: 'Berjaya!',
+          text: 'Gambar profil berjaya dimuat naik', // Teks asal dikekalkan
+          timer: 2000,
+          showConfirmButton: false
+        });
       } else {
-        alert('Failed to update picture: ' + response.data.message);
+        // 'alert' untuk mesej GAGAL (dari API) digantikan dengan SweetAlert
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal',
+          text: 'Gambar profil gagal dimuat naik: ' + response.data.message // Teks asal dikekalkan
+        });
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert('An error occurred while uploading the picture.');
+      // 'alert' untuk mesej RALAT (dari network/server) digantikan dengan SweetAlert
+      Swal.fire({
+        icon: 'error',
+        title: 'Ralat',
+        text: 'Isu Memuat Naik gambar profil. Sila cuba sebentar lagi.' // Teks asal diubah suai sedikit untuk lebih jelas
+      });
     }
   };
 
@@ -113,21 +123,20 @@ const Profile = () => {
     fileInputRef.current.click();
   };
 
+  // Bahagian JSX di bawah ini tidak perlu diubah.
   return (
     <>
-      {/* The header can render immediately with the username */}
       <UserHeader name={profileData?.fullname || username} />
       
       <Container className="mt--7" fluid>
         <Row>
-          {/* 👇 4. Use the loading state to conditionally render the content */}
           {isProfileLoading ? (
             <Col className="text-center p-5">
               <Spinner color="primary" />
             </Col>
           ) : (
             <>
-              {/* This content will only appear AFTER loading is complete */}
+              {/* ... Semua kandungan JSX sedia ada anda yang sudah betul ... */}
               <Col className="order-xl-2 mb-5 mb-xl-0" xl="4">
                 <Card className="card-profile shadow">
                   <Row className="justify-content-center">
