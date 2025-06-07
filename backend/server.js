@@ -9,6 +9,7 @@ import DeathApplication from './routes/Application/Death.js'
 import LHDNApi from './routes/govApi/apiLHDN.js'
 import THApi from './routes/govApi/apiTH.js'
 import InboxApi from './routes/Inbox/inbox.js'
+import adminStat from './routes/stats/adminStat.js'
 
 const app = express();
 app.use(cors(
@@ -22,6 +23,7 @@ app.use(express.json());
 
 app.use('/profile', profileRoutes);
 app.use('/',authRoutes);
+app.use('/adminstat',adminStat);
 app.use('/stat',generalStat);
 app.use('/icapply',ICApplication);
 app.use('/newbornapply',NewbornApplication);
