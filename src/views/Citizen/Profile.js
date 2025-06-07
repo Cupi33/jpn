@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Button,
   Card,
@@ -12,43 +12,82 @@ import {
 } from "reactstrap";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-
-// core components
 import UserHeader from "components/Headers/UserHeader.js";
 
 const Profile = () => {
   const [citizenID, setCitizenID] = useState("");
   const [username, setUsername] = useState("");
-  const [profileData, setProfileData] = useState(null); // State to hold profile data
+  const [profileData, setProfileData] = useState(null);
+  const [profilePicUrl, setProfilePicUrl] = useState(
+    require("../../assets/img/theme/team-4-800x800.jpg")
+  );
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedCitizenID = sessionStorage.getItem("citizenID");
     const storedUsername = sessionStorage.getItem("username");
 
-    if (storedCitizenID && storedUsername)
-       {
+    if (storedCitizenID && storedUsername) {
       setCitizenID(storedCitizenID);
       setUsername(storedUsername);
 
-      // Fetch profile data from API
-      axios
-        .post("http://localhost:5000/profile/profile", { citizenID: storedCitizenID })
+      // This URL is correct: /profile/profile
+      axios.post("http://localhost:5000/profile/profile", { citizenID: storedCitizenID })
         .then((response) => {
-          if (response.data.success) {
-            setProfileData(response.data.user);
-          } else {
-            console.error("Failed to fetch profile data:", response.data.message);
-          }
+          if (response.data.success) setProfileData(response.data.user);
+          else console.error("Failed to fetch profile data:", response.data.message);
         })
-        .catch((error) => {
-          console.error("Error fetching profile data:", error);
+        .catch((error) => console.error("Error fetching profile data:", error));
+      
+      // 👇 3. Fetch the profile picture using the NEW URL
+      axios.get(`http://localhost:5000/profile/get-picture/${storedCitizenID}`, { responseType: 'blob' })
+        .then(response => {
+            const imageUrl = URL.createObjectURL(response.data);
+            setProfilePicUrl(imageUrl);
+        })
+        .catch(error => {
+            console.log("No profile picture found or failed to load. Using default.");
         });
+
     } else {
       navigate("/authCitizen/login");
     }
   }, [navigate]);
 
+  const handlePictureUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setProfilePicUrl(URL.createObjectURL(file));
+
+    const formData = new FormData();
+    formData.append('profilePic', file);
+    formData.append('citizenID', citizenID);
+
+    try {
+      // 👇 4. Use the NEW URL for uploading the picture
+      const response = await axios.put(
+        'http://localhost:5000/profile/upload-picture',
+        formData
+      );
+      if (response.data.success) {
+        alert('Profile picture updated successfully!');
+      } else {
+        alert('Failed to update picture: ' + response.data.message);
+      }
+    } catch (error) {
+      // This catch block will now only be triggered for genuine server errors
+      console.error("Error uploading image:", error);
+      alert('An error occurred while uploading the picture.');
+    }
+  };
+
+  const handleUbahProfilClick = () => {
+    fileInputRef.current.click();
+  };
+
+  // The rest of your JSX remains exactly the same...
   return (
     <>
       <UserHeader name={profileData?.fullname || username} />
@@ -60,11 +99,18 @@ const Profile = () => {
               <Row className="justify-content-center">
                 <Col className="order-lg-2" lg="3">
                   <div className="card-profile-image">
+                    <input
+                      type="file"
+                      style={{ display: "none" }}
+                      ref={fileInputRef}
+                      onChange={handlePictureUpload}
+                      accept="image/png, image/jpeg"
+                    />
                     <a href="#pablo" onClick={(e) => e.preventDefault()}>
                       <img
                         alt="..."
                         className="rounded-circle"
-                        src={require("../../assets/img/theme/team-4-800x800.jpg")}
+                        src={profilePicUrl}
                       />
                     </a>
                   </div>
@@ -75,7 +121,7 @@ const Profile = () => {
                   <Button
                     className="mr-4"
                     color="info"
-                    onClick={(e) => e.preventDefault()}
+                    onClick={handleUbahProfilClick}
                     size="sm"
                   >
                     Ubah Profil
@@ -91,6 +137,7 @@ const Profile = () => {
                 </div>
               </CardHeader>
               <CardBody className="pt-0 pt-md-4">
+                {/* ... unchanged JSX ... */}
                 <Row>
                   <div className="col">
                     <div className="card-profile-stats d-flex justify-content-center mt-md-5" />
@@ -136,6 +183,7 @@ const Profile = () => {
               </CardHeader>
               <CardBody>
                 <Form>
+                {/* ... unchanged JSX ... */}
                   <h6 className="heading-small text-muted mb-4">Info Pengguna</h6>
                   <div className="pl-lg-4">
                     <Row>
