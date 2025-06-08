@@ -242,5 +242,26 @@ router.post('/changePassword', async (req, res) => {
   }
 });
 
+router.get('/validMykad', async (req, res) => {
+
+  const { citizenID } = req.query;
+  try {
+    const result = await execute(`
+      SELECT valid_mykad(:1) from dual
+    `,[citizenID]);
+
+    
+    
+    res.json({ 
+      success: true, 
+      message: 'Query Successful', 
+      stat: result.rows 
+    });
+
+  } catch (err) {
+    console.error('Retrieval error for /validMykad:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 export default router;
