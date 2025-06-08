@@ -220,8 +220,21 @@ router.post('/reviewIC', async (req, res) => {
       message: result.outBinds.message
     });
 
-  } catch (err) {
+  }  catch (err) {
     console.error("Review error:", err);
+
+    // ✅ Check for the specific custom application error from the trigger
+    if (err.errorNum && err.errorNum === 20001) {
+
+      const rawMessage = err.message; // e.g., "ORA-20001: Cannot insert or update address..."
+      const cleanMessage = rawMessage.substring(rawMessage.indexOf(':') + 2); // Extracts text after "ORA-XXXXX: "
+
+      return res.status(400).json({ 
+        success: false, 
+        message: cleanMessage || 'Pemohon sudah meninggal dunia' 
+      });
+    }
+
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
