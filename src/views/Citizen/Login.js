@@ -1,3 +1,5 @@
+// --- START OF FILE Login.js (Updated) ---
+
 import {
   Button,
   Card,
@@ -13,12 +15,12 @@ import {
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
-
+import Swal from 'sweetalert2'; // <-- 1. Import SweetAlert2
 
 const Login = () => {
 
   // Clear any existing session data when login page loads
-      useEffect(() => {
+  useEffect(() => {
     sessionStorage.removeItem('citizenID');
     sessionStorage.removeItem('username');
     console.log('Both username and citizenID have been removed');
@@ -28,7 +30,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-
+  // --- 2. This is the updated handleLogin function ---
   const handleLogin = async () => {
     try {
       const response = await axios.post('http://localhost:5000/login', {
@@ -38,26 +40,44 @@ const Login = () => {
   
       if (response.data.success) {
         console.log("Login berjaya:", response.data.user);
-        alert(`Selamat datang, ${response.data.user.username}!`); // mesej susccess login
+        
+        // --- REPLACED a success alert() ---
+        await Swal.fire({
+          icon: 'success',
+          title: 'Berjaya!',
+          text: `Selamat datang, ${response.data.user.username}!`,
+          timer: 2000, // Alert will close automatically after 2 seconds
+          showConfirmButton: false
+        });
+
         sessionStorage.setItem('citizenID',response.data.user.id);
         sessionStorage.setItem('username',response.data.user.username);
         navigate('/citizenMenu/Index');
+
       } else {
+        // This 'else' block might not be hit if backend always returns errors with status codes,
+        // but we'll keep it for safety.
         console.log("Login gagal:", response.data.message);
-        alert(response.data.message || "Nama pengguna atau kata laluan salah.");
+
+        // --- REPLACED a failure alert() ---
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Gagal',
+          text: response.data.message || "Nama pengguna atau kata laluan salah.",
+        });
       }
     } catch (error) {
       console.error("Ralat:", error);
-      if (error.response) {
-        // Handle 401 (Unauthorized) specifically
-        if (error.response.status === 401) {
-          alert(error.response.data.message || "Nama pengguna atau kata laluan salah.");
-        } else {
-          alert(`Ralat pelayan: ${error.response.data.message || error.response.status}`);
-        }
-      } else {
-        alert("Ralat semasa sambungan ke pelayan.");
-      }
+      
+      // This single block handles all errors (401, 500, network error) gracefully.
+      const errorMessage = error.response?.data?.message || "Ralat semasa sambungan ke pelayan.";
+
+      // --- REPLACED ALL error alerts in the catch block ---
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops... Sesuatu tidak kena',
+        text: errorMessage,
+      });
     }
   };
   
