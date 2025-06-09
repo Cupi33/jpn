@@ -6,9 +6,12 @@ import axios from "axios";
 import Chart from "chart.js";
 // react plugin used to create charts
 import { Line, Pie, Bar, Doughnut } from "react-chartjs-2";
+// Map and Tooltip Imports
+import { ComposableMap, Geographies, Geography } from "react-simple-maps";
+import { Tooltip as ReactTooltip } from "react-tooltip";
+
 // reactstrap components
 import {
-  Badge,
   Card,
   CardHeader,
   CardBody,
@@ -21,7 +24,7 @@ import {
 
 // core components
 import {
-  chartOptions, // This function returns the global defaults
+  chartOptions,
   parseOptions,
   annualOverviewChart,
   genderDistributionChart,
@@ -30,18 +33,18 @@ import {
 } from "variables/chartAdmin";
 
 import Header from "components/Headers/AdminStatHeader";
+// Import the local GeoJSON file from your data folder
+import geoData from "../../data/malaysia-states.json";
 
-// --- MOCK DATA FOR THE DASHBOARD (except for population table) ---
-
-// Data for the main line chart (Births vs. Deaths)
+// --- MOCK DATA (for charts) ---
 const annualOverviewData = {
   labels: ["2018", "2019", "2020", "2021", "2022", "2023", "2024"],
   datasets: [
     {
       label: "Births",
       data: [490, 510, 485, 530, 550, 540, 565],
-      borderColor: "#2dce89", // Success color
-      backgroundColor: "#2dce89", // Added for better line fill
+      borderColor: "#2dce89",
+      backgroundColor: "#2dce89",
       pointBackgroundColor: "#2dce89",
       pointRadius: 3,
       pointHoverRadius: 5,
@@ -49,16 +52,14 @@ const annualOverviewData = {
     {
       label: "Deaths",
       data: [170, 180, 195, 185, 205, 210, 220],
-      borderColor: "#f5365c", // Danger color
-      backgroundColor: "#f5365c", // Added for better line fill
+      borderColor: "#f5365c",
+      backgroundColor: "#f5365c",
       pointBackgroundColor: "#f5365c",
       pointRadius: 3,
       pointHoverRadius: 5,
     },
   ],
 };
-
-// Data for the Gender Pie chart
 const genderData = {
   labels: ["Male", "Female"],
   datasets: [
@@ -69,20 +70,16 @@ const genderData = {
     },
   ],
 };
-
-// Data for the Age Group Bar chart
 const ageGroupData = {
   labels: ["0-17", "18-24", "25-39", "40-59", "60+"],
   datasets: [
     {
       label: "Population",
       data: [8900100, 4500250, 9800500, 6450800, 3218910],
-      backgroundColor: "#11cdef", // Info color
+      backgroundColor: "#11cdef",
     },
   ],
 };
-
-// Data for the new Marital Status Doughnut chart
 const maritalStatusData = {
   labels: ["Single", "Married", "Divorced", "Widowed"],
   datasets: [
@@ -94,43 +91,120 @@ const maritalStatusData = {
   ],
 };
 
-// Data for the Recent Registrations table
-const recentRegistrations = [
-    { name: "Ahmad Bin Kassim", ic: "900101-10-1234", date: "2024-05-20", status: "Approved" },
-    { name: "Siti Nurhaliza", ic: "850322-01-5678", date: "2024-05-19", status: "Approved" },
-    { name: "Lim Wei Jie", ic: "010815-14-9876", date: "2024-05-18", status: "Pending" },
-    { name: "Priya a/p Kumar", ic: "921203-08-5544", date: "2024-05-18", status: "Approved" },
-    { name: "John Doe", ic: "950505-71-1122", date: "2024-05-17", status: "Pending" },
-];
+// --- DATA MAPPING & MAP COMPONENT ---
 
+// This mapping matches the names from the simplemaps.com file to your API keys
+const stateNameMapping = {
+  "Johor": "JOHOR",
+  "Kedah": "KEDAH",
+  "Kelantan": "KELANTAN",
+  "Kuala Lumpur": "KUALA_LUMPUR",
+  "Labuan": "LABUAN",
+  "Melaka": "MELAKA",
+  "Negeri Sembilan": "NEGERI_SEMBILAN",
+  "Pahang": "PAHANG",
+  "Perak": "PERAK",
+  "Perlis": "PERLIS",
+  "Pulau Pinang": "PULAU_PINANG",
+  "Putrajaya": "PUTRAJAYA",
+  "Sabah": "SABAH",
+  "Sarawak": "SARAWAK",
+  "Selangor": "SELANGOR",
+  "Terengganu": "TERENGGANU",
+};
 
+// The MapChart component, defined outside the main component for performance
+const MapChart = ({ data }) => {
+  const populationValues = Object.values(data).map(d => d.total);
+  const minPop = Math.min(...populationValues, 0);
+  const maxPop = Math.max(...populationValues, 1);
+
+  // A vibrant color scale from light yellow to deep red
+  const colorScale = (value) => {
+    if (value === undefined || value === null) return "#DDD"; // Default for no data
+    const normalized = (value - minPop) / (maxPop - minPop);
+    const r = 255;
+    const g = 255 - Math.floor(normalized * 200);
+    const b = 100 - Math.floor(normalized * 100);
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  return (
+    <ComposableMap
+      projection="geoMercator"
+      // *** THIS IS THE CORRECTED PART ***
+      // Adjusted scale and center to fit the whole country in the view
+      projectionConfig={{
+        scale: 1800,      // Reduced from 4500 to "zoom out"
+        center: [108, 4]  // Adjusted from [109, 4.2] to re-center the view
+      }}
+      style={{ width: "100%", height: "auto" }}
+    >
+      <Geographies geography={geoData}> 
+        {({ geographies }) =>
+          geographies.map((geo) => {
+            const geoJsonName = geo.properties.name; 
+            const apiName = stateNameMapping[geoJsonName];
+            const stateData = data[apiName];
+
+            return (
+              <Geography
+                key={geo.rsmKey}
+                geography={geo}
+                data-tooltip-id="map-tooltip"
+                data-tooltip-content={
+                  stateData ? `${geoJsonName}: ${stateData.total.toLocaleString()} people` : `${geoJsonName}: No data`
+                }
+                style={{
+                  default: {
+                    fill: stateData ? colorScale(stateData.total) : "#F5F5F5",
+                    outline: "none",
+                    stroke: "#FFF",
+                    strokeWidth: 0.5
+                  },
+                  hover: { fill: "#f5365c", outline: "none" },
+                  pressed: { fill: "#E42B4F", outline: "none" },
+                }}
+              />
+            );
+          })
+        }
+      </Geographies>
+    </ComposableMap>
+  );
+};
+
+// --- MAIN ADMIN STATISTIC COMPONENT ---
 const AdminStatistic = (props) => {
-  // State to hold the population data from the API
-  const [populationData, setPopulationData] = useState([]);
+  const [populationTableData, setPopulationTableData] = useState([]);
+  const [populationMapData, setPopulationMapData] = useState({});
 
   useEffect(() => {
-    // Initialize Chart.js global defaults
+    // Initialize Chart.js defaults
     if (window.Chart) {
       parseOptions(Chart, chartOptions());
     }
 
-    // Fetch population data from the API
+    // Fetch population data from API
     const fetchPopulationData = async () => {
       try {
         const response = await axios.get("http://localhost:5000/adminstat/citizenPlacement");
         if (response.data.success) {
           const stats = response.data.stats;
+
+          // Set data for the map (as an object for fast lookups)
+          setPopulationMapData(stats);
           
-          // Convert the stats object into a sorted array for easier rendering
-          const formattedData = Object.entries(stats)
+          // Set data for the table (as a sorted array for rendering)
+          const formattedTableData = Object.entries(stats)
             .map(([stateName, data]) => ({
-              state: stateName.replace(/_/g, " "), // Replace underscores with spaces
+              state: stateName.replace(/_/g, " "),
               population: data.total,
               percentage: data.percentage
             }))
-            .sort((a, b) => b.population - a.population); // Sort descending by population
+            .sort((a, b) => b.population - a.population);
           
-          setPopulationData(formattedData);
+          setPopulationTableData(formattedTableData);
         }
       } catch (error) {
         console.error("Error fetching population data:", error);
@@ -138,26 +212,11 @@ const AdminStatistic = (props) => {
     };
 
     fetchPopulationData();
-  }, []); // Empty dependency array means this runs once on component mount
-
-  // Helper to get the right color for status badges
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "Approved":
-        return "success";
-      case "Pending":
-        return "warning";
-      case "Rejected":
-        return "danger";
-      default:
-        return "primary";
-    }
-  };
+  }, []); // Runs once on component mount
 
   return (
     <>
       <Header />
-      {/* Page content */}
       <Container className="mt--7" fluid>
         {/* --- ROW 1: MAIN OVERVIEW CHART --- */}
         <Row>
@@ -190,8 +249,8 @@ const AdminStatistic = (props) => {
           <Col xl="4" className="mb-5 mb-xl-0">
             <Card className="shadow h-100">
               <CardHeader className="bg-transparent">
-                  <h6 className="text-uppercase text-muted ls-1 mb-1">Demographics</h6>
-                  <h2 className="mb-0">Age Groups</h2>
+                <h6 className="text-uppercase text-muted ls-1 mb-1">Demographics</h6>
+                <h2 className="mb-0">Age Groups</h2>
               </CardHeader>
               <CardBody>
                 <div className="chart" style={{ height: "300px" }}>
@@ -203,8 +262,8 @@ const AdminStatistic = (props) => {
           <Col xl="4" className="mb-5 mb-xl-0">
             <Card className="shadow h-100">
               <CardHeader className="bg-transparent">
-                  <h6 className="text-uppercase text-muted ls-1 mb-1">Demographics</h6>
-                  <h2 className="mb-0">Gender Distribution</h2>
+                <h6 className="text-uppercase text-muted ls-1 mb-1">Demographics</h6>
+                <h2 className="mb-0">Gender Distribution</h2>
               </CardHeader>
               <CardBody>
                 <div className="chart" style={{ height: "300px" }}>
@@ -228,35 +287,23 @@ const AdminStatistic = (props) => {
           </Col>
         </Row>
         
-        {/* --- ROW 3: DATA TABLES --- */}
+        {/* --- ROW 3: HEATMAP AND DATA TABLE --- */}
         <Row className="mt-5">
           <Col xl="7" className="mb-5 mb-xl-0">
-            <Card className="shadow">
+            <Card className="shadow h-100">
               <CardHeader className="border-0">
-                <h3 className="mb-0">Recent System Registrations</h3>
+                <h3 className="mb-0">Peta Kependudukan Di Malaysia</h3>
               </CardHeader>
-              <Table className="align-items-center table-flush" responsive>
-                <thead className="thead-light">
-                  <tr>
-                    <th scope="col">Applicant Name</th>
-                    <th scope="col">IC Number</th>
-                    <th scope="col">Registration Date</th>
-                    <th scope="col">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentRegistrations.map((reg, index) => (
-                     <tr key={index}>
-                        <th scope="row">{reg.name}</th>
-                        <td>{reg.ic}</td>
-                        <td>{reg.date}</td>
-                        <td><Badge color={getStatusBadge(reg.status)} pill>{reg.status}</Badge></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
+              <CardBody>
+                {Object.keys(populationMapData).length > 0 ? (
+                  <MapChart data={populationMapData} />
+                ) : (
+                  <div className="text-center">Loading map data...</div>
+                )}
+              </CardBody>
             </Card>
           </Col>
+
           <Col xl="5">
             <Card className="shadow">
               <CardHeader className="border-0">
@@ -271,8 +318,8 @@ const AdminStatistic = (props) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {populationData.length > 0 ? (
-                    populationData.map((item, index) => (
+                  {populationTableData.length > 0 ? (
+                    populationTableData.map((item, index) => (
                       <tr key={index}>
                         <th scope="row" style={{ textTransform: 'capitalize' }}>
                           {item.state.toLowerCase()}
@@ -305,6 +352,9 @@ const AdminStatistic = (props) => {
           </Col>
         </Row>
       </Container>
+
+      {/* The Tooltip component that the map uses to display hover info */}
+      <ReactTooltip id="map-tooltip" />
     </>
   );
 };
