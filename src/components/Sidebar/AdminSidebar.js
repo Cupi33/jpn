@@ -91,6 +91,9 @@ const AdminSidebar = (props) => {
   
     // Include only MenuUtama from adminApplication
     if (route.group === "adminApplication" && route.path === "/checkApplication") return true;
+
+    // AFTER (The Fix)
+    if (route.group === "StatisticAdmin" && route.path === "/statAdmin") return true;
   
     // Exclude everything else
     return false;

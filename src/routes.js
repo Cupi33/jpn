@@ -20,6 +20,7 @@ import TableDeath from "views/Admin/checkAdmin/TableDeath";
 import ICCheck from "views/Admin/checkAdmin/ICCheck";
 import TableIC from "views/Admin/checkAdmin/TableIC";
 import LaporanHarian from "views/Admin/LaporanHarian";
+import AdminStatistic from "views/Admin/AdminStatistic"
 
 
 
@@ -125,6 +126,17 @@ const routeGroups = {
         name: "Log Keluar",
          icon: "ni ni-user-run",
         component: <AdminLogin />,
+      },
+    ],
+  },
+  StatisticAdmin: {
+    layout: "/statistic",
+    routes: [
+      {
+        path: "/statAdmin",
+        name: "Statistik",
+        icon: "ni ni-sound-wave text-green",
+        component: <AdminStatistic />,
       },
     ],
   },
