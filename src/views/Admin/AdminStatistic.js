@@ -140,10 +140,10 @@ const MapChart = ({ data }) => {
       }}
       style={{ width: "100%", height: "auto" }}
     >
-      <Geographies geography={geoData}> 
+      <Geographies geography={geoData}>
         {({ geographies }) =>
           geographies.map((geo) => {
-            const geoJsonName = geo.properties.name; 
+            const geoJsonName = geo.properties.name;
             const apiName = stateNameMapping[geoJsonName];
             const stateData = data[apiName];
 
@@ -194,7 +194,7 @@ const AdminStatistic = (props) => {
 
           // Set data for the map (as an object for fast lookups)
           setPopulationMapData(stats);
-          
+
           // Set data for the table (as a sorted array for rendering)
           const formattedTableData = Object.entries(stats)
             .map(([stateName, data]) => ({
@@ -203,7 +203,7 @@ const AdminStatistic = (props) => {
               percentage: data.percentage
             }))
             .sort((a, b) => b.population - a.population);
-          
+
           setPopulationTableData(formattedTableData);
         }
       } catch (error) {
@@ -233,10 +233,19 @@ const AdminStatistic = (props) => {
                 </Row>
               </CardHeader>
               <CardBody>
-                <div className="chart">
+                {/*
+                  FIX: To prevent the chart from overlapping content below, we do two things:
+                  1. Give the container div a fixed height (e.g., '350px').
+                  2. Set 'maintainAspectRatio: false' in the chart options. This ensures
+                     the chart respects the container's height and doesn't overflow it.
+                */}
+                <div className="chart" style={{ height: "350px" }}>
                   <Line
                     data={annualOverviewData}
-                    options={annualOverviewChart.options}
+                    options={{
+                      ...annualOverviewChart.options,
+                      maintainAspectRatio: false,
+                    }}
                   />
                 </div>
               </CardBody>
@@ -254,7 +263,13 @@ const AdminStatistic = (props) => {
               </CardHeader>
               <CardBody>
                 <div className="chart" style={{ height: "300px" }}>
-                  <Bar data={ageGroupData} options={ageGroupChart.options} />
+                  <Bar
+                    data={ageGroupData}
+                    options={{
+                      ...ageGroupChart.options,
+                      maintainAspectRatio: false,
+                    }}
+                  />
                 </div>
               </CardBody>
             </Card>
@@ -267,7 +282,13 @@ const AdminStatistic = (props) => {
               </CardHeader>
               <CardBody>
                 <div className="chart" style={{ height: "300px" }}>
-                  <Pie data={genderData} options={genderDistributionChart.options} />
+                  <Pie
+                    data={genderData}
+                    options={{
+                      ...genderDistributionChart.options,
+                      maintainAspectRatio: false,
+                    }}
+                  />
                 </div>
               </CardBody>
             </Card>
@@ -280,13 +301,19 @@ const AdminStatistic = (props) => {
               </CardHeader>
               <CardBody>
                 <div className="chart" style={{ height: "300px" }}>
-                  <Doughnut data={maritalStatusData} options={maritalStatusChart.options} />
+                  <Doughnut
+                    data={maritalStatusData}
+                    options={{
+                      ...maritalStatusChart.options,
+                      maintainAspectRatio: false,
+                    }}
+                  />
                 </div>
               </CardBody>
             </Card>
           </Col>
         </Row>
-        
+
         {/* --- ROW 3: HEATMAP AND DATA TABLE --- */}
         <Row className="mt-5">
           <Col xl="7" className="mb-5 mb-xl-0">
