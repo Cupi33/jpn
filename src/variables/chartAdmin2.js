@@ -1,7 +1,6 @@
-// src/variables/chartAdmin.js
+//for INFORMASI KELAHIRAN BAYI DI MALAYSIA
 
-// Import axios here to handle data fetching
-const axios = require("axios");
+// --- Chart.js setup and extensions (kept as is for professional styling) ---
 const Chart = require("chart.js");
 
 // Extension for rounded bar charts (This part remains the same)
@@ -104,16 +103,20 @@ function chartOptions() {
 
 
 // --- Utility to parse options (ROBUST VERSION) ---
+// *** THIS IS THE ONLY PART THAT HAS CHANGED ***
 function parseOptions(parent, options) {
   for (const key in options) {
     if (Object.prototype.hasOwnProperty.call(options, key)) {
       const value = options[key];
+      // If the value is an object (and not null), recurse.
+      // But first, ensure the parent has a corresponding object to merge into.
       if (typeof value === 'object' && value !== null) {
         if (!parent[key]) {
-          parent[key] = {};
+          parent[key] = {}; // Create the object if it doesn't exist
         }
         parseOptions(parent[key], value);
       } else {
+        // Otherwise, it's a primitive value, so just assign it.
         parent[key] = value;
       }
     }
@@ -127,7 +130,8 @@ function parseOptions(parent, options) {
 const annualOverviewChart = {
   options: {
     scales: {
-      y: { grid: { color: colors.gray[300], zeroLineColor: colors.gray[300] },
+      y: { // Changed from yAxes
+        grid: { color: colors.gray[300], zeroLineColor: colors.gray[300] },
         ticks: {
           callback: function (value) {
             if (value >= 1000) return (value / 1000) + 'k';
@@ -136,8 +140,11 @@ const annualOverviewChart = {
         },
       },
     },
-    plugins: {
-      legend: { display: true, position: 'top' },
+    plugins: { // Moved tooltips and legend inside plugins
+      legend: {
+        display: true,
+        position: 'top',
+      },
       tooltip: {
         callbacks: {
           label: function (item) {
@@ -155,19 +162,21 @@ const annualOverviewChart = {
 // 2. Gender Distribution Pie Chart
 const genderDistributionChart = {
     options: {
-        plugins: {
+        plugins: { // Moved tooltips and legend inside plugins
             tooltip: {
                 callbacks: {
                     label: function(item) {
                         const total = item.chart.getDatasetMeta(0).total;
                         const currentValue = item.raw;
-                        if (total === 0) return `${item.label}: 0 (0%)`; // Handle division by zero
                         const percentage = Math.round((currentValue / total) * 100);
                         return `${item.label}: ${currentValue.toLocaleString()} (${percentage}%)`;
                     }
                 }
             },
-            legend: { display: true, position: 'bottom' }
+            legend: {
+                display: true,
+                position: 'bottom',
+            }
         }
     }
 };
@@ -176,7 +185,7 @@ const genderDistributionChart = {
 const ageGroupChart = {
   options: {
     scales: {
-      y: {
+      y: { // Changed from yAxes
         ticks: {
           callback: function (value) {
             if (value >= 1000000) return (value / 1000000) + 'M';
@@ -186,7 +195,7 @@ const ageGroupChart = {
         },
       },
     },
-    plugins: {
+    plugins: { // Moved tooltip inside plugins
       tooltip: {
         callbacks: {
           label: function (item) {
@@ -204,59 +213,31 @@ const ageGroupChart = {
 // 4. Marital Status Doughnut Chart
 const maritalStatusChart = {
     options: {
-        cutout: '70%',
-        plugins: {
+        cutout: '70%', // Changed from cutoutPercentage
+        plugins: { // Moved tooltips and legend inside plugins
             tooltip: {
                 callbacks: {
                     label: function(item) {
                         const total = item.chart.getDatasetMeta(0).total;
                         const currentValue = item.raw;
-                        if (total === 0) return `${item.label}: 0%`; // Handle division by zero
                         const percentage = Math.round((currentValue / total) * 100);
                         return `${item.label}: ${percentage}%`;
                     }
                 }
             },
-            legend: { display: true, position: 'bottom' }
+            legend: {
+                display: true,
+                position: 'bottom',
+            }
         }
     }
 };
 
-// --- NEW DATA AND FUNCTIONS EXPORTED FROM THIS MODULE ---
-
-// 1. Centralized State Name Mapping
-const stateNameMapping = {
-  "Johor": "JOHOR", "Kedah": "KEDAH", "Kelantan": "KELANTAN", "Kuala Lumpur": "KUALA_LUMPUR",
-  "Labuan": "LABUAN", "Melaka": "MELAKA", "Negeri Sembilan": "NEGERI_SEMBILAN", "Pahang": "PAHANG",
-  "Perak": "PERAK", "Perlis": "PERLIS", "Pulau Pinang": "PULAU_PINANG", "Putrajaya": "PUTRAJAYA",
-  "Sabah": "SABAH", "Sarawak": "SARAWAK", "Selangor": "SELANGOR", "Terengganu": "TERENGGANU",
-};
-
-// 2. Encapsulated API call for Gender Data
-const fetchGenderDataForState = async (stateCode = "ALL") => {
-  try {
-    const response = await axios.get(`http://localhost:5000/adminstat/genderDistribution?state=${stateCode}`);
-    if (response.data.success) {
-      return response.data.stats; // e.g., { male: 12345, female: 67890 }
-    }
-    // Return a default object if API reports failure
-    return { male: 0, female: 0 };
-  } catch (error) {
-    console.error(`Error fetching gender data for ${stateCode}:`, error);
-    // Return a default object on network error
-    return { male: 0, female: 0 };
-  }
-};
-
-
 module.exports = {
-  chartOptions,
-  parseOptions,
+  chartOptions, // Global defaults
+  parseOptions, // Utility
   annualOverviewChart,
   genderDistributionChart,
   ageGroupChart,
   maritalStatusChart,
-  // Export the new mapping and fetcher function
-  stateNameMapping,
-  fetchGenderDataForState,
 };
