@@ -107,4 +107,47 @@ router.get('/staffDailyReview', async (req, res) => {
   }
 });
 
+router.get('/citizenPlacement', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM V_CITIZEN_STATE_STATS`);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const row = result.rows[0]; // Because SELECT * FROM DUAL always returns 1 row
+    const stateTotals = {};
+    let grandTotal = 0;
+
+    // Sum up totals and build stateTotals object
+    for (const state in row) {
+      const stateTotal = Number(row[state]);
+      stateTotals[state] = {
+        total: stateTotal,
+        percentage: 0 // placeholder, calculated below
+      };
+      grandTotal += stateTotal;
+    }
+
+    // Calculate percentage
+    for (const state in stateTotals) {
+      const percentage = ((stateTotals[state].total / grandTotal) * 100).toFixed(2); // 2 decimal places
+      stateTotals[state].percentage = parseFloat(percentage); // convert back to number
+    }
+
+    res.json({
+      success: true,
+      message: 'Citizen placement stats retrieved successfully',
+      total_citizens: grandTotal,
+      stats: stateTotals
+    });
+
+  } catch (err) {
+    console.error('Retrieval error for /citizenPlacement:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
+
 export default router;

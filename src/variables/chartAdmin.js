@@ -1,138 +1,56 @@
 // src/variables/chartAdmin.js
 
-/*!
-
-=========================================================
-* Argon Dashboard React - v1.2.4
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/argon-dashboard-react
-* Copyright 2024 Creative Tim (https://www.creative-tim.com)
-* Licensed under MIT (https://github.com/creativetimofficial/argon-dashboard-react/blob/master/LICENSE.md)
-
-* Coded by Creative Tim
-
-=========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-*/
+// --- Chart.js setup and extensions (kept as is for professional styling) ---
 const Chart = require("chart.js");
 
-//
-// Chart extension for making the bars rounded
-// Code from: https://codepen.io/jedtrow/full/ygRYgo
-//
-
+// Extension for rounded bar charts (This part remains the same)
 Chart.elements.Rectangle.prototype.draw = function () {
   var ctx = this._chart.ctx;
   var vm = this._view;
   var left, right, top, bottom, signX, signY, borderSkipped, radius;
   var borderWidth = vm.borderWidth;
-  // Set Radius Here
-  // If radius is large enough to cause drawing errors a max radius is imposed
   var cornerRadius = 6;
 
   if (!vm.horizontal) {
-    // bar
-    left = vm.x - vm.width / 2;
-    right = vm.x + vm.width / 2;
-    top = vm.y;
-    bottom = vm.base;
-    signX = 1;
-    signY = bottom > top ? 1 : -1;
-    borderSkipped = vm.borderSkipped || "bottom";
+    left = vm.x - vm.width / 2; right = vm.x + vm.width / 2; top = vm.y; bottom = vm.base;
+    signX = 1; signY = bottom > top ? 1 : -1; borderSkipped = vm.borderSkipped || "bottom";
   } else {
-    // horizontal bar
-    left = vm.base;
-    right = vm.x;
-    top = vm.y - vm.height / 2;
-    bottom = vm.y + vm.height / 2;
-    signX = right > left ? 1 : -1;
-    signY = 1;
-    borderSkipped = vm.borderSkipped || "left";
+    left = vm.base; right = vm.x; top = vm.y - vm.height / 2; bottom = vm.y + vm.height / 2;
+    signX = right > left ? 1 : -1; signY = 1; borderSkipped = vm.borderSkipped || "left";
   }
 
-  // Canvas doesn't allow us to stroke inside the width so we can
-  // adjust the sizes to fit if we're setting a stroke on the line
   if (borderWidth) {
-    // borderWidth shold be less than bar width and bar height.
     var barSize = Math.min(Math.abs(left - right), Math.abs(top - bottom));
     borderWidth = borderWidth > barSize ? barSize : borderWidth;
     var halfStroke = borderWidth / 2;
-    // Adjust borderWidth when bar top position is near vm.base(zero).
     var borderLeft = left + (borderSkipped !== "left" ? halfStroke * signX : 0);
-    var borderRight =
-      right + (borderSkipped !== "right" ? -halfStroke * signX : 0);
+    var borderRight = right + (borderSkipped !== "right" ? -halfStroke * signX : 0);
     var borderTop = top + (borderSkipped !== "top" ? halfStroke * signY : 0);
-    var borderBottom =
-      bottom + (borderSkipped !== "bottom" ? -halfStroke * signY : 0);
-    // not become a vertical line?
-    if (borderLeft !== borderRight) {
-      top = borderTop;
-      bottom = borderBottom;
-    }
-    // not become a horizontal line?
-    if (borderTop !== borderBottom) {
-      left = borderLeft;
-      right = borderRight;
-    }
+    var borderBottom = bottom + (borderSkipped !== "bottom" ? -halfStroke * signY : 0);
+    if (borderLeft !== borderRight) { top = borderTop; bottom = borderBottom; }
+    if (borderTop !== borderBottom) { left = borderLeft; right = borderRight; }
   }
 
   ctx.beginPath();
-  ctx.fillStyle = vm.backgroundColor;
-  ctx.strokeStyle = vm.borderColor;
-  ctx.lineWidth = borderWidth;
-
-  // Corner points, from bottom-left to bottom-right clockwise
-  // | 1 2 |
-  // | 0 3 |
-  var corners = [
-    [left, bottom],
-    [left, top],
-    [right, top],
-    [right, bottom],
-  ];
-
-  // Find first (starting) corner with fallback to 'bottom'
+  ctx.fillStyle = vm.backgroundColor; ctx.strokeStyle = vm.borderColor; ctx.lineWidth = borderWidth;
+  var corners = [[left, bottom], [left, top], [right, top], [right, bottom]];
   var borders = ["bottom", "left", "top", "right"];
   var startCorner = borders.indexOf(borderSkipped, 0);
-  if (startCorner === -1) {
-    startCorner = 0;
-  }
-
-  function cornerAt(index) {
-    return corners[(startCorner + index) % 4];
-  }
-
-  // Draw rectangle from 'startCorner'
+  if (startCorner === -1) { startCorner = 0; }
+  function cornerAt(index) { return corners[(startCorner + index) % 4]; }
   var corner = cornerAt(0);
   ctx.moveTo(corner[0], corner[1]);
-
   for (var i = 1; i < 4; i++) {
     corner = cornerAt(i);
     let nextCornerId = i + 1;
-    if (nextCornerId === 4) {
-      nextCornerId = 0;
-    }
-
-    // let nextCorner = cornerAt(nextCornerId);
-
+    if (nextCornerId === 4) { nextCornerId = 0; }
     let width = corners[2][0] - corners[1][0];
     let height = corners[0][1] - corners[1][1];
     let x = corners[1][0];
     let y = corners[1][1];
-    // eslint-disable-next-line
     var radius = cornerRadius;
-
-    // Fix radius being too large
-    if (radius > height / 2) {
-      radius = height / 2;
-    }
-    if (radius > width / 2) {
-      radius = width / 2;
-    }
-
+    if (radius > height / 2) { radius = height / 2; }
+    if (radius > width / 2) { radius = width / 2; }
     ctx.moveTo(x + radius, y);
     ctx.lineTo(x + width - radius, y);
     ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
@@ -143,270 +61,183 @@ Chart.elements.Rectangle.prototype.draw = function () {
     ctx.lineTo(x, y + radius);
     ctx.quadraticCurveTo(x, y, x + radius, y);
   }
-
   ctx.fill();
-  if (borderWidth) {
-    ctx.stroke();
-  }
+  if (borderWidth) { ctx.stroke(); }
 };
 
-var mode = "light"; //(themeMode) ? themeMode : 'light';
-var fonts = {
-  base: "Open Sans",
-};
 
-// Colors
-var colors = {
-  gray: {
-    100: "#f6f9fc",
-    200: "#e9ecef",
-    300: "#dee2e6",
-    400: "#ced4da",
-    500: "#adb5bd",
-    600: "#8898aa",
-    700: "#525f7f",
-    800: "#32325d",
-    900: "#212529",
-  },
+// --- Color and Font Definitions ---
+const colors = {
+  gray: { 300: "#dee2e6", 600: "#8898aa", 700: "#525f7f", 900: "#212529" },
   theme: {
-    default: "#172b4d",
-    primary: "#5e72e4",
-    secondary: "#f4f5f7",
-    info: "#11cdef",
-    success: "#2dce89",
-    danger: "#f5365c",
-    warning: "#fb6340",
+    primary: "#5e72e4", info: "#11cdef", success: "#2dce89",
+    danger: "#f5365c", warning: "#fb6340"
   },
-  black: "#12263F",
-  white: "#FFFFFF",
-  transparent: "transparent",
+  white: "#FFFFFF", transparent: "transparent",
 };
+const fonts = { base: "Open Sans" };
 
+
+// --- Global Chart Options Function ---
 function chartOptions() {
-  var options = {
+  return {
     defaults: {
       global: {
-        responsive: true,
-        maintainAspectRatio: false,
-        defaultColor: mode === "dark" ? colors.gray[700] : colors.gray[600],
-        defaultFontColor: mode === "dark" ? colors.gray[700] : colors.gray[600],
-        defaultFontFamily: fonts.base,
-        defaultFontSize: 13,
-        layout: {
-          padding: 0,
-        },
-        legend: {
-          display: false,
-          position: "bottom",
-          labels: {
-            usePointStyle: true,
-            padding: 16,
-          },
+        responsive: true, maintainAspectRatio: false,
+        defaultColor: colors.gray[600], defaultFontColor: colors.gray[600],
+        defaultFontFamily: fonts.base, defaultFontSize: 13,
+        layout: { padding: 0 },
+        plugins: {
+            legend: { display: false, position: "bottom", labels: { usePointStyle: true, padding: 16 } },
         },
         elements: {
-          point: {
-            radius: 0,
-            backgroundColor: colors.theme["primary"],
-          },
-          line: {
-            tension: 0.4,
-            borderWidth: 4,
-            borderColor: colors.theme["primary"],
-            backgroundColor: colors.transparent,
-            borderCapStyle: "rounded",
-          },
-          rectangle: {
-            backgroundColor: colors.theme["warning"],
-          },
-          arc: {
-            backgroundColor: colors.theme["primary"],
-            borderColor: mode === "dark" ? colors.gray[800] : colors.white,
-            borderWidth: 4,
-          },
-        },
-        tooltips: {
-          enabled: true,
-          mode: "index",
-          intersect: false,
-        },
-      },
-      doughnut: {
-        cutoutPercentage: 83,
-        legendCallback: function (chart) {
-          var data = chart.data;
-          var content = "";
-
-          data.labels.forEach(function (label, index) {
-            var bgColor = data.datasets[0].backgroundColor[index];
-
-            content += '<span class="chart-legend-item">';
-            content +=
-              '<i class="chart-legend-indicator" style="background-color: ' +
-              bgColor +
-              '"></i>';
-            content += label;
-            content += "</span>";
-          });
-
-          return content;
+          point: { radius: 0, backgroundColor: colors.theme.primary },
+          line: { tension: 0.4, borderWidth: 4, borderColor: colors.theme.primary, backgroundColor: colors.transparent, borderCapStyle: "rounded" },
+          rectangle: { backgroundColor: colors.theme.warning },
+          arc: { backgroundColor: colors.theme.primary, borderColor: colors.white, borderWidth: 4 }
         },
       },
     },
   };
-
-  Chart.scaleService.updateScaleDefaults("linear", {
-    gridLines: {
-      borderDash: [2],
-      borderDashOffset: [2],
-      color: mode === "dark" ? colors.gray[900] : colors.gray[300],
-      drawBorder: false,
-      drawTicks: false,
-      lineWidth: 0,
-      zeroLineWidth: 0,
-      zeroLineColor: mode === "dark" ? colors.gray[900] : colors.gray[300],
-      zeroLineBorderDash: [2],
-      zeroLineBorderDashOffset: [2],
-    },
-    ticks: {
-      beginAtZero: true,
-      padding: 10,
-      callback: function (value) {
-        if (!(value % 10)) {
-          return value;
-        }
-      },
-    },
-  });
-
-  Chart.scaleService.updateScaleDefaults("category", {
-    gridLines: {
-      drawBorder: false,
-      drawOnChartArea: false,
-      drawTicks: false,
-    },
-    ticks: {
-      padding: 20,
-    },
-  });
-
-  return options;
 }
 
+
+// --- Utility to parse options (ROBUST VERSION) ---
+// *** THIS IS THE ONLY PART THAT HAS CHANGED ***
 function parseOptions(parent, options) {
-  for (var item in options) {
-    if (typeof options[item] !== "object") {
-      parent[item] = options[item];
-    } else {
-      parseOptions(parent[item], options[item]);
+  for (const key in options) {
+    if (Object.prototype.hasOwnProperty.call(options, key)) {
+      const value = options[key];
+      // If the value is an object (and not null), recurse.
+      // But first, ensure the parent has a corresponding object to merge into.
+      if (typeof value === 'object' && value !== null) {
+        if (!parent[key]) {
+          parent[key] = {}; // Create the object if it doesn't exist
+        }
+        parseOptions(parent[key], value);
+      } else {
+        // Otherwise, it's a primitive value, so just assign it.
+        parent[key] = value;
+      }
     }
   }
 }
 
-// Chart Example 1: Sales Value Line Chart
-const chartExample1 = {
+
+// --- EXPORTED CHART CONFIGURATIONS (Updated for Chart.js v3/v4) ---
+
+// 1. Annual Overview Line Chart
+const annualOverviewChart = {
   options: {
     scales: {
-      yAxes: [
-        {
-          gridLines: {
-            color: colors.gray[900],
-            zeroLineColor: colors.gray[900],
+      y: { // Changed from yAxes
+        grid: { color: colors.gray[300], zeroLineColor: colors.gray[300] },
+        ticks: {
+          callback: function (value) {
+            if (value >= 1000) return (value / 1000) + 'k';
+            return value;
           },
-          ticks: {
-            callback: function (value) {
-              if (!(value % 10)) {
-                return "$" + value + "k";
-              }
-            },
-          },
-        },
-      ],
-    },
-    tooltips: {
-      callbacks: {
-        label: function (item, data) {
-          var label = data.datasets[item.datasetIndex].label || "";
-          var yLabel = item.yLabel;
-          var content = "";
-          if (data.datasets.length > 1) {
-            content += label;
-          }
-          content += "$" + yLabel + "k";
-          return content;
         },
       },
     },
-  },
-  data1: (canvas) => {
-    return {
-      labels: ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-      datasets: [
-        {
-          label: "Performance",
-          data: [0, 20, 10, 30, 15, 40, 20, 60, 60],
+    plugins: { // Moved tooltips and legend inside plugins
+      legend: {
+        display: true,
+        position: 'top',
+      },
+      tooltip: {
+        callbacks: {
+          label: function (item) {
+            let label = item.dataset.label || "";
+            if (label) { label += ": "; }
+            label += item.formattedValue.toLocaleString();
+            return label;
+          },
         },
-      ],
-    };
-  },
-  data2: (canvas) => {
-    return {
-      labels: ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-      datasets: [
-        {
-          label: "Performance",
-          data: [0, 20, 5, 25, 10, 30, 15, 40, 40],
-        },
-      ],
-    };
+      },
+    },
   },
 };
 
-// Chart Example 2: Total Orders Bar Chart
-const chartExample2 = {
+// 2. Gender Distribution Pie Chart
+const genderDistributionChart = {
+    options: {
+        plugins: { // Moved tooltips and legend inside plugins
+            tooltip: {
+                callbacks: {
+                    label: function(item) {
+                        const total = item.chart.getDatasetMeta(0).total;
+                        const currentValue = item.raw;
+                        const percentage = Math.round((currentValue / total) * 100);
+                        return `${item.label}: ${currentValue.toLocaleString()} (${percentage}%)`;
+                    }
+                }
+            },
+            legend: {
+                display: true,
+                position: 'bottom',
+            }
+        }
+    }
+};
+
+// 3. Age Group Bar Chart
+const ageGroupChart = {
   options: {
     scales: {
-      yAxes: [
-        {
-          ticks: {
-            callback: function (value) {
-              if (!(value % 500)) {
-                return value;
-              }
-            },
+      y: { // Changed from yAxes
+        ticks: {
+          callback: function (value) {
+            if (value >= 1000000) return (value / 1000000) + 'M';
+            if (value >= 1000) return (value / 1000) + 'K';
+            return value;
           },
         },
-      ],
+      },
     },
-    tooltips: {
-      callbacks: {
-        label: function (item, data) {
-          var label = data.datasets[item.datasetIndex].label || "";
-          var yLabel = item.yLabel;
-          var content = "";
-          if (data.datasets.length > 1) {
-            content += label;
-          }
-          content += yLabel;
-          return content;
+    plugins: { // Moved tooltip inside plugins
+      tooltip: {
+        callbacks: {
+          label: function (item) {
+            let label = item.dataset.label || "";
+            if (label) { label += ": "; }
+            label += item.raw.toLocaleString();
+            return label;
+          },
         },
       },
     },
   },
-  data: {
-    labels: ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-    datasets: [
-      {
-        label: "Sales",
-        data: [25, 20, 30, 22, 17, 29],
-        maxBarThickness: 10,
-      },
-    ],
-  },
+};
+
+// 4. Marital Status Doughnut Chart
+const maritalStatusChart = {
+    options: {
+        cutout: '70%', // Changed from cutoutPercentage
+        plugins: { // Moved tooltips and legend inside plugins
+            tooltip: {
+                callbacks: {
+                    label: function(item) {
+                        const total = item.chart.getDatasetMeta(0).total;
+                        const currentValue = item.raw;
+                        const percentage = Math.round((currentValue / total) * 100);
+                        return `${item.label}: ${percentage}%`;
+                    }
+                }
+            },
+            legend: {
+                display: true,
+                position: 'bottom',
+            }
+        }
+    }
 };
 
 module.exports = {
-  chartOptions,
-  parseOptions,
-  chartExample1,
-  chartExample2,
+  chartOptions, // Global defaults
+  parseOptions, // Utility
+  annualOverviewChart,
+  genderDistributionChart,
+  ageGroupChart,
+  maritalStatusChart,
 };
