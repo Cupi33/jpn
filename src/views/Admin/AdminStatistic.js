@@ -7,7 +7,13 @@ import Chart from "chart.js";
 // react plugin used to create charts
 import { Line, Pie, Bar, Doughnut } from "react-chartjs-2";
 // Map and Tooltip Imports
-import { ComposableMap, Geographies, Geography } from "react-simple-maps";
+// FIX: Import ZoomableGroup to enable zoom/pan functionality
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+  ZoomableGroup,
+} from "react-simple-maps";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 
 // reactstrap components
@@ -20,6 +26,7 @@ import {
   Row,
   Col,
   Progress,
+  Button, // Import Button for our zoom controls
 } from "reactstrap";
 
 // core components
@@ -93,35 +100,38 @@ const maritalStatusData = {
 
 // --- DATA MAPPING & MAP COMPONENT ---
 
-// This mapping matches the names from the simplemaps.com file to your API keys
 const stateNameMapping = {
-  "Johor": "JOHOR",
-  "Kedah": "KEDAH",
-  "Kelantan": "KELANTAN",
-  "Kuala Lumpur": "KUALA_LUMPUR",
-  "Labuan": "LABUAN",
-  "Melaka": "MELAKA",
-  "Negeri Sembilan": "NEGERI_SEMBILAN",
-  "Pahang": "PAHANG",
-  "Perak": "PERAK",
-  "Perlis": "PERLIS",
-  "Pulau Pinang": "PULAU_PINANG",
-  "Putrajaya": "PUTRAJAYA",
-  "Sabah": "SABAH",
-  "Sarawak": "SARAWAK",
-  "Selangor": "SELANGOR",
-  "Terengganu": "TERENGGANU",
+  "Johor": "JOHOR", "Kedah": "KEDAH", "Kelantan": "KELANTAN", "Kuala Lumpur": "KUALA_LUMPUR",
+  "Labuan": "LABUAN", "Melaka": "MELAKA", "Negeri Sembilan": "NEGERI_SEMBILAN", "Pahang": "PAHANG",
+  "Perak": "PERAK", "Perlis": "PERLIS", "Pulau Pinang": "PULAU_PINANG", "Putrajaya": "PUTRAJAYA",
+  "Sabah": "SABAH", "Sarawak": "SARAWAK", "Selangor": "SELANGOR", "Terengganu": "TERENGGANU",
 };
 
-// The MapChart component, defined outside the main component for performance
+// --- UPDATED MAPCHART COMPONENT WITH ZOOM/PAN ---
 const MapChart = ({ data }) => {
-  const populationValues = Object.values(data).map(d => d.total);
+  // State to manage map position and zoom
+  const [position, setPosition] = useState({ coordinates: [108, 4], zoom: 1 });
+
+  // Handlers for zoom buttons
+  const handleZoomIn = () => {
+    if (position.zoom >= 4) return;
+    setPosition((pos) => ({ ...pos, zoom: pos.zoom * 1.5 }));
+  };
+  const handleZoomOut = () => {
+    if (position.zoom <= 1) return;
+    setPosition((pos) => ({ ...pos, zoom: pos.zoom / 1.5 }));
+  };
+
+  // Handler for when the map is moved (panned or zoomed)
+  const handleMoveEnd = (position) => {
+    setPosition(position);
+  };
+
+  const populationValues = Object.values(data).map((d) => d.total);
   const minPop = Math.min(...populationValues, 0);
   const maxPop = Math.max(...populationValues, 1);
-
-  // A vibrant color scale from light yellow to deep red
   const colorScale = (value) => {
-    if (value === undefined || value === null) return "#DDD"; // Default for no data
+    if (value === undefined || value === null) return "#DDD";
     const normalized = (value - minPop) / (maxPop - minPop);
     const r = 255;
     const g = 255 - Math.floor(normalized * 200);
@@ -130,47 +140,72 @@ const MapChart = ({ data }) => {
   };
 
   return (
-    <ComposableMap
-      projection="geoMercator"
-      // *** THIS IS THE CORRECTED PART ***
-      // Adjusted scale and center to fit the whole country in the view
-      projectionConfig={{
-        scale: 1800,      // Reduced from 4500 to "zoom out"
-        center: [108, 4]  // Adjusted from [109, 4.2] to re-center the view
-      }}
-      style={{ width: "100%", height: "auto" }}
-    >
-      <Geographies geography={geoData}>
-        {({ geographies }) =>
-          geographies.map((geo) => {
-            const geoJsonName = geo.properties.name;
-            const apiName = stateNameMapping[geoJsonName];
-            const stateData = data[apiName];
+    // We add a wrapper div with relative positioning to contain the absolute positioned buttons
+    <div style={{ position: "relative" }}>
+      <ComposableMap
+        projection="geoMercator"
+        projectionConfig={{ scale: 1800 }} // Scale sets the initial "fit"
+        style={{ width: "100%", height: "auto" }}
+      >
+        {/* ZoomableGroup handles the zooming and panning logic */}
+        <ZoomableGroup
+          zoom={position.zoom}
+          center={position.coordinates}
+          onMoveEnd={handleMoveEnd}
+        >
+          <Geographies geography={geoData}>
+            {({ geographies }) =>
+              geographies.map((geo) => {
+                const geoJsonName = geo.properties.name;
+                const apiName = stateNameMapping[geoJsonName];
+                const stateData = data[apiName];
 
-            return (
-              <Geography
-                key={geo.rsmKey}
-                geography={geo}
-                data-tooltip-id="map-tooltip"
-                data-tooltip-content={
-                  stateData ? `${geoJsonName}: ${stateData.total.toLocaleString()} people` : `${geoJsonName}: No data`
-                }
-                style={{
-                  default: {
-                    fill: stateData ? colorScale(stateData.total) : "#F5F5F5",
-                    outline: "none",
-                    stroke: "#FFF",
-                    strokeWidth: 0.5
-                  },
-                  hover: { fill: "#f5365c", outline: "none" },
-                  pressed: { fill: "#E42B4F", outline: "none" },
-                }}
-              />
-            );
-          })
-        }
-      </Geographies>
-    </ComposableMap>
+                return (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    data-tooltip-id="map-tooltip"
+                    data-tooltip-content={
+                      stateData ? `${geoJsonName}: ${stateData.total.toLocaleString()} people` : `${geoJsonName}: No data`
+                    }
+                    style={{
+                      default: {
+                        fill: stateData ? colorScale(stateData.total) : "#F5F5F5",
+                        outline: "none", stroke: "#FFF", strokeWidth: 0.5,
+                      },
+                      hover: { fill: "#f5365c", outline: "none" },
+                      pressed: { fill: "#E42B4F", outline: "none" },
+                    }}
+                  />
+                );
+              })
+            }
+          </Geographies>
+        </ZoomableGroup>
+      </ComposableMap>
+      
+      {/* Zoom control buttons */}
+      <div
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Button color="primary" onClick={handleZoomIn} className="btn-icon btn-sm mb-1">
+          <span className="btn-inner--icon">
+            <i className="fas fa-plus" />
+          </span>
+        </Button>
+        <Button color="primary" onClick={handleZoomOut} className="btn-icon btn-sm">
+          <span className="btn-inner--icon">
+            <i className="fas fa-minus" />
+          </span>
+        </Button>
+      </div>
+    </div>
   );
 };
 
@@ -180,80 +215,57 @@ const AdminStatistic = (props) => {
   const [populationMapData, setPopulationMapData] = useState({});
 
   useEffect(() => {
-    // Initialize Chart.js defaults
     if (window.Chart) {
       parseOptions(Chart, chartOptions());
     }
-
-    // Fetch population data from API
     const fetchPopulationData = async () => {
       try {
         const response = await axios.get("http://localhost:5000/adminstat/citizenPlacement");
         if (response.data.success) {
           const stats = response.data.stats;
-
-          // Set data for the map (as an object for fast lookups)
           setPopulationMapData(stats);
-
-          // Set data for the table (as a sorted array for rendering)
           const formattedTableData = Object.entries(stats)
             .map(([stateName, data]) => ({
               state: stateName.replace(/_/g, " "),
               population: data.total,
-              percentage: data.percentage
+              percentage: data.percentage,
             }))
             .sort((a, b) => b.population - a.population);
-
           setPopulationTableData(formattedTableData);
         }
       } catch (error) {
         console.error("Error fetching population data:", error);
       }
     };
-
     fetchPopulationData();
-  }, []); // Runs once on component mount
+  }, []);
 
   return (
     <>
       <Header />
       <Container className="mt--7" fluid>
-        {/* --- ROW 1: MAIN OVERVIEW CHART --- */}
+        {/* Row 1 */}
         <Row>
           <Col xl="12">
             <Card className="shadow">
               <CardHeader className="bg-transparent">
                 <Row className="align-items-center">
                   <div className="col">
-                    <h6 className="text-uppercase text-muted ls-1 mb-1">
-                      Overview
-                    </h6>
+                    <h6 className="text-uppercase text-muted ls-1 mb-1">Overview</h6>
                     <h2 className="mb-0">Annual Population Dynamics</h2>
                   </div>
                 </Row>
               </CardHeader>
               <CardBody>
-                {/*
-                  FIX: To prevent the chart from overlapping content below, we do two things:
-                  1. Give the container div a fixed height (e.g., '350px').
-                  2. Set 'maintainAspectRatio: false' in the chart options. This ensures
-                     the chart respects the container's height and doesn't overflow it.
-                */}
                 <div className="chart" style={{ height: "350px" }}>
-                  <Line
-                    data={annualOverviewData}
-                    options={{
-                      ...annualOverviewChart.options,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <Line data={annualOverviewData} options={{...annualOverviewChart.options, maintainAspectRatio: false,}}/>
                 </div>
               </CardBody>
             </Card>
           </Col>
         </Row>
 
-        {/* --- ROW 2: DEMOGRAPHIC BREAKDOWN CHARTS --- */}
+        {/* Row 2 */}
         <Row className="mt-5">
           <Col xl="4" className="mb-5 mb-xl-0">
             <Card className="shadow h-100">
@@ -263,13 +275,7 @@ const AdminStatistic = (props) => {
               </CardHeader>
               <CardBody>
                 <div className="chart" style={{ height: "300px" }}>
-                  <Bar
-                    data={ageGroupData}
-                    options={{
-                      ...ageGroupChart.options,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <Bar data={ageGroupData} options={{...ageGroupChart.options, maintainAspectRatio: false,}}/>
                 </div>
               </CardBody>
             </Card>
@@ -282,13 +288,7 @@ const AdminStatistic = (props) => {
               </CardHeader>
               <CardBody>
                 <div className="chart" style={{ height: "300px" }}>
-                  <Pie
-                    data={genderData}
-                    options={{
-                      ...genderDistributionChart.options,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <Pie data={genderData} options={{...genderDistributionChart.options, maintainAspectRatio: false,}}/>
                 </div>
               </CardBody>
             </Card>
@@ -301,20 +301,14 @@ const AdminStatistic = (props) => {
               </CardHeader>
               <CardBody>
                 <div className="chart" style={{ height: "300px" }}>
-                  <Doughnut
-                    data={maritalStatusData}
-                    options={{
-                      ...maritalStatusChart.options,
-                      maintainAspectRatio: false,
-                    }}
-                  />
+                  <Doughnut data={maritalStatusData} options={{...maritalStatusChart.options, maintainAspectRatio: false,}}/>
                 </div>
               </CardBody>
             </Card>
           </Col>
         </Row>
 
-        {/* --- ROW 3: HEATMAP AND DATA TABLE --- */}
+        {/* Row 3 */}
         <Row className="mt-5">
           <Col xl="7" className="mb-5 mb-xl-0">
             <Card className="shadow h-100">
@@ -330,7 +324,6 @@ const AdminStatistic = (props) => {
               </CardBody>
             </Card>
           </Col>
-
           <Col xl="5">
             <Card className="shadow">
               <CardHeader className="border-0">
@@ -356,11 +349,7 @@ const AdminStatistic = (props) => {
                           <div className="d-flex align-items-center">
                             <span className="mr-2">{item.percentage}%</span>
                             <div>
-                              <Progress
-                                max="100"
-                                value={item.percentage}
-                                barClassName="bg-gradient-primary"
-                              />
+                              <Progress max="100" value={item.percentage} barClassName="bg-gradient-primary"/>
                             </div>
                           </div>
                         </td>
@@ -368,9 +357,7 @@ const AdminStatistic = (props) => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="3" className="text-center">
-                        Loading data...
-                      </td>
+                      <td colSpan="3" className="text-center">Loading data...</td>
                     </tr>
                   )}
                 </tbody>
@@ -379,8 +366,7 @@ const AdminStatistic = (props) => {
           </Col>
         </Row>
       </Container>
-
-      {/* The Tooltip component that the map uses to display hover info */}
+      
       <ReactTooltip id="map-tooltip" />
     </>
   );
