@@ -92,6 +92,61 @@ router.get('/newbornTotal5year', async (req, res) => {
   }
 });
 
+router.get('/newbornTotal5yearRace', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM TOTAL_NEWBORN_RACE_5YEARS`);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    // Sort the rows by birth year in ascending order
+    const sortedRows = result.rows
+      .map(row => ({
+        birth_year: row.BIRTH_YEAR || row.birth_year,
+        melayu: Number(row.MELAYU || row.melayu || 0),
+        cina: Number(row.CINA || row.cina || 0),
+        india: Number(row.INDIA || row.india || 0),
+        lain: Number(row["LAIN-LAIN"] || row["lain-lain"] || 0)
+      }))
+      .sort((a, b) => parseInt(a.birth_year) - parseInt(b.birth_year));
+
+    const stats = [];
+
+    for (const row of sortedRows) {
+      const total = row.melayu + row.cina + row.india + row.lain;
+
+      const current = {
+        birth_year: row.birth_year,
+        total_newborn: total,
+        race_counts: {
+          melayu: row.melayu,
+          cina: row.cina,
+          india: row.india,
+          lain: row.lain
+        },
+        race_percentages: {
+          melayu: total ? parseFloat(((row.melayu / total) * 100).toFixed(2)) : 0,
+          cina: total ? parseFloat(((row.cina / total) * 100).toFixed(2)) : 0,
+          india: total ? parseFloat(((row.india / total) * 100).toFixed(2)) : 0,
+          lain: total ? parseFloat(((row.lain / total) * 100).toFixed(2)) : 0
+        }
+      };
+
+      stats.push(current);
+    }
+
+    res.json({
+      success: true,
+      message: 'Newborn race-wise percentages per year calculated successfully',
+      stats: stats
+    });
+
+  } catch (err) {
+    console.error('Retrieval error for /newbornTotal5yearRace:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 
 export default router;

@@ -20,8 +20,6 @@ import {
 import Header from "components/Headers/AdminStatHeader";
 import geoData from "../../data/malaysia-states.json";
 
-// --- HARDCODED DATA FOR NEWBORN STATISTICS ---
-
 // State name mapping for newborn data
 const stateNameMapping = {
   "Johor": "JOHOR", "Kedah": "KEDAH", "Kelantan": "KELANTAN", "Kuala Lumpur": "KUALA_LUMPUR",
@@ -30,7 +28,7 @@ const stateNameMapping = {
   "Sabah": "SABAH", "Sarawak": "SARAWAK", "Selangor": "SELANGOR", "Terengganu": "TERENGGANU",
 };
 
-// Annual newborn overview data
+// Annual newborn overview data (can also be fetched from an API if available)
 const annualNewbornOverviewData = {
   labels: ["2018", "2019", "2020", "2021", "2022", "2023", "2024"],
   datasets: [
@@ -55,24 +53,6 @@ const annualNewbornOverviewData = {
   ],
 };
 
-// Hardcoded 5-year birth data by state (2020-2024)
-const hardcodedFiveYearBirthData = {
-  "JOHOR": [82000, 83500, 84000, 84500, 85000],
-  "SELANGOR": [90000, 91000, 91500, 92000, 92000],
-  "KUALA_LUMPUR": [43000, 44000, 44500, 45000, 45000],
-  "PERAK": [36000, 37000, 37500, 38000, 38000],
-  "PAHANG": [26000, 27000, 27500, 28000, 28000],
-  "KEDAH": [33000, 34000, 34500, 35000, 35000],
-  "PULAU_PINANG": [30000, 31000, 31500, 32000, 32000],
-  "KELANTAN": [40000, 41000, 41500, 42000, 42000],
-  "TERENGGANU": [23000, 24000, 24500, 25000, 25000],
-  "NEGERI_SEMBILAN": [20000, 21000, 21500, 22000, 22000],
-  "MELAKA": [16000, 17000, 17500, 18000, 18000],
-  "PERLIS": [7000, 7500, 7800, 8000, 8000],
-  "SABAH": [46000, 47000, 47500, 48000, 48000],
-  "SARAWAK": [50000, 51000, 51500, 52000, 52000],
-};
-
 // Hardcoded gender distribution by state
 const hardcodedGenderData = {
   "JOHOR": { LELAKI: { total: 43500 }, PEREMPUAN: { total: 41500 } },
@@ -89,24 +69,6 @@ const hardcodedGenderData = {
   "PERLIS": { LELAKI: { total: 4100 }, PEREMPUAN: { total: 3900 } },
   "SABAH": { LELAKI: { total: 24500 }, PEREMPUAN: { total: 23500 } },
   "SARAWAK": { LELAKI: { total: 26600 }, PEREMPUAN: { total: 25400 } },
-};
-
-// Hardcoded ethnicity distribution by state
-const hardcodedEthnicityData = {
-  "JOHOR": { MELAYU: { total: 45000 }, CINA: { total: 25000 }, INDIA: { total: 12000 }, LAIN_LAIN: { total: 3000 } },
-  "SELANGOR": { MELAYU: { total: 48000 }, CINA: { total: 28000 }, INDIA: { total: 13000 }, LAIN_LAIN: { total: 3000 } },
-  "KUALA_LUMPUR": { MELAYU: { total: 18000 }, CINA: { total: 15000 }, INDIA: { total: 8000 }, LAIN_LAIN: { total: 4000 } },
-  "PERAK": { MELAYU: { total: 22000 }, CINA: { total: 10000 }, INDIA: { total: 4500 }, LAIN_LAIN: { total: 1500 } },
-  "PAHANG": { MELAYU: { total: 24000 }, CINA: { total: 2800 }, INDIA: { total: 1000 }, LAIN_LAIN: { total: 200 } },
-  "KEDAH": { MELAYU: { total: 30000 }, CINA: { total: 3500 }, INDIA: { total: 1200 }, LAIN_LAIN: { total: 300 } },
-  "PULAU_PINANG": { MELAYU: { total: 16000 }, CINA: { total: 12000 }, INDIA: { total: 3500 }, LAIN_LAIN: { total: 500 } },
-  "KELANTAN": { MELAYU: { total: 40000 }, CINA: { total: 1500 }, INDIA: { total: 400 }, LAIN_LAIN: { total: 100 } },
-  "TERENGGANU": { MELAYU: { total: 23500 }, CINA: { total: 1200 }, INDIA: { total: 250 }, LAIN_LAIN: { total: 50 } },
-  "NEGERI_SEMBILAN": { MELAYU: { total: 14000 }, CINA: { total: 5000 }, INDIA: { total: 2500 }, LAIN_LAIN: { total: 500 } },
-  "MELAKA": { MELAYU: { total: 11000 }, CINA: { total: 4500 }, INDIA: { total: 2000 }, LAIN_LAIN: { total: 500 } },
-  "PERLIS": { MELAYU: { total: 7500 }, CINA: { total: 400 }, INDIA: { total: 80 }, LAIN_LAIN: { total: 20 } },
-  "SABAH": { MELAYU: { total: 15000 }, CINA: { total: 8000 }, INDIA: { total: 2000 }, LAIN_LAIN: { total: 23000 } },
-  "SARAWAK": { MELAYU: { total: 18000 }, CINA: { total: 15000 }, INDIA: { total: 1500 }, LAIN_LAIN: { total: 17500 } },
 };
 
 // --- MAP COMPONENT with Zoom/Pan ---
@@ -158,23 +120,6 @@ const MapChart = ({ data, stateNameMapping }) => {
   );
 };
 
-// --- HELPER FUNCTION TO CALCULATE TREND ---
-const calculateTrend = (data) => {
-  if (data.length < 2) return { trend: 'stable', percentage: 0 };
-  
-  const latest = data[data.length - 1];
-  const previous = data[data.length - 2];
-  const change = ((latest - previous) / previous) * 100;
-  
-  if (change > 0) {
-    return { trend: 'increase', percentage: change.toFixed(1) };
-  } else if (change < 0) {
-    return { trend: 'decrease', percentage: Math.abs(change).toFixed(1) };
-  } else {
-    return { trend: 'stable', percentage: 0 };
-  }
-};
-
 // --- MAIN ADMIN STATISTIC NEWBORN COMPONENT ---
 const AdminStatisticNewborn = (props) => {
   const [birthTableData, setBirthTableData] = useState([]);
@@ -187,27 +132,28 @@ const AdminStatisticNewborn = (props) => {
     datasets: [{ data: [0, 0], backgroundColor: ["#5e72e4", "#f5365c"], hoverBackgroundColor: ["#5e72e4", "#f5365c"] }],
   });
   
-  // Ethnicity Chart State
-  const [selectedEthnicityState, setSelectedEthnicityState] = useState("ALL");
+  // --- MODIFIED: States for Ethnicity Chart ---
+  const [yearlyRaceData, setYearlyRaceData] = useState([]); // To store API data (array)
+  const [availableYears, setAvailableYears] = useState([]); // To store years from API for dropdown
+  const [selectedEthnicityYear, setSelectedEthnicityYear] = useState("ALL"); // For the dropdown
   const [ethnicityChartData, setEthnicityChartData] = useState({
     labels: ["Melayu", "Cina", "India", "Lain-lain"],
     datasets: [{ data: [0, 0, 0, 0], backgroundColor: ["#2dce89", "#fb6340", "#5e72e4", "#adb5bd"], hoverBackgroundColor: ["#2dce89", "#fb6340", "#5e72e4", "#adb5bd"] }],
   });
 
-  // 5-Year Birth Trend Chart State
-  const [selectedBirthTrendState, setSelectedBirthTrendState] = useState("ALL");
+  // States for the 5-year trend chart
   const [birthTrendChartData, setBirthTrendChartData] = useState({
-    labels: ["2020", "2021", "2022", "2023", "2024"],
+    labels: [],
     datasets: [{ 
       label: "Kelahiran Bayi", 
-      data: [0, 0, 0, 0, 0], 
+      data: [],
       backgroundColor: "#11cdef",
       borderColor: "#11cdef",
       borderWidth: 2,
       fill: false
     }],
   });
-  const [birthTrendIndicator, setBirthTrendIndicator] = useState({ trend: 'stable', percentage: 0 });
+  const [birthTrendIndicators, setBirthTrendIndicators] = useState([]);
 
   // --- Initial Data Loading ---
   useEffect(() => {
@@ -215,43 +161,54 @@ const AdminStatisticNewborn = (props) => {
       parseOptions(Chart, chartOptions());
     }
 
-    // Fetch data from the API
-    const fetchBirthData = async () => {
+    const fetchAllData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/newbornStat/newbornState");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const apiData = await response.json();
-
-        if (apiData.success && apiData.stats) {
+        // Fetch state-wise birth data
+        const stateResponse = await fetch("http://localhost:5000/newbornStat/newbornState");
+        const stateApiData = await stateResponse.json();
+        if (stateApiData.success && stateApiData.stats) {
           const processedMapData = {};
-          for (const stateKey in apiData.stats) {
+          for (const stateKey in stateApiData.stats) {
             const mapKey = stateKey.replace(/ /g, "_");
-            processedMapData[mapKey] = {
-              total: apiData.stats[stateKey].total_population,
-              percentage: apiData.stats[stateKey].percentage
-            };
+            processedMapData[mapKey] = { total: stateApiData.stats[stateKey].total_population, percentage: stateApiData.stats[stateKey].percentage };
           }
           setBirthMapData(processedMapData);
 
-          const formattedTableData = Object.entries(apiData.stats)
-            .map(([stateName, data]) => ({
-              state: stateName,
-              births: data.total_population,
-              percentage: data.percentage
-            }))
+          const formattedTableData = Object.entries(stateApiData.stats)
+            .map(([stateName, data]) => ({ state: stateName, births: data.total_population, percentage: data.percentage }))
             .sort((a, b) => b.births - a.births);
           setBirthTableData(formattedTableData);
-        } else {
-          console.error("API call was not successful or stats data is missing:", apiData.message);
         }
+
+        // Fetch 5-year trend data
+        const trendResponse = await fetch("http://localhost:5000/newbornStat/newbornTotal5year");
+        const trendApiData = await trendResponse.json();
+        if (trendApiData.success && trendApiData.stats) {
+          setBirthTrendChartData(prev => ({
+            ...prev,
+            labels: trendApiData.stats.map(item => item.birth_year),
+            datasets: [{ ...prev.datasets[0], data: trendApiData.stats.map(item => item.total_newborn) }]
+          }));
+          setBirthTrendIndicators(trendApiData.stats);
+        }
+
+        // --- MODIFIED: Fetch yearly ethnicity data from the new endpoint ---
+        const ethnicityResponse = await fetch("http://localhost:5000/newbornStat/newbornTotal5yearRace");
+        const ethnicityApiData = await ethnicityResponse.json();
+        if (ethnicityApiData.success && ethnicityApiData.stats) {
+          setYearlyRaceData(ethnicityApiData.stats); // Store the array of yearly data
+          
+          // Dynamically populate the years dropdown from the API response
+          const years = ethnicityApiData.stats.map(item => item.birth_year).sort((a, b) => b - a); // Newest first
+          setAvailableYears(years);
+        }
+
       } catch (error) {
-        console.error("Failed to fetch newborn statistics:", error);
+        console.error("Failed to fetch dashboard data:", error);
       }
     };
 
-    fetchBirthData();
+    fetchAllData();
   }, []);
 
   // --- Data Processing for Gender Chart ---
@@ -275,58 +232,39 @@ const AdminStatisticNewborn = (props) => {
     }));
   }, [selectedGenderState]);
 
-  // --- Data Processing for Ethnicity Chart ---
+  // --- MODIFIED: Data Processing for Ethnicity Chart based on Year and new API structure ---
   useEffect(() => {
-    let melayuTotal = 0, cinaTotal = 0, indiaTotal = 0, lainTotal = 0;
-    if (selectedEthnicityState === "ALL") {
-      Object.values(hardcodedEthnicityData).forEach(stateData => { 
-        melayuTotal += stateData.MELAYU.total; 
-        cinaTotal += stateData.CINA.total; 
-        indiaTotal += stateData.INDIA.total; 
-        lainTotal += stateData.LAIN_LAIN.total; 
-      });
+    if (yearlyRaceData.length === 0) return; // Don't run if data isn't loaded
+
+    let dataForChart = [0, 0, 0, 0];
+
+    if (selectedEthnicityYear === "ALL") {
+      // Sum up all years if 'ALL' is selected
+      const totals = yearlyRaceData.reduce((acc, yearData) => {
+        acc.melayu += yearData.race_counts.melayu;
+        acc.cina += yearData.race_counts.cina;
+        acc.india += yearData.race_counts.india;
+        acc.lain += yearData.race_counts.lain;
+        return acc;
+      }, { melayu: 0, cina: 0, india: 0, lain: 0 });
+      
+      dataForChart = [totals.melayu, totals.cina, totals.india, totals.lain];
+
     } else {
-      const stateData = hardcodedEthnicityData[selectedEthnicityState];
-      if (stateData) { 
-        melayuTotal = stateData.MELAYU.total; 
-        cinaTotal = stateData.CINA.total; 
-        indiaTotal = stateData.INDIA.total; 
-        lainTotal = stateData.LAIN_LAIN.total; 
+      // Find the data for the specific selected year
+      const yearData = yearlyRaceData.find(item => item.birth_year === selectedEthnicityYear);
+      if (yearData) {
+        const { melayu, cina, india, lain } = yearData.race_counts;
+        dataForChart = [melayu, cina, india, lain];
       }
     }
+
     setEthnicityChartData(prevData => ({ 
       ...prevData, 
-      datasets: [{ ...prevData.datasets[0], data: [melayuTotal, cinaTotal, indiaTotal, lainTotal] }] 
+      datasets: [{ ...prevData.datasets[0], data: dataForChart }] 
     }));
-  }, [selectedEthnicityState]);
+  }, [selectedEthnicityYear, yearlyRaceData]); // Re-run when year changes or data arrives
 
-  // --- Data Processing for 5-Year Birth Trend Chart ---
-  useEffect(() => {
-    let trendData = [0, 0, 0, 0, 0];
-    
-    if (selectedBirthTrendState === "ALL") {
-      // Sum all states for each year
-      for (let yearIndex = 0; yearIndex < 5; yearIndex++) {
-        Object.values(hardcodedFiveYearBirthData).forEach(stateData => {
-          trendData[yearIndex] += stateData[yearIndex];
-        });
-      }
-    } else {
-      const stateData = hardcodedFiveYearBirthData[selectedBirthTrendState];
-      if (stateData) {
-        trendData = [...stateData];
-      }
-    }
-    
-    setBirthTrendChartData(prevData => ({ 
-      ...prevData, 
-      datasets: [{ ...prevData.datasets[0], data: trendData }] 
-    }));
-    
-    // Calculate trend indicator
-    const trendInfo = calculateTrend(trendData);
-    setBirthTrendIndicator(trendInfo);
-  }, [selectedBirthTrendState]);
 
   return (
     <>
@@ -334,7 +272,7 @@ const AdminStatisticNewborn = (props) => {
       <Container className="mt--7" fluid>
         {/* ROW 1: MAIN OVERVIEW CHART */}
         <Row>
-          <Col xl="12">
+           <Col xl="12">
             <Card className="shadow">
               <CardHeader className="bg-transparent">
                 <Row className="align-items-center">
@@ -357,51 +295,36 @@ const AdminStatisticNewborn = (props) => {
         <Row className="mt-5">
           {/* 5-Year Birth Trend Chart */}
           <Col xl="4" className="mb-5 mb-xl-0">
-            <Card className="shadow h-100">
+             <Card className="shadow h-100">
               <CardHeader className="bg-transparent">
-                <div className="d-flex justify-content-between align-items-center">
+                <div className="d-flex justify-content-between align-items-start">
                   <div>
-                    <h6 className="text-uppercase text-muted ls-1 mb-1">Trend Kelahiran</h6>
+                    <h6 className="text-uppercase text-muted ls-1 mb-1">Trend Tahunan</h6>
                     <h2 className="mb-0">Graf Kelahiran Bayi (5 Tahun)</h2>
-                    {/* Trend Indicator */}
-                    <div className="mt-2">
-                      {birthTrendIndicator.trend === 'increase' && (
-                        <div className="d-flex align-items-center">
-                          <i className="fas fa-arrow-up text-success mr-1"></i>
-                          <span className="text-success text-sm font-weight-bold">
-                            Naik {birthTrendIndicator.percentage}%
-                          </span>
-                        </div>
-                      )}
-                      {birthTrendIndicator.trend === 'decrease' && (
-                        <div className="d-flex align-items-center">
-                          <i className="fas fa-arrow-down text-danger mr-1"></i>
-                          <span className="text-danger text-sm font-weight-bold">
-                            Turun {birthTrendIndicator.percentage}%
-                          </span>
-                        </div>
-                      )}
-                      {birthTrendIndicator.trend === 'stable' && (
-                        <div className="d-flex align-items-center">
-                          <i className="fas fa-minus text-warning mr-1"></i>
-                          <span className="text-warning text-sm font-weight-bold">
-                            Stabil
-                          </span>
-                        </div>
-                      )}
+                    <div className="mt-2 d-flex flex-wrap">
+                      {birthTrendIndicators.map((indicator, index) => {
+                        if (typeof indicator.percentage_change === 'undefined') {
+                          return (
+                            <div key={index} className="d-flex align-items-center mr-3 mb-1">
+                                <span className="text-muted mr-1">{indicator.birth_year}:</span>
+                                <span className="text-sm font-weight-bold">Data Asas</span>
+                            </div>
+                          );
+                        }
+                        const change = indicator.percentage_change;
+                        const trendClass = change > 0 ? 'text-success' : change < 0 ? 'text-danger' : 'text-warning';
+                        const iconClass = change > 0 ? 'fas fa-arrow-up' : change < 0 ? 'fas fa-arrow-down' : 'fas fa-minus';
+                        return (
+                          <div key={index} className="d-flex align-items-center mr-3 mb-1">
+                            <span className="text-muted mr-1">{indicator.birth_year}:</span>
+                            <i className={`${iconClass} ${trendClass} mr-1`}></i>
+                            <span className={`${trendClass} text-sm font-weight-bold`}>
+                              {Math.abs(change)}%
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                  <div>
-                    <Input type="select" bsSize="sm" style={{ maxWidth: '150px' }} 
-                           value={selectedBirthTrendState} 
-                           onChange={e => setSelectedBirthTrendState(e.target.value)}>
-                      <option value="ALL">Seluruh Malaysia</option>
-                      {Object.keys(stateNameMapping).sort().map(prettyName => (
-                        <option key={stateNameMapping[prettyName]} value={stateNameMapping[prettyName]}>
-                          {prettyName}
-                        </option>
-                      ))}
-                    </Input>
                   </div>
                 </div>
               </CardHeader>
@@ -410,16 +333,7 @@ const AdminStatisticNewborn = (props) => {
                   <Line data={birthTrendChartData} options={{ 
                     ...ageGroupChart.options, 
                     maintainAspectRatio: false,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                        ticks: {
-                          callback: function(value) {
-                            return value.toLocaleString();
-                          }
-                        }
-                      }
-                    }
+                    scales: { y: { beginAtZero: false, ticks: { callback: (value) => value.toLocaleString() } } }
                   }} />
                 </div>
               </CardBody>
@@ -428,7 +342,7 @@ const AdminStatisticNewborn = (props) => {
 
           {/* Gender Chart */}
           <Col xl="4" className="mb-5 mb-xl-0">
-            <Card className="shadow h-100">
+             <Card className="shadow h-100">
               <CardHeader className="bg-transparent">
                 <div className="d-flex justify-content-between align-items-center">
                   <div>
@@ -457,7 +371,7 @@ const AdminStatisticNewborn = (props) => {
             </Card>
           </Col>
 
-          {/* Ethnicity Chart */}
+          {/* --- MODIFIED: Ethnicity Chart with Year Dropdown populated from API --- */}
           <Col xl="4">
             <Card className="shadow h-100">
               <CardHeader className="bg-transparent">
@@ -468,12 +382,12 @@ const AdminStatisticNewborn = (props) => {
                   </div>
                   <div>
                     <Input type="select" bsSize="sm" style={{ maxWidth: '150px' }} 
-                           value={selectedEthnicityState} 
-                           onChange={e => setSelectedEthnicityState(e.target.value)}>
-                      <option value="ALL">Seluruh Malaysia</option>
-                      {Object.keys(stateNameMapping).sort().map(prettyName => (
-                        <option key={stateNameMapping[prettyName]} value={stateNameMapping[prettyName]}>
-                          {prettyName}
+                           value={selectedEthnicityYear} 
+                           onChange={e => setSelectedEthnicityYear(e.target.value)}>
+                      <option value="ALL">Semua Tahun</option>
+                      {availableYears.map(year => (
+                        <option key={year} value={year}>
+                          Tahun {year}
                         </option>
                       ))}
                     </Input>
@@ -491,7 +405,7 @@ const AdminStatisticNewborn = (props) => {
         
         {/* ROW 3: HEATMAP AND DATA TABLE */}
         <Row className="mt-5">
-          <Col xl="7" className="mb-5 mb-xl-0">
+           <Col xl="7" className="mb-5 mb-xl-0">
             <Card className="shadow h-100">
               <CardHeader className="border-0">
                 <h3 className="mb-0">Peta Kelahiran Bayi Di Malaysia</h3>
