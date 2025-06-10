@@ -148,6 +148,63 @@ router.get('/citizenPlacement', async (req, res) => {
   }
 });
 
+router.get('/stateGender', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM LELAKI_PEREMPUAN_NEGERI`);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const row = result.rows[0]; // only 1 row from the view/table
+    const stateData = {}; // will hold data grouped by state
+
+    // Step 1: Group male and female counts by state
+    for (const key in row) {
+      const [gender, ...stateParts] = key.split('_'); // e.g., ['LELAKI', 'MELAKA']
+      const state = stateParts.join('_'); // in case the state name has underscores
+
+      if (!stateData[state]) {
+        stateData[state] = {
+          LELAKI: 0,
+          PEREMPUAN: 0
+        };
+      }
+
+      stateData[state][gender] = Number(row[key]);
+    }
+
+    // Step 2: Calculate percentages within each state
+    const stats = {};
+    for (const state in stateData) {
+      const male = stateData[state].LELAKI;
+      const female = stateData[state].PEREMPUAN;
+      const total = male + female;
+
+      stats[state] = {
+        LELAKI: {
+          total: male,
+          percentage: total > 0 ? parseFloat(((male / total) * 100).toFixed(2)) : 0
+        },
+        PEREMPUAN: {
+          total: female,
+          percentage: total > 0 ? parseFloat(((female / total) * 100).toFixed(2)) : 0
+        },
+        total: total
+      };
+    }
+
+    res.json({
+      success: true,
+      message: 'State-wise gender breakdown calculated successfully',
+      stats: stats
+    });
+
+  } catch (err) {
+    console.error('Retrieval error for /stateGender:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 
 export default router;

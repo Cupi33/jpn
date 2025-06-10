@@ -25,13 +25,13 @@ import {
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// *** UPDATED IMPORT: Point to the new chartAdmin.js file ***
+// *** 1. UPDATED IMPORT: Import the variables that are actually exported ***
 import {
   chartOptions,
   parseOptions,
-  chartExample1,
-  chartExample2,
-} from "variables/chartAdmin.js"; // <-- THE ONLY CHANGE NEEDED
+  annualOverviewChart, // Was chartExample1
+  ageGroupChart,       // Was chartExample2 (using ageGroupChart as a substitute)
+} from "variables/chartAdmin.js";
 
 import AdminHeader from "components/Headers/AdminHeader";
 
@@ -60,6 +60,43 @@ const Index = (props) => {
   const [activeNav, setActiveNav] = useState(1);
   const [chartExample1Data, setChartExample1Data] = useState("data1");
 
+  // *** 2. RE-CREATE CHART DATA: Define the chart data locally, as it's no longer in chartAdmin.js ***
+  const salesChart = {
+    options: annualOverviewChart.options, // Use options from the imported file
+    data1: { // Data for "Month" view
+      labels: ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      datasets: [
+        {
+          label: "Performance",
+          data: [0, 20, 10, 30, 15, 40, 20, 60, 60],
+          // You can add styling here if needed, e.g., borderColor
+        },
+      ],
+    },
+    data2: { // Data for "Week" view
+      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+      datasets: [
+        {
+          label: "Performance",
+          data: [10, 30, 20, 50, 25, 60, 40],
+        },
+      ],
+    },
+  };
+
+  const ordersChart = {
+    options: ageGroupChart.options, // Use options from the imported file
+    data: {
+      labels: ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+      datasets: [
+        {
+          label: "Total orders",
+          data: [25, 20, 30, 22, 17, 29],
+          // You can add styling here, e.g., backgroundColor
+        },
+      ],
+    },
+  };
 
   if (isLoading) {
     return (
@@ -130,9 +167,10 @@ const Index = (props) => {
               <CardBody>
                 {/* Chart */}
                 <div className="chart">
+                  {/* *** 3. UPDATE CHART PROPS: Use the new local variables *** */}
                   <Line
-                    data={chartExample1[chartExample1Data]}
-                    options={chartExample1.options}
+                    data={salesChart[chartExample1Data]}
+                    options={salesChart.options}
                     getDatasetAtEvent={(e) => console.log(e)}
                   />
                 </div>
@@ -154,9 +192,10 @@ const Index = (props) => {
               <CardBody>
                 {/* Chart */}
                 <div className="chart">
+                  {/* *** 3. UPDATE CHART PROPS: Use the new local variables *** */}
                   <Bar
-                    data={chartExample2.data}
-                    options={chartExample2.options}
+                    data={ordersChart.data}
+                    options={ordersChart.options}
                   />
                 </div>
               </CardBody>
