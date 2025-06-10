@@ -63,7 +63,7 @@ const AdminStatHeader = () => {
                           INFORMASI KELAHIRAN BAYI DI MALAYSIA
                         </CardTitle>
                         <span className="h2 font-weight-bold mb-0">
-                          <Button className="my-4" type="button" color="primary" >
+                          <Button className="my-4" type="button" color="primary" onClick={() => navigate('/statistic/statAdminNewborn')}>
                             SEMAK
                         </Button>
                         </span>

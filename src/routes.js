@@ -21,6 +21,7 @@ import ICCheck from "views/Admin/checkAdmin/ICCheck";
 import TableIC from "views/Admin/checkAdmin/TableIC";
 import LaporanHarian from "views/Admin/LaporanHarian";
 import AdminStatistic from "views/Admin/AdminStatistic"
+import AdminStatisticNewborn from "views/Admin/AdminStatisticNewborn"
 
 
 
@@ -138,6 +139,12 @@ const routeGroups = {
         icon: "ni ni-sound-wave text-green",
         component: <AdminStatistic />,
       },
+      {
+        path: "/statAdminNewborn",
+        name: "Statistik",
+        icon: "ni ni-sound-wave text-green",
+        component: <AdminStatisticNewborn />,
+      }
     ],
   },
 
