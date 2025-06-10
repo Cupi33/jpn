@@ -31,7 +31,7 @@ import {
   parseOptions,
   annualOverviewChart, // Was chartExample1
   ageGroupChart,       // Was chartExample2 (using ageGroupChart as a substitute)
-} from "variables/chartAdmin.js";
+} from "variables/dashboardAdminChart";
 
 import AdminHeader from "components/Headers/AdminHeader";
 
