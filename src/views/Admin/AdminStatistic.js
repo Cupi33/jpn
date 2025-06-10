@@ -9,6 +9,7 @@ import { Card, CardHeader, CardBody, Table, Container, Row, Col, Progress, Butto
 import Chart from "chart.js";
 
 // Import configurations and data-fetching logic from our refactored module
+// Note: We will bypass fetchGenderDataForState for a more efficient approach
 import {
   chartOptions,
   parseOptions,
@@ -17,7 +18,6 @@ import {
   ageGroupChart,
   maritalStatusChart,
   stateNameMapping,
-  fetchGenderDataForState,
 } from "variables/chartAdmin";
 
 import Header from "components/Headers/AdminStatHeader";
@@ -99,10 +99,14 @@ const AdminStatistic = (props) => {
   const [populationTableData, setPopulationTableData] = useState([]);
   const [populationMapData, setPopulationMapData] = useState({});
 
+  // *** NEW: State to hold all gender data fetched from the API
+  const [allGenderStats, setAllGenderStats] = useState(null);
+
   const [selectedGenderState, setSelectedGenderState] = useState("ALL");
   const [isGenderLoading, setIsGenderLoading] = useState(true);
   const [genderChartData, setGenderChartData] = useState({
-    labels: ["Male", "Female"],
+    // *** UPDATED: More descriptive labels
+    labels: ["Lelaki", "Perempuan"],
     datasets: [{
       data: [],
       backgroundColor: ["#5e72e4", "#f5365c"],
@@ -110,10 +114,13 @@ const AdminStatistic = (props) => {
     }],
   });
 
+  // --- Initial Data Fetching ---
   useEffect(() => {
     if (window.Chart) {
       parseOptions(Chart, chartOptions());
     }
+
+    // 1. Fetch population data for map and table
     const fetchPopulationData = async () => {
       try {
         const response = await axios.get("http://localhost:5000/adminstat/citizenPlacement");
@@ -129,21 +136,61 @@ const AdminStatistic = (props) => {
         console.error("Error fetching population data:", error);
       }
     };
+
+    // *** NEW: 2. Fetch all gender data at once
+    const fetchAllGenderData = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/adminstat/stateGender");
+        if (response.data.success) {
+          setAllGenderStats(response.data.stats); // Store the entire stats object
+        }
+      } catch (error) {
+        console.error("Error fetching gender data:", error);
+        setAllGenderStats({}); // Set to empty object on error to prevent crashes
+      }
+    };
+
     fetchPopulationData();
+    fetchAllGenderData(); // Call the new fetcher function
   }, []);
 
+  // *** REWRITTEN: This hook now processes the already-fetched data
+  // It runs whenever the dropdown selection or the fetched gender data changes.
   useEffect(() => {
-    const updateGenderData = async () => {
-      setIsGenderLoading(true);
-      const stats = await fetchGenderDataForState(selectedGenderState);
-      setGenderChartData(prevData => ({
-        ...prevData,
-        datasets: [{ ...prevData.datasets[0], data: [stats.male, stats.female] }]
-      }));
-      setIsGenderLoading(false);
-    };
-    updateGenderData();
-  }, [selectedGenderState]);
+    // Don't proceed if the data hasn't been loaded yet
+    if (!allGenderStats) {
+      return;
+    }
+    
+    setIsGenderLoading(true);
+
+    let maleTotal = 0;
+    let femaleTotal = 0;
+
+    if (selectedGenderState === "ALL") {
+      // If "All Malaysia" is selected, sum totals from all states
+      Object.values(allGenderStats).forEach(stateData => {
+        maleTotal += stateData.LELAKI.total;
+        femaleTotal += stateData.PEREMPUAN.total;
+      });
+    } else {
+      // If a specific state is selected, get its data directly
+      const stateData = allGenderStats[selectedGenderState];
+      if (stateData) {
+        maleTotal = stateData.LELAKI.total;
+        femaleTotal = stateData.PEREMPUAN.total;
+      }
+    }
+
+    // Update the chart's data state, which will cause it to re-render
+    setGenderChartData(prevData => ({
+      ...prevData,
+      datasets: [{ ...prevData.datasets[0], data: [maleTotal, femaleTotal] }]
+    }));
+    
+    setIsGenderLoading(false);
+
+  }, [selectedGenderState, allGenderStats]); // Dependencies
 
   return (
     <>
@@ -175,7 +222,7 @@ const AdminStatistic = (props) => {
             <Card className="shadow h-100">
               <CardHeader className="bg-transparent">
                 <div className="d-flex justify-content-between align-items-center">
-                  <div><h6 className="text-uppercase text-muted ls-1 mb-1">Demographics</h6><h2 className="mb-0">Gender Distribution</h2></div>
+                  <div><h6 className="text-uppercase text-muted ls-1 mb-1">Demografik</h6><h2 className="mb-0">Ratio Jantina Di Setiap Negeri</h2></div>
                   <div>
                     <Input type="select" bsSize="sm" style={{ maxWidth: '150px' }} value={selectedGenderState} onChange={e => setSelectedGenderState(e.target.value)}>
                       <option value="ALL">All Malaysia</option>

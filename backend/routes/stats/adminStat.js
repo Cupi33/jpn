@@ -206,5 +206,58 @@ router.get('/stateGender', async (req, res) => {
   }
 });
 
+router.get('/stateRace', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM RACE_STATISTICS`);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const stats = {};
+
+    result.rows.forEach(row => {
+      const state = row.NEGERI || row.state;
+
+      const melayu = Number(row.MELAYU || 0);
+      const cina = Number(row.CINA || 0);
+      const india = Number(row.INDIA || 0);
+      const lain = Number(row.LAIN_LAIN || 0);
+
+      const total = melayu + cina + india + lain;
+
+      stats[state] = {
+        MELAYU: {
+          total: melayu,
+          percentage: total > 0 ? parseFloat(((melayu / total) * 100).toFixed(2)) : 0
+        },
+        CINA: {
+          total: cina,
+          percentage: total > 0 ? parseFloat(((cina / total) * 100).toFixed(2)) : 0
+        },
+        INDIA: {
+          total: india,
+          percentage: total > 0 ? parseFloat(((india / total) * 100).toFixed(2)) : 0
+        },
+        LAIN_LAIN: {
+          total: lain,
+          percentage: total > 0 ? parseFloat(((lain / total) * 100).toFixed(2)) : 0
+        },
+        total: total
+      };
+    });
+
+    res.json({
+      success: true,
+      message: 'State-wise race breakdown calculated successfully',
+      stats: stats
+    });
+
+  } catch (err) {
+    console.error('Retrieval error for /stateRace:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 
 export default router;
