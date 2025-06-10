@@ -55,23 +55,7 @@ const annualNewbornOverviewData = {
   ],
 };
 
-// Hardcoded state birth data for map and table
-const hardcodedBirthData = {
-  "JOHOR": { total: 85000, percentage: 18.5 },
-  "SELANGOR": { total: 92000, percentage: 20.1 },
-  "KUALA_LUMPUR": { total: 45000, percentage: 9.8 },
-  "PERAK": { total: 38000, percentage: 8.3 },
-  "PAHANG": { total: 28000, percentage: 6.1 },
-  "KEDAH": { total: 35000, percentage: 7.6 },
-  "PULAU_PINANG": { total: 32000, percentage: 7.0 },
-  "KELANTAN": { total: 42000, percentage: 9.2 },
-  "TERENGGANU": { total: 25000, percentage: 5.5 },
-  "NEGERI_SEMBILAN": { total: 22000, percentage: 4.8 },
-  "MELAKA": { total: 18000, percentage: 3.9 },
-  "PERLIS": { total: 8000, percentage: 1.7 },
-  "SABAH": { total: 48000, percentage: 10.5 },
-  "SARAWAK": { total: 52000, percentage: 11.4 },
-};
+// --- REMOVED: hardcodedBirthData constant is no longer needed ---
 
 // Hardcoded gender distribution by state
 const hardcodedGenderData = {
@@ -151,8 +135,9 @@ const MapChart = ({ data, stateNameMapping }) => {
           <Geographies geography={geoData}>
             {({ geographies }) => geographies.map((geo) => {
               const geoJsonName = geo.properties.name;
-              const apiName = stateNameMapping[geoJsonName];
-              const stateData = data[apiName];
+              // --- CHANGE: Map geoJsonName to the key format used by the map (e.g., "Kuala Lumpur" -> "KUALA_LUMPUR")
+              const dataKey = stateNameMapping[geoJsonName]; 
+              const stateData = data[dataKey]; // Use the transformed key to look up data
               return (
                 <Geography
                   key={geo.rsmKey} geography={geo} data-tooltip-id="map-tooltip"
@@ -175,6 +160,7 @@ const MapChart = ({ data, stateNameMapping }) => {
     </div>
   );
 };
+
 
 // --- MAIN ADMIN STATISTIC NEWBORN COMPONENT ---
 const AdminStatisticNewborn = (props) => {
@@ -208,13 +194,48 @@ const AdminStatisticNewborn = (props) => {
       parseOptions(Chart, chartOptions());
     }
 
-    // Set hardcoded birth data for map and table
-    setBirthMapData(hardcodedBirthData);
-    const formattedTableData = Object.entries(hardcodedBirthData)
-      .map(([stateName, data]) => ({ state: stateName.replace(/_/g, " "), births: data.total, percentage: data.percentage }))
-      .sort((a, b) => b.births - a.births);
-    setBirthTableData(formattedTableData);
-  }, []);
+    // --- NEW: Fetch data from the API instead of using hardcoded data ---
+    const fetchBirthData = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/newbornStat/newbornState");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const apiData = await response.json();
+
+        if (apiData.success && apiData.stats) {
+          // Process data for the Map
+          // The API returns keys like "PULAU PINANG", but the map needs "PULAU_PINANG" to match stateNameMapping.
+          const processedMapData = {};
+          for (const stateKey in apiData.stats) {
+            const mapKey = stateKey.replace(/ /g, "_"); // "PULAU PINANG" -> "PULAU_PINANG"
+            processedMapData[mapKey] = {
+              total: apiData.stats[stateKey].total_population,
+              percentage: apiData.stats[stateKey].percentage
+            };
+          }
+          setBirthMapData(processedMapData);
+
+          // Process data for the Table
+          const formattedTableData = Object.entries(apiData.stats)
+            .map(([stateName, data]) => ({
+              state: stateName, // API gives "PAHANG", which is fine for the table
+              births: data.total_population,
+              percentage: data.percentage
+            }))
+            .sort((a, b) => b.births - a.births); // Sort by highest births
+          setBirthTableData(formattedTableData);
+        } else {
+          console.error("API call was not successful or stats data is missing:", apiData.message);
+        }
+      } catch (error) {
+        console.error("Failed to fetch newborn statistics:", error);
+      }
+    };
+
+    fetchBirthData();
+  }, []); // Empty dependency array means this effect runs once when the component mounts.
+
 
   // --- Data Processing for Gender Chart ---
   useEffect(() => {

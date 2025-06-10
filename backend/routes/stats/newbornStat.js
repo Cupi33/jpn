@@ -13,19 +13,30 @@ router.get('/newbornState', async (req, res) => {
     }
 
     const stats = {};
+    let grandTotal = 0;
 
+    // First pass: calculate grand total
     result.rows.forEach(row => {
-      const state = row.NEGERI_LAHIR || row.negeri_lahir || row.state; // Handle case differences
       const total = Number(row.TOTAL_POPULATION || row.total_population || 0);
+      grandTotal += total;
+    });
+
+    // Second pass: build stats with percentage
+    result.rows.forEach(row => {
+      const state = row.NEGERI_LAHIR || row.negeri_lahir || row.state;
+      const total = Number(row.TOTAL_POPULATION || row.total_population || 0);
+      const percentage = grandTotal > 0 ? parseFloat(((total / grandTotal) * 100).toFixed(2)) : 0;
 
       stats[state] = {
-        total_population: total
+        total_population: total,
+        percentage: percentage
       };
     });
 
     res.json({
       success: true,
-      message: 'State-wise newborn population calculated successfully',
+      message: 'State-wise newborn population with percentage calculated successfully',
+      total_population: grandTotal,
       stats: stats
     });
 
