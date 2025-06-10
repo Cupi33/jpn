@@ -259,5 +259,56 @@ router.get('/stateRace', async (req, res) => {
   }
 });
 
+router.get('/stateGroupAge', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM CITIZEN_AGE_STATISTICS`);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const stats = {};
+
+    result.rows.forEach(row => {
+      const state = row.NEGERI || row.state;
+
+      const AGE_0_17 = Number(row.AGE_0_17 || 0);
+      const AGE_18_24  = Number(row.AGE_18_24 || 0);
+      const AGE_25_39 = Number(row.AGE_25_39 || 0);
+      const AGE_40_59 = Number(row.AGE_40_59 || 0);
+      const AGE_60_PLUS = Number(row.AGE_60_PLUS || 0);
+
+
+      stats[state] = {
+        AGE_0_17: {
+          total: AGE_0_17,       
+        },
+        AGE_18_24: {
+          total: AGE_18_24,
+        },
+        AGE_25_39: {
+          total: AGE_25_39,
+        },
+        AGE_40_59: {
+          total: AGE_40_59,
+        },
+        AGE_60_PLUS: {
+          total: AGE_60_PLUS,
+        }
+      };
+    });
+
+    res.json({
+      success: true,
+      message: 'State-wise age group breakdown calculated successfully',
+      stats: stats
+    });
+
+  } catch (err) {
+    console.error('Retrieval error for /stateGroupAge:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 
 export default router;
