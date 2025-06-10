@@ -15,7 +15,7 @@ import {
   annualOverviewChart,
   genderDistributionChart,
   ageGroupChart,
-  maritalStatusChart, // We'll still use its options for the race chart
+  maritalStatusChart, 
   stateNameMapping,
 } from "variables/chartAdmin";
 
@@ -34,10 +34,7 @@ const annualOverviewData = {
     },
   ],
 };
-const ageGroupData = {
-  labels: ["0-17", "18-24", "25-39", "40-59", "60+"],
-  datasets: [{ label: "Population", data: [8900100, 4500250, 9800500, 6450800, 3218910], backgroundColor: "#11cdef" }],
-};
+// Removed the static ageGroupData constant
 
 // --- MAP COMPONENT with Zoom/Pan ---
 const MapChart = ({ data, stateNameMapping }) => {
@@ -100,7 +97,6 @@ const AdminStatistic = (props) => {
   const [isGenderLoading, setIsGenderLoading] = useState(true);
   const [genderChartData, setGenderChartData] = useState({
     labels: ["Lelaki", "Perempuan"],
-    // *** FIX: Initialize with zero data to prevent rendering issues ***
     datasets: [{ data: [0, 0], backgroundColor: ["#5e72e4", "#f5365c"], hoverBackgroundColor: ["#5e72e4", "#f5365c"] }],
   });
   
@@ -110,12 +106,16 @@ const AdminStatistic = (props) => {
   const [isRaceLoading, setIsRaceLoading] = useState(true);
   const [raceChartData, setRaceChartData] = useState({
     labels: ["Melayu", "Cina", "India", "Lain-lain"],
-    // *** FIX: Initialize with zero data to prevent rendering issues ***
-    datasets: [{
-      data: [0, 0, 0, 0],
-      backgroundColor: ["#2dce89", "#fb6340", "#5e72e4", "#adb5bd"],
-      hoverBackgroundColor: ["#2dce89", "#fb6340", "#5e72e4", "#adb5bd"],
-    }],
+    datasets: [{ data: [0, 0, 0, 0], backgroundColor: ["#2dce89", "#fb6340", "#5e72e4", "#adb5bd"], hoverBackgroundColor: ["#2dce89", "#fb6340", "#5e72e4", "#adb5bd"] }],
+  });
+
+  // *** NEW: Age Group Chart State ***
+  const [allAgeGroupStats, setAllAgeGroupStats] = useState(null);
+  const [selectedAgeGroupState, setSelectedAgeGroupState] = useState("ALL");
+  const [isAgeGroupLoading, setIsAgeGroupLoading] = useState(true);
+  const [ageGroupChartData, setAgeGroupChartData] = useState({
+    labels: ["0-17", "18-24", "25-39", "40-59", "60+"],
+    datasets: [{ label: "Population", data: [0, 0, 0, 0, 0], backgroundColor: "#11cdef" }],
   });
 
 
@@ -124,8 +124,6 @@ const AdminStatistic = (props) => {
     if (window.Chart) {
       parseOptions(Chart, chartOptions());
     }
-
-    // *** FIX: Fetch data in separate, robust try-catch blocks ***
     const fetchPopulationData = async () => {
       try {
         const response = await axios.get("http://localhost:5000/adminstat/citizenPlacement");
@@ -137,38 +135,32 @@ const AdminStatistic = (props) => {
             .sort((a, b) => b.population - a.population);
           setPopulationTableData(formattedTableData);
         }
-      } catch (error) {
-        console.error("Error fetching population data:", error);
-      }
+      } catch (error) { console.error("Error fetching population data:", error); }
     };
-    
     const fetchGenderData = async () => {
       try {
         const response = await axios.get("http://localhost:5000/adminstat/stateGender");
-        if (response.data.success) {
-          setAllGenderStats(response.data.stats);
-        }
-      } catch (error) {
-        console.error("Error fetching gender data:", error);
-        setAllGenderStats({}); // Set to empty to stop loading spinner on error
-      }
+        if (response.data.success) { setAllGenderStats(response.data.stats); }
+      } catch (error) { console.error("Error fetching gender data:", error); setAllGenderStats({}); }
     };
-
     const fetchRaceData = async () => {
-        try {
-            const response = await axios.get("http://localhost:5000/adminstat/stateRace");
-            if (response.data.success) {
-                setAllRaceStats(response.data.stats);
-            }
-        } catch (error) {
-            console.error("Error fetching race data:", error);
-            setAllRaceStats({}); // Set to empty to stop loading spinner on error
-        }
+      try {
+        const response = await axios.get("http://localhost:5000/adminstat/stateRace");
+        if (response.data.success) { setAllRaceStats(response.data.stats); }
+      } catch (error) { console.error("Error fetching race data:", error); setAllRaceStats({}); }
+    };
+    // *** NEW: Fetch Age Group Data ***
+    const fetchAgeGroupData = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/adminstat/stateGroupAge");
+        if (response.data.success) { setAllAgeGroupStats(response.data.stats); }
+      } catch (error) { console.error("Error fetching age group data:", error); setAllAgeGroupStats({}); }
     };
 
     fetchPopulationData();
     fetchGenderData();
     fetchRaceData();
+    fetchAgeGroupData(); // Call the new fetcher
   }, []);
 
   // --- Data Processing for Gender Chart ---
@@ -177,12 +169,10 @@ const AdminStatistic = (props) => {
     setIsGenderLoading(true);
     let maleTotal = 0; let femaleTotal = 0;
     if (selectedGenderState === "ALL") {
-      Object.values(allGenderStats).forEach(stateData => {
-        maleTotal += stateData.LELAKI.total; femaleTotal += stateData.PEREMPUAN.total;
-      });
+      Object.values(allGenderStats).forEach(stateData => { maleTotal += stateData.LELAKI.total; femaleTotal += stateData.PEREMPUAN.total; });
     } else {
-      // Keys from gender API use underscores, which matches our dropdown values
-      const stateData = allGenderStats[selectedGenderState];
+      const lookupKey = selectedGenderState.replace(/_/g, ' ');
+      const stateData = allGenderStats[lookupKey];
       if (stateData) { maleTotal = stateData.LELAKI.total; femaleTotal = stateData.PEREMPUAN.total; }
     }
     setGenderChartData(prevData => ({ ...prevData, datasets: [{ ...prevData.datasets[0], data: [maleTotal, femaleTotal] }] }));
@@ -195,22 +185,35 @@ const AdminStatistic = (props) => {
     setIsRaceLoading(true);
     let melayuTotal = 0, cinaTotal = 0, indiaTotal = 0, lainTotal = 0;
     if (selectedRaceState === "ALL") {
-      Object.values(allRaceStats).forEach(stateData => {
-        melayuTotal += stateData.MELAYU.total; cinaTotal += stateData.CINA.total;
-        indiaTotal += stateData.INDIA.total; lainTotal += stateData.LAIN_LAIN.total;
-      });
+      Object.values(allRaceStats).forEach(stateData => { melayuTotal += stateData.MELAYU.total; cinaTotal += stateData.CINA.total; indiaTotal += stateData.INDIA.total; lainTotal += stateData.LAIN_LAIN.total; });
     } else {
-      // *** FIX: Keys from race API have spaces, so we convert the dropdown value (with underscores) to match ***
       const lookupKey = selectedRaceState.replace(/_/g, ' ');
       const stateData = allRaceStats[lookupKey];
-      if (stateData) {
-        melayuTotal = stateData.MELAYU.total; cinaTotal = stateData.CINA.total;
-        indiaTotal = stateData.INDIA.total; lainTotal = stateData.LAIN_LAIN.total;
-      }
+      if (stateData) { melayuTotal = stateData.MELAYU.total; cinaTotal = stateData.CINA.total; indiaTotal = stateData.INDIA.total; lainTotal = stateData.LAIN_LAIN.total; }
     }
     setRaceChartData(prevData => ({ ...prevData, datasets: [{ ...prevData.datasets[0], data: [melayuTotal, cinaTotal, indiaTotal, lainTotal] }] }));
     setIsRaceLoading(false);
   }, [selectedRaceState, allRaceStats]);
+
+  // *** NEW: Data Processing for Age Group Chart ***
+  useEffect(() => {
+    if (!allAgeGroupStats) return;
+    setIsAgeGroupLoading(true);
+    let age0_17 = 0, age18_24 = 0, age25_39 = 0, age40_59 = 0, age60_plus = 0;
+    if (selectedAgeGroupState === "ALL") {
+      Object.values(allAgeGroupStats).forEach(stateData => {
+        age0_17 += stateData.AGE_0_17.total; age18_24 += stateData.AGE_18_24.total; age25_39 += stateData.AGE_25_39.total; age40_59 += stateData.AGE_40_59.total; age60_plus += stateData.AGE_60_PLUS.total;
+      });
+    } else {
+      const lookupKey = selectedAgeGroupState.replace(/_/g, ' ');
+      const stateData = allAgeGroupStats[lookupKey];
+      if (stateData) {
+        age0_17 = stateData.AGE_0_17.total; age18_24 = stateData.AGE_18_24.total; age25_39 = stateData.AGE_25_39.total; age40_59 = stateData.AGE_40_59.total; age60_plus = stateData.AGE_60_PLUS.total;
+      }
+    }
+    setAgeGroupChartData(prevData => ({ ...prevData, datasets: [{ ...prevData.datasets[0], data: [age0_17, age18_24, age25_39, age40_59, age60_plus] }] }));
+    setIsAgeGroupLoading(false);
+  }, [selectedAgeGroupState, allAgeGroupStats]);
 
 
   return (
@@ -229,33 +232,42 @@ const AdminStatistic = (props) => {
 
         {/* ROW 2: DEMOGRAPHIC BREAKDOWN CHARTS */}
         <Row className="mt-5">
+          {/* *** UPDATED: Age Group chart is now dynamic *** */}
           <Col xl="4" className="mb-5 mb-xl-0">
             <Card className="shadow h-100">
-              <CardHeader className="bg-transparent"><h6 className="text-uppercase text-muted ls-1 mb-1">Demographics</h6><h2 className="mb-0">Age Groups</h2></CardHeader>
-              <CardBody><div className="chart" style={{ height: "300px" }}><Bar data={ageGroupData} options={{ ...ageGroupChart.options, maintainAspectRatio: false }} /></div></CardBody>
+              <CardHeader className="bg-transparent">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div><h6 className="text-uppercase text-muted ls-1 mb-1">Demografik</h6><h2 className="mb-0">Kumpulan Umur</h2></div>
+                  <div>
+                    <Input type="select" bsSize="sm" style={{ maxWidth: '150px' }} value={selectedAgeGroupState} onChange={e => setSelectedAgeGroupState(e.target.value)}>
+                      <option value="ALL">All Malaysia</option>
+                      {Object.keys(stateNameMapping).sort().map(prettyName => (<option key={stateNameMapping[prettyName]} value={stateNameMapping[prettyName]}>{prettyName}</option>))}
+                    </Input>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardBody>
+                {isAgeGroupLoading ? (<div className="d-flex justify-content-center align-items-center h-100">Loading...</div>) : 
+                (<div className="chart" style={{ height: "300px" }}><Bar data={ageGroupChartData} options={{ ...ageGroupChart.options, maintainAspectRatio: false }} /></div>)}
+              </CardBody>
             </Card>
           </Col>
           <Col xl="4" className="mb-5 mb-xl-0">
             <Card className="shadow h-100">
               <CardHeader className="bg-transparent">
                 <div className="d-flex justify-content-between align-items-center">
-                  <div><h6 className="text-uppercase text-muted ls-1 mb-1">Demografik</h6><h2 className="mb-0">Ratio Jantina Di Setiap Negeri</h2></div>
+                  <div><h6 className="text-uppercase text-muted ls-1 mb-1">Demografik</h6><h2 className="mb-0">Ratio Jantina</h2></div>
                   <div>
                     <Input type="select" bsSize="sm" style={{ maxWidth: '150px' }} value={selectedGenderState} onChange={e => setSelectedGenderState(e.target.value)}>
                       <option value="ALL">All Malaysia</option>
-                      {Object.keys(stateNameMapping).sort().map(prettyName => (
-                        <option key={stateNameMapping[prettyName]} value={stateNameMapping[prettyName]}>{prettyName}</option>
-                      ))}
+                      {Object.keys(stateNameMapping).sort().map(prettyName => (<option key={stateNameMapping[prettyName]} value={stateNameMapping[prettyName]}>{prettyName}</option>))}
                     </Input>
                   </div>
                 </div>
               </CardHeader>
               <CardBody>
-                {isGenderLoading ? (
-                  <div className="d-flex justify-content-center align-items-center h-100">Loading...</div>
-                ) : (
-                  <div className="chart" style={{ height: "300px" }}><Pie data={genderChartData} options={{ ...genderDistributionChart.options, maintainAspectRatio: false }} /></div>
-                )}
+                {isGenderLoading ? (<div className="d-flex justify-content-center align-items-center h-100">Loading...</div>) : 
+                (<div className="chart" style={{ height: "300px" }}><Pie data={genderChartData} options={{ ...genderDistributionChart.options, maintainAspectRatio: false }} /></div>)}
               </CardBody>
             </Card>
           </Col>
