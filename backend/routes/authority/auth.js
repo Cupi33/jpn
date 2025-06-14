@@ -264,4 +264,52 @@ router.get('/validMykad', async (req, res) => {
   }
 });
 
+router.post('/forgetPasswordCheck', async (req, res) => {
+  const { icno, username, password } = req.body;
+
+  try {
+    // Step 1: Check if username or IC number exists
+    const result = await execute(
+      `SELECT ac.citizenID as CITIZENID
+      FROM citizen ct
+      join account ac
+      on ct.citizenid = ac.citizenid
+      WHERE UPPER(ac.username) = UPPER(:1) 
+        AND ct.icno = :2
+        AND ct.death_registered_by IS NULL`,
+      [username, icno]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Maklumat tidak dijumpai'
+      });
+    }
+
+    const citizenID = result.rows[0].CITIZENID;
+
+    // Step 2: Update account password
+    await execute(
+      `UPDATE ACCOUNT
+      SET PASSWORD = :1
+      WHERE CITIZENID = :2`,
+      [password, citizenID] // replace 'password' with 'hashedPassword' if hashing
+    );
+
+    // Optional: Commit depending on your DB setup
+    await execute('COMMIT');
+
+    res.status(200).json({
+      success: true,
+      message: 'Kata Laluan berjaya diubah',
+    });
+
+  } catch (err) {
+    console.error('Forget password error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
 export default router;

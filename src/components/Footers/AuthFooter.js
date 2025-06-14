@@ -1,3 +1,4 @@
+// --- START OF FILE AuthFooter.js (Corrected) ---
 
 import { NavItem, NavLink, Nav, Container, Row, Col } from "reactstrap";
 
@@ -14,6 +15,8 @@ const Login = () => {
                   className="font-weight-bold ml-1"
                   href="https://www.creative-tim.com?ref=adr-auth-footer"
                   target="_blank"
+                  // --- FIX: Added for security ---
+                  rel="noopener noreferrer"
                 >
                   Creative Tim
                 </a>
@@ -25,6 +28,8 @@ const Login = () => {
                   <NavLink
                     href="https://www.creative-tim.com?ref=adr-auth-footer"
                     target="_blank"
+                    // --- FIX: Added for security ---
+                    rel="noopener noreferrer"
                   >
                     Creative Tim
                   </NavLink>
@@ -33,6 +38,8 @@ const Login = () => {
                   <NavLink
                     href="https://www.creative-tim.com/presentation?ref=adr-auth-footer"
                     target="_blank"
+                    // --- FIX: Added for security ---
+                    rel="noopener noreferrer"
                   >
                     About Us
                   </NavLink>
@@ -41,6 +48,8 @@ const Login = () => {
                   <NavLink
                     href="http://blog.creative-tim.com?ref=adr-auth-footer"
                     target="_blank"
+                    // --- FIX: Added for security ---
+                    rel="noopener noreferrer"
                   >
                     Blog
                   </NavLink>
@@ -49,6 +58,8 @@ const Login = () => {
                   <NavLink
                     href="https://github.com/creativetimofficial/argon-dashboard/blob/master/LICENSE.md?ref=adr-auth-footer"
                     target="_blank"
+                    // --- FIX: Added for security ---
+                    rel="noopener noreferrer"
                   >
                     MIT License
                   </NavLink>
