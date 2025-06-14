@@ -21,6 +21,7 @@ import LaporanHarian from "views/Admin/LaporanHarian";
 import AdminStatistic from "views/Admin/AdminStatistic"
 import AdminStatisticNewborn from "views/Admin/AdminStatisticNewborn"
 import AdminStatisticDeath from "views/Admin/AdminStatisticDeath";
+import DigitalIDCard from "views/Citizen/DigitalCard";
 
 
 
@@ -53,6 +54,12 @@ const routeGroups = {
         icon: "ni ni-sound-wave text-lilac",
         component: <Statistic />,
       },
+      {
+        path: "/card",
+        name: "Digital Card",
+        icon: "ni ni-card text-lilac",
+        component: <DigitalIDCard />,
+      }
     ],
   },
   authCitizen: {
