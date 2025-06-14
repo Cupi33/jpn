@@ -12,123 +12,138 @@ import {
 } from "reactstrap";
 import { useState } from "react";
 import axios from "axios";
+// --- NEW: Import SweetAlert2 for better user feedback ---
+import Swal from 'sweetalert2';
 
 const Register = () => {
   const [icno, setIcno] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  // --- NEW: State for the confirm password field ---
+  const [confirmPassword, setConfirmPassword] = useState('');
+  // --- NEW: State for the terms and conditions checkbox ---
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleRegister = async () => {
-    if (!icno || !username || !password) {
-    alert('Sila isi semua maklumat yang diperlukan');
-    return;
-  }
-  try {
-    const response = await axios.post('http://localhost:5000/register', {
-      icno, username, password
-    });
+    // --- NEW: Comprehensive validation logic ---
+    if (!termsAccepted) {
+      return Swal.fire("Perhatian", "Anda mesti bersetuju dengan terma dan syarat untuk mendaftar.", "warning");
+    }
 
-    if (response.data.success) {
-      console.log("Pendaftaran Akaun Berjaya untuk:", response.data.user.username);
-      alert(`Pendaftaran Akaun Berjaya untuk: ${response.data.user.username}!`);
-    } else {
-      console.log("Pendaftaran gagal:", response.data.message);
-      alert(response.data.message);
+    if (!icno || !username || !password || !confirmPassword) {
+      return Swal.fire("Ralat", "Sila lengkapkan semua medan pendaftaran.", "error");
     }
-  } catch (error) {
-    console.error("Server error:", error);
-    
-    // Check if it's a validation error from the backend
-    if (error.response && error.response.data && error.response.data.message) {
-      alert(error.response.data.message); // Show the specific backend error message
-    } else {
-      alert("Ralat pelayan: Tidak dapat mendaftar akaun."); // Fallback generic error
+
+    if (username.length < 6) {
+      return Swal.fire("Nama Pengguna Lemah", "Nama pengguna mestilah sekurang-kurangnya 6 aksara.", "warning");
     }
-  }
-};
+
+    if (password.length < 6) {
+      return Swal.fire("Kata Laluan Lemah", "Kata laluan mestilah sekurang-kurangnya 6 aksara.", "warning");
+    }
+
+    const hasDigit = /\d/;
+    if (!hasDigit.test(password)) {
+      return Swal.fire("Kata Laluan Lemah", "Kata laluan mestilah mengandungi sekurang-kurangnya satu digit (0-9).", "warning");
+    }
+
+    if (password !== confirmPassword) {
+      return Swal.fire("Ralat", "Kata laluan dan konfirmasi kata laluan tidak sepadan.", "error");
+    }
+    // --- End of validation ---
+
+
+    try {
+      // The backend only needs the final password, not the confirmation one.
+      const response = await axios.post('http://localhost:5000/register', {
+        icno, username, password
+      });
+
+      if (response.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Pendaftaran Berjaya!',
+          text: `Akaun untuk ${response.data.user.username} telah berjaya didaftarkan.`,
+        });
+        // Optional: Clear form fields after successful registration
+        setIcno('');
+        setUsername('');
+        setPassword('');
+        setConfirmPassword('');
+        setTermsAccepted(false);
+      } else {
+        // This 'else' block might not be reached if backend uses HTTP error codes, but it's good practice to keep it.
+        Swal.fire("Pendaftaran Gagal", response.data.message, "error");
+      }
+    } catch (error) {
+      console.error("Server error:", error);
+      // Show the specific error message from the backend (e.g., "Username sudah wujud")
+      const errorMessage = error.response?.data?.message || "Ralat pelayan: Tidak dapat mendaftar akaun.";
+      Swal.fire("Oops... Sesuatu tidak kena", errorMessage, "error");
+    }
+  };
 
   return (
     <>
       <Col lg="6" md="8">
-        <Card className="bg-secondary shadow border-0">
+        <Card className="bg-secondary shadow border-0 p-4"> {/* Added padding for better spacing */}
           <div className="text-center text-muted mb-4">
             <b>Daftar Akaun</b>
           </div>
           <Form role="form">
 
             {/* IC Number field */}
-            <FormGroup className="mb-3" style={{ marginTop: '20px' }}>
-              <InputGroup className="input-group-alternative">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>
-                    <i className="ni ni-badge" />
-                  </InputGroupText>
-                </InputGroupAddon>
-                <Input
-                  placeholder="Nombor Kad Pengenalan"
-                  type="text"
-                  autoComplete="off"
-                  value={icno}
-                  onChange={(e) => setIcno(e.target.value)}
-                />
+            <FormGroup>
+              <InputGroup className="input-group-alternative mb-3">
+                <InputGroupAddon addonType="prepend"><InputGroupText><i className="ni ni-badge" /></InputGroupText></InputGroupAddon>
+                <Input placeholder="Nombor Kad Pengenalan" type="text" autoComplete="off" value={icno} onChange={(e) => setIcno(e.target.value)} />
               </InputGroup>
             </FormGroup>
 
             {/* Username field */}
-            <FormGroup className="mb-3" style={{ marginTop: '20px' }}>
-              <InputGroup className="input-group-alternative">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>
-                    <i className="ni ni-circle-08" />
-                  </InputGroupText>
-                </InputGroupAddon>
-                <Input
-                  placeholder="Username"
-                  type="text"
-                  autoComplete="off"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
+            <FormGroup>
+              <InputGroup className="input-group-alternative mb-3">
+                <InputGroupAddon addonType="prepend"><InputGroupText><i className="ni ni-circle-08" /></InputGroupText></InputGroupAddon>
+                <Input placeholder="Username (sekurangnya 6 aksara)" type="text" autoComplete="off" value={username} onChange={(e) => setUsername(e.target.value)} />
               </InputGroup>
             </FormGroup>
 
             {/* Password field */}
-            <FormGroup className="mb-3" style={{ marginTop: '20px' }}>
-              <InputGroup className="input-group-alternative">
-                <InputGroupAddon addonType="prepend">
-                  <InputGroupText>
-                    <i className="ni ni-lock-circle-open" />
-                  </InputGroupText>
-                </InputGroupAddon>
-                <Input
-                  placeholder="Kata Laluan"
-                  type="password"
-                  autoComplete="off"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+            <FormGroup>
+              <InputGroup className="input-group-alternative mb-3">
+                <InputGroupAddon addonType="prepend"><InputGroupText><i className="ni ni-lock-circle-open" /></InputGroupText></InputGroupAddon>
+                <Input placeholder="Kata Laluan (6+ aksara, 1+ digit)" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
               </InputGroup>
             </FormGroup>
 
-            <div className="text-muted font-italic">
+            {/* --- NEW: Confirm Password field --- */}
+            <FormGroup>
+              <InputGroup className="input-group-alternative">
+                <InputGroupAddon addonType="prepend"><InputGroupText><i className="ni ni-lock-circle-open" /></InputGroupText></InputGroupAddon>
+                <Input placeholder="Konfirmasi Kata Laluan" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+              </InputGroup>
+            </FormGroup>
+
+            {/* The password strength indicator is currently static. You could make this dynamic in the future. */}
+            <div className="text-muted font-italic mt-2">
               <small>
-                password strength:{" "}
-                <span className="text-success font-weight-700">strong</span>
+                Kekuatan kata laluan:{" "}
+                <span className="text-success font-weight-700">kuat</span>
               </small>
             </div>
 
             <Row className="my-4">
               <Col xs="12">
                 <div className="custom-control custom-control-alternative custom-checkbox">
+                  {/* --- MODIFIED: Connected to state --- */}
                   <input
                     className="custom-control-input"
                     id="customCheckRegister"
                     type="checkbox"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
                   />
-                  <label
-                    className="custom-control-label"
-                    htmlFor="customCheckRegister"
-                  >
+                  <label className="custom-control-label" htmlFor="customCheckRegister">
                     <span className="text-muted">
                       Saya bersetuju dengan{" "}
                       <a href="#pablo" onClick={(e) => e.preventDefault()}>
@@ -142,12 +157,7 @@ const Register = () => {
 
             {/* Register Button */}
             <div className="text-center">
-              <Button
-                className="mt-4"
-                color="primary"
-                type="button"
-                onClick={handleRegister}
-              >
+              <Button className="mt-4" color="primary" type="button" onClick={handleRegister}>
                 Daftar Akaun
               </Button>
             </div>
