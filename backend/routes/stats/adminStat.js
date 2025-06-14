@@ -338,5 +338,80 @@ router.get('/totalApplication4Month', async (req, res) => {
   }
 });
 
+router.get('/avgReviewTime', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM CUPI.VW_AVG_REVIEW_TIME`);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const stats = result.rows.map(row => ({
+      apptype: row.APPTYPE || row.apptype,
+      avg_review_time_days: parseFloat(row.AVG_REVIEW_TIME_DAYS || row.avg_review_time_days || 0).toFixed(2)
+    }));
+
+    res.json({
+      success: true,
+      message: 'Average review time per application type retrieved successfully',
+      stats: stats
+    });
+
+  } catch (err) {
+    console.error('Retrieval error for /avgReviewTime:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.get('/applicationAgeGroup', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM AGE_GROUP_APPLICATION`);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const stats = result.rows.map(row => ({
+      age_group: row.AGE_GROUP || row.age_group,
+      total_applicants: Number(row.TOTAL_APPLICANTS || row.total_applicants || 0)
+    }));
+
+    res.json({
+      success: true,
+      message: 'Total applicants by age group retrieved successfully',
+      stats: stats
+    });
+
+  } catch (err) {
+    console.error('Retrieval error for /applicationAgeGroup:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.get('/applicationDecision5Months', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM DECISION_ON_APPLICATION_5MONTHS`);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const stats = result.rows.map(row => ({
+      apptype: row.APPTYPE || row.apptype,
+      accept_percentage: Number(row.ACCEPT_PERCENTAGE || row.accept_percentage || 0),
+      reject_percentage: Number(row.REJECT_PERCENTAGE || row.reject_percentage || 0)
+    }));
+
+    res.json({
+      success: true,
+      message: 'Application decision percentages for last 5 months retrieved successfully',
+      stats: stats
+    });
+
+  } catch (err) {
+    console.error('Retrieval error for /applicationDecision5Months:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 export default router;
