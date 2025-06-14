@@ -245,6 +245,16 @@ const TableIC = () => {
                       <td>Sebab Permohonan</td>
                       <td>{application.reason_desc || 'N/A'}</td>
                     </tr>
+
+                    {/* === NEW: Conditionally render address row only for 'ta' (Tukar Alamat) reason === */}
+                    {application.reason === 'ta' && (
+                      <tr>
+                        <td>Alamat Baru</td>
+                        <td>{application.address || 'N/A'}</td>
+                      </tr>
+                    )}
+                    {/* =================================================================================== */}
+
                     {/* Conditionally render document row only for 'ha' reason */}
                     {application.reason === 'ha' && (
                       <tr>
