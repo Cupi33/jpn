@@ -155,6 +155,18 @@ const handleSubmit = async () => {
                 <Col md="8">
                 <Card className="shadow">
   <CardBody>
+    {/* === ADDED BUTTON HERE === */}
+    <div className="text-right">
+        <Button
+            color="info"
+            outline
+            size="sm"
+            onClick={() => window.open('https://www.jpn.gov.my/my/perkhidmatan/kematian', '_blank', 'noopener,noreferrer')}
+        >
+            Lihat Syarat Permohonan
+        </Button>
+    </div>
+    {/* ======================= */}
     <CardTitle tag="h3" className="mb-4 text-center">
       Pendaftaran Kematian
     </CardTitle>
@@ -189,13 +201,13 @@ const handleSubmit = async () => {
               <FormGroup>
                     <label
                         className="form-control-label"
-                        htmlFor="input-fullname"
+                        htmlFor="input-icno"
                     >
                         Nombor Kad Pengenalan Si Mati
                     </label>
                     <Input
                         className="form-control"
-                        id="input-fullname"
+                        id="input-icno"
                         placeholder="Contoh: 00001102010100"
                         type="text"
                         value={icno}
@@ -238,13 +250,13 @@ const handleSubmit = async () => {
                                                       <FormGroup>
                                                       <label
                                                           className="form-control-label"
-                                                          htmlFor="input-dob"
+                                                          htmlFor="input-death-date"
                                                       >
                                                           Tarikh Kematian
                                                       </label>
                                                       <Input
                                                           className="form-control"
-                                                          id="input-dob"
+                                                          id="input-death-date"
                                                           type="date"
                                                           max={new Date().toISOString().split("T")[0]} // 👈 Set maximum date to today
                                                           value={deathDate}

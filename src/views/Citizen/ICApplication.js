@@ -1,5 +1,3 @@
-// --- START OF FILE ICApplication.js ---
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -176,6 +174,18 @@ const ICApplication = () => {
                 <Col md="8">
                     <Card className="shadow">
                         <CardBody>
+                            {/* === ADDED BUTTON HERE === */}
+                            <div className="text-right">
+                                <Button
+                                    color="info"
+                                    outline
+                                    size="sm"
+                                    onClick={() => window.open('https://www.jpn.gov.my/my/perkhidmatan/kad-pengenalan', '_blank', 'noopener,noreferrer')}
+                                >
+                                    Lihat Syarat Permohonan
+                                </Button>
+                            </div>
+                            {/* ======================= */}
                             <CardTitle tag="h3" className="mb-4 text-center">
                                 Permohonan Kad Pengenalan
                             </CardTitle>

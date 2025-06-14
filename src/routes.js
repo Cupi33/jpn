@@ -38,14 +38,8 @@ const routeGroups = {
         component: <Index />,
       },
       {
-        path: "/icons",
-        name: "Icons",
-        icon: "ni ni-planet text-blue",
-        component: <Icons />,
-      },
-      {
         path: "/maps",
-        name: "Maps",
+        name: "Pejabat JPN",
         icon: "ni ni-pin-3 text-orange",
         component: <Maps />,
       },
@@ -54,12 +48,6 @@ const routeGroups = {
         name: "Info Pengguna",
         icon: "ni ni-single-02 text-yellow",
         component: <Profile />,
-      },
-      {
-        path: "/tables",
-        name: "Tables",
-        icon: "ni ni-bullet-list-67 text-red",
-        component: <Tables />,
       },
       {
         path: "/statistic",
