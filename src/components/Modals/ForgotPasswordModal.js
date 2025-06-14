@@ -1,4 +1,4 @@
-// src/components/Modals/ForgotPasswordModal.js (Adjusted for your /forgetPasswordCheck API)
+// src/components/Modals/ForgotPasswordModal.js (Updated with Password Validation)
 
 import { useState, useEffect } from "react";
 import {
@@ -18,9 +18,9 @@ import axios from "axios";
 import Swal from "sweetalert2";
 
 const ForgotPasswordModal = ({ isOpen, toggle }) => {
-  // State variables in the front-end (names don't need to change)
+  // --- State for all fields in the single-step form ---
   const [username, setUsername] = useState("");
-  const [citizenId, setCitizenId] = useState(""); // This holds the IC number
+  const [citizenId, setCitizenId] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -37,7 +37,7 @@ const ForgotPasswordModal = ({ isOpen, toggle }) => {
   }, [isOpen]);
 
   const handleVerifyAndReset = async () => {
-    // Client-side validation first
+    // --- Step 1: Basic validation for empty fields and password match ---
     if (!username || !citizenId || !newPassword || !confirmPassword) {
       return Swal.fire("Ralat", "Sila lengkapkan semua medan.", "error");
     }
@@ -45,21 +45,40 @@ const ForgotPasswordModal = ({ isOpen, toggle }) => {
       return Swal.fire("Ralat", "Kata laluan baru tidak sepadan.", "error");
     }
 
+    // --- Step 2: NEW PASSWORD VALIDATION CHECKS ---
+    // Rule 1: Check for minimum length (at least 6 characters)
+    if (newPassword.length < 6) {
+      return Swal.fire(
+        "Kata Laluan Lemah",
+        "Kata laluan mestilah sekurang-kurangnya 6 aksara.",
+        "warning"
+      );
+    }
+
+    // Rule 2: Check for at least one digit using a regular expression
+    const hasDigit = /\d/;
+    if (!hasDigit.test(newPassword)) {
+      return Swal.fire(
+        "Kata Laluan Lemah",
+        "Kata laluan mestilah mengandungi sekurang-kurangnya satu digit (0-9).",
+        "warning"
+      );
+    }
+    // --- END OF NEW VALIDATION CHECKS ---
+
+
+    // --- Step 3: If all validation passes, proceed with API call ---
     try {
-      // --- CHANGE 1: Use your existing API endpoint ---
       const response = await axios.post("http://localhost:5000/forgetPasswordCheck", {
-        
-        // --- CHANGE 2: Match the payload keys to what your backend expects ---
-        username: username,         // Backend expects 'username' -> We send 'username'
-        icno: citizenId,            // Backend expects 'icno' -> We send the value from our 'citizenId' state
-        password: newPassword,      // Backend expects 'password' for the new pass -> We send 'newPassword'
+        username: username,
+        icno: citizenId,
+        password: newPassword,
       });
 
       if (response.data.success) {
         toggle(); // Close the modal on success
         Swal.fire("Berjaya!", "Kata laluan anda telah berjaya ditukar.", "success");
       } else {
-        // Show the specific error message from the backend (e.g., "Maklumat tidak dijumpai")
         Swal.fire("Gagal", response.data.message || "Maklumat tidak sah atau ralat berlaku.", "error");
       }
     } catch (error) {
@@ -75,6 +94,7 @@ const ForgotPasswordModal = ({ isOpen, toggle }) => {
       <ModalBody>
         <Form>
           <p>Sila masukkan maklumat anda dan kata laluan baru.</p>
+          {/* Form fields remain the same */}
           <FormGroup>
             <InputGroup className="input-group-alternative mb-3">
               <InputGroupAddon addonType="prepend"><InputGroupText><i className="ni ni-single-02" /></InputGroupText></InputGroupAddon>
