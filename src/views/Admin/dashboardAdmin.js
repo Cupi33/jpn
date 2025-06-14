@@ -1,13 +1,9 @@
 // src/views/admin/dashboardAdmin.js
 
-import { useState } from "react";
-// node.js library that concatenates classes (strings)
+import { useState, useEffect } from "react"; // Added useEffect to import
 import classnames from "classnames";
-// javascipt plugin for creating charts
 import Chart from "chart.js";
-// react plugin used to create charts
 import { Line, Bar } from "react-chartjs-2";
-// reactstrap components
 import {
   Button,
   Card,
@@ -22,77 +18,110 @@ import {
   Row,
   Col,
 } from "reactstrap";
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-// *** 1. UPDATED IMPORT: Import the variables that are actually exported ***
 import {
   chartOptions,
   parseOptions,
-  annualOverviewChart, // Was chartExample1
-  ageGroupChart,       // Was chartExample2 (using ageGroupChart as a substitute)
+  annualOverviewChart,
+  ageGroupChart,
 } from "variables/dashboardAdminChart";
 
 import AdminHeader from "components/Headers/AdminHeader";
+
+// *** NEW: Helper function to format the API data into the structure the chart needs ***
+const formatApiDataForChart = (apiStats, monthLabels) => {
+    // Default structure for the chart data
+    const formattedData = {
+      kadPengenalan: { labels: monthLabels, datasets: [{ label: "Permohonan Kad Pengenalan", data: [0, 0, 0, 0] }] },
+      kematian: { labels: monthLabels, datasets: [{ label: "Pendaftaran Kematian", data: [0, 0, 0, 0] }] },
+      bayi: { labels: monthLabels, datasets: [{ label: "Pendaftaran Kelahiran Bayi", data: [0, 0, 0, 0] }] },
+    };
+  
+    // Mapping from API apptype to our chart keys
+    const typeMapping = {
+      'IC': 'kadPengenalan',
+      'DEATH': 'kematian',
+      'NEWBORN': 'bayi'
+    };
+  
+    // Populate the structure with data from the API
+    apiStats.forEach(stat => {
+      const chartKey = typeMapping[stat.apptype];
+      if (chartKey) {
+        // The data is ordered from month_1 (oldest) to month_4 (newest)
+        const dataPoints = [stat.month_1, stat.month_2, stat.month_3, stat.month_4];
+        formattedData[chartKey].datasets[0].data = dataPoints;
+      }
+    });
+  
+    return formattedData;
+};
 
 const Index = (props) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
+  // *** CHANGED: State for active button remains, but chart data state is new ***
+  const [activeNav, setActiveNav] = useState('kadPengenalan');
+  const [permohonanChartData, setPermohonanChartData] = useState({}); // To hold data from API
+
+  const getPastFourMonths = () => {
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const today = new Date();
+    const months = [];
+    for (let i = 3; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      months.push(monthNames[d.getMonth()]);
+    }
+    return months;
+  };
+  const lastFourMonths = getPastFourMonths();
+
+  // *** CHANGED: useEffect to fetch data from the API ***
   useEffect(() => {
-    // Get user data from sessionStorage
-    console.log('Checking session storage...');
-    console.log('Current staffID:', sessionStorage.getItem('staffID'));
-    console.log('Current username:', sessionStorage.getItem('username'));
     const storedStaffID = sessionStorage.getItem('staffID');
     const storedUsername = sessionStorage.getItem('username');
 
-    if (storedStaffID && storedUsername) {
-      // setCitizenID(storedCitizenID);
-      // setUsername(storedUsername);
-      setIsLoading(false);
-    } else {
-      // If no data exists, redirect to login page
-      navigate('/authCitizen/login');
+    if (!storedStaffID || !storedUsername) {
+        navigate('/authCitizen/login');
+        return; // Stop execution if not logged in
     }
-  }, [navigate]);
 
-  const [activeNav, setActiveNav] = useState(1);
-  const [chartExample1Data, setChartExample1Data] = useState("data1");
+    const fetchChartData = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/adminstat/totalApplication4Month');
+            const data = await response.json();
 
-  // *** 2. RE-CREATE CHART DATA: Define the chart data locally, as it's no longer in chartAdmin.js ***
-  const salesChart = {
-    options: annualOverviewChart.options, // Use options from the imported file
-    data1: { // Data for "Month" view
-      labels: ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-      datasets: [
-        {
-          label: "Performance",
-          data: [0, 20, 10, 30, 15, 40, 20, 60, 60],
-          // You can add styling here if needed, e.g., borderColor
-        },
-      ],
-    },
-    data2: { // Data for "Week" view
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      datasets: [
-        {
-          label: "Performance",
-          data: [10, 30, 20, 50, 25, 60, 40],
-        },
-      ],
-    },
-  };
+            if (data.success) {
+                // Process the API data and set it to state
+                const formattedData = formatApiDataForChart(data.stats, lastFourMonths);
+                setPermohonanChartData(formattedData);
+            } else {
+                console.error("Failed to fetch chart data:", data.message);
+                // Optionally set an error state here
+            }
+        } catch (error) {
+            console.error("Error fetching chart data:", error);
+            // Optionally set an error state here
+        } finally {
+            setIsLoading(false); // Stop loading indicator
+        }
+    };
+    
+    fetchChartData();
 
+  }, [navigate]); // Dependency array, runs once on mount
+
+  // Hardcoded data for the second chart remains
   const ordersChart = {
-    options: ageGroupChart.options, // Use options from the imported file
+    options: ageGroupChart.options,
     data: {
       labels: ["Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
       datasets: [
         {
           label: "Total orders",
           data: [25, 20, 30, 22, 17, 29],
-          // You can add styling here, e.g., backgroundColor
         },
       ],
     },
@@ -111,16 +140,15 @@ const Index = (props) => {
   if (window.Chart) {
     parseOptions(Chart, chartOptions());
   }
-
-  const toggleNavs = (e, index) => {
+  
+  const toggleNavs = (e, key) => {
     e.preventDefault();
-    setActiveNav(index);
-    setChartExample1Data("data" + index);
+    setActiveNav(key);
   };
+
   return (
     <>
       <AdminHeader />
-      {/* Page content */}
       <Container className="mt--7" fluid>
         <Row>
           <Col className="mb-5 mb-xl-0" xl="8">
@@ -131,33 +159,38 @@ const Index = (props) => {
                     <h6 className="text-uppercase text-light ls-1 mb-1">
                       Overview
                     </h6>
-                    <h2 className="text-white mb-0">Sales value</h2>
+                    <h2 className="text-white mb-0">Jumlah Permohonan Dalam masa 4 bulan</h2>
                   </div>
                   <div className="col">
                     <Nav className="justify-content-end" pills>
                       <NavItem>
                         <NavLink
-                          className={classnames("py-2 px-3", {
-                            active: activeNav === 1,
-                          })}
+                          className={classnames("py-2 px-3", { active: activeNav === 'kadPengenalan' })}
                           href="#pablo"
-                          onClick={(e) => toggleNavs(e, 1)}
+                          onClick={(e) => toggleNavs(e, 'kadPengenalan')}
                         >
-                          <span className="d-none d-md-block">Month</span>
+                          <span className="d-none d-md-block">Kad Pengenalan</span>
+                          <span className="d-md-none">KP</span>
+                        </NavLink>
+                      </NavItem>
+                      <NavItem>
+                        <NavLink
+                          className={classnames("py-2 px-3", { active: activeNav === 'kematian' })}
+                          href="#pablo"
+                          onClick={(e) => toggleNavs(e, 'kematian')}
+                        >
+                          <span className="d-none d-md-block">Kematian</span>
                           <span className="d-md-none">M</span>
                         </NavLink>
                       </NavItem>
                       <NavItem>
                         <NavLink
-                          className={classnames("py-2 px-3", {
-                            active: activeNav === 2,
-                          })}
-                          data-toggle="tab"
+                          className={classnames("py-2 px-3", { active: activeNav === 'bayi' })}
                           href="#pablo"
-                          onClick={(e) => toggleNavs(e, 2)}
+                          onClick={(e) => toggleNavs(e, 'bayi')}
                         >
-                          <span className="d-none d-md-block">Week</span>
-                          <span className="d-md-none">W</span>
+                          <span className="d-none d-md-block">Bayi</span>
+                          <span className="d-md-none">B</span>
                         </NavLink>
                       </NavItem>
                     </Nav>
@@ -165,12 +198,11 @@ const Index = (props) => {
                 </Row>
               </CardHeader>
               <CardBody>
-                {/* Chart */}
                 <div className="chart">
-                  {/* *** 3. UPDATE CHART PROPS: Use the new local variables *** */}
+                  {/* *** CHANGED: Use the new state data for the chart *** */}
                   <Line
-                    data={salesChart[chartExample1Data]}
-                    options={salesChart.options}
+                    data={permohonanChartData[activeNav] || { labels: [], datasets: [] }}
+                    options={annualOverviewChart.options} // Options from imported file
                     getDatasetAtEvent={(e) => console.log(e)}
                   />
                 </div>
@@ -178,6 +210,7 @@ const Index = (props) => {
             </Card>
           </Col>
           <Col xl="4">
+            {/* The second chart remains unchanged */}
             <Card className="shadow">
               <CardHeader className="bg-transparent">
                 <Row className="align-items-center">
@@ -190,9 +223,7 @@ const Index = (props) => {
                 </Row>
               </CardHeader>
               <CardBody>
-                {/* Chart */}
                 <div className="chart">
-                  {/* *** 3. UPDATE CHART PROPS: Use the new local variables *** */}
                   <Bar
                     data={ordersChart.data}
                     options={ordersChart.options}
@@ -203,7 +234,7 @@ const Index = (props) => {
           </Col>
         </Row>
         <Row className="mt-5">
-          {/* {untuk able first page visits} */}
+           {/* The rest of the page remains the same... */}
           <Col className="mb-5 mb-xl-0" xl="8">
             <Card className="shadow">
               <CardHeader className="border-0">
@@ -299,7 +330,6 @@ const Index = (props) => {
                   </div>
                 </Row>
               </CardHeader>
-              {/* {untuk table social traffic} */}
               <Table className="align-items-center table-flush" responsive>
                 <thead className="thead-light">
                   <tr>

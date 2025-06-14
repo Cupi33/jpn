@@ -310,5 +310,33 @@ router.get('/stateGroupAge', async (req, res) => {
   }
 });
 
+router.get('/totalApplication4Month', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM TOTAL_APPLICATION_4MONTH`);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    const stats = result.rows.map(row => ({
+      apptype: row.APPTYPE || row.apptype,
+      month_1: Number(row.MONTH_1 || row.month_1 || 0),
+      month_2: Number(row.MONTH_2 || row.month_2 || 0),
+      month_3: Number(row.MONTH_3 || row.month_3 || 0),
+      month_4: Number(row.MONTH_4 || row.month_4 || 0)
+    }));
+
+    res.json({
+      success: true,
+      message: 'Total application data for the last 4 months retrieved successfully',
+      stats: stats
+    });
+
+  } catch (err) {
+    console.error('Retrieval error for /totalApplication4Month:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 
 export default router;
