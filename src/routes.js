@@ -3,8 +3,6 @@ import Profile from "views/Citizen/Profile.js";
 import Maps from "views/Citizen/Maps.js";
 import Register from "views/Citizen/Register.js";
 import Login from "views/Citizen/Login.js";
-import Tables from "views/Citizen/Tables.js";
-import Icons from "views/Citizen/Icons.js";
 import MenuUtama from "views/Citizen/MenuUtama.js";
 import Statistic from "views/Citizen/Statistic.js"
 import DeathApplication from "views/Citizen/DeathApplication.js";
