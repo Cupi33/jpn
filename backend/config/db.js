@@ -58,3 +58,16 @@ export async function callProcedure(procSql, bindParams) {
     throw err;
   }
 }
+
+export async function callProcedureWithCursor(procSql, bindParams) {
+  let connection;
+  try {
+    connection = await oracledb.getConnection(dbConfig);
+    const result = await connection.execute(procSql, bindParams, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    result.connection = connection;  // don't close yet
+    return result;
+  } catch (err) {
+    if (connection) await connection.close();
+    throw err;
+  }
+}
