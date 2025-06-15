@@ -11,34 +11,43 @@ router.get('/general', async (req, res) => {
     console.log('Received GET request for /general');
 
     const result = await execute(`
-      SELECT count(citizenID) AS "jumlah_rakyat", 
-             TRUNC(AVG(EXTRACT(YEAR FROM SYSDATE) - EXTRACT(YEAR FROM date_of_birth))) AS "purata_umur",
-             count(death_registered_by) AS "jumlah_kematian"
-      FROM citizen
+      SELECT * FROM TOTAL_AND_AGE_CITIZEN
     `);
     
     const result2 = await execute(`
-      SELECT count(cardID) AS "kad_hilang"
-      FROM ic_card
-      WHERE activestatus = 'INACTIVE'
+      SELECT * FROM TOTAL_IC_LOSS
     `);
     
-    if (!result || !result2 || !result.rows.length || !result2.rows.length) {
+    const result3 = await execute(`
+      SELECT * FROM TOTAL_DEATH_THISYEAR
+    `);
+
+    if (!result || !result2 || !result3) {
       console.error('Query returned no results');
       return res.status(400).json({ success: false, message: 'Query returned no results' });
     }
 
-    const stat1 = result.rows[0] || {};
-    const stat2 = result2.rows[0] || {};
+    const ic_this_year = result2.rows[0].TOTAL_REPORTED_CASES;
+    const ic_previous_year = result2.rows[1].TOTAL_REPORTED_CASES;
+
+    // Calculate percentage difference
+    let percentage_difference = 0;
+    if (ic_previous_year === 0) {
+      percentage_difference = ic_this_year > 0 ? 100 : 0;  // handle zero division
+    } else {
+      percentage_difference = ((ic_this_year - ic_previous_year) / ic_previous_year) * 100;
+      percentage_difference = Math.round(percentage_difference * 100) / 100; // round to 2 decimal places
+    }
 
     const responseData = {
       success: true,
       message: 'Query Successful',
       stat: {
-        jumlah_rakyat: stat1.jumlah_rakyat || 0,
-        purata_umur: stat1.purata_umur || 0,
-        jumlah_kematian: stat1.jumlah_kematian || 0,
-        kad_hilang: stat2.kad_hilang || 0,
+        jumlah_rakyat: result.rows[0].TOTAL || 0,
+        purata_umur: result.rows[0].AVERAGE_AGE || 0,
+        jumlah_kematian: result3.rows[0].TOTAL_DEATHS || 0,
+        kad_hilang: ic_this_year || 0,
+        peratus_peningkatan: percentage_difference
       }
     };
 
@@ -49,6 +58,7 @@ router.get('/general', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
 
 
 router.get('/totalRace', async (req, res) => {
