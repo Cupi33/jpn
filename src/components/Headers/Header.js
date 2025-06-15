@@ -11,9 +11,8 @@ const Header = () => {
   useEffect(() => {
     console.log("2. useEffect is running - API call will be made. This should only happen ONCE per mount.");
 
-    // CHANGED: from .post to .get and removed the request body
     axios
-      .get("http://localhost:5000/stat/general") 
+      .get("http://localhost:5000/stat/general")
       .then((response) => {
         if (response.data.success) {
           setStatData(response.data.stat);
@@ -25,11 +24,33 @@ const Header = () => {
         console.error("Error fetching statistic data:", error);
       });
     
-    // This is a cleanup function. It runs when the component unmounts.
     return () => {
         console.log("3. Header component is UNMOUNTING."); 
     };
-  }, []); // The empty array is correct.
+  }, []);
+
+  // --- START: Added logic for dynamic percentage display ---
+  // Default values for the loading state
+  let percentageText = "Loading...";
+  let percentageClass = "text-muted";
+  let percentageIcon = "fas fa-spinner fa-spin"; // A loading spinner icon
+
+  if (statData) {
+    const percentage = statData.peratus_peningkatan;
+    percentageText = `${Math.abs(percentage)}%`; // Use Math.abs() to always show a positive number
+
+    if (percentage > 0) {
+      percentageClass = "text-success";
+      percentageIcon = "fas fa-arrow-up";
+    } else if (percentage < 0) {
+      percentageClass = "text-danger";
+      percentageIcon = "fas fa-arrow-down";
+    } else {
+      percentageClass = "text-warning"; // Use a neutral color for zero
+      percentageIcon = "fas fa-minus";   // Use a neutral icon for zero
+    }
+  }
+  // --- END: Added logic ---
 
   return (
     <>
@@ -131,14 +152,16 @@ const Header = () => {
                         </div>
                       </Col>
                     </Row>
+                    {/* --- START: Modified this section to be dynamic --- */}
                     <p className="mt-3 mb-0 text-muted text-sm">
-                      <span className="text-success mr-2">
-                        <i className="fas fa-arrow-up" /> 12%
+                      <span className={`${percentageClass} mr-2`}>
+                        <i className={percentageIcon} /> {percentageText}
                       </span>{" "}
                       <span className="text-nowrap">
                         Berbanding tahun lepas
                       </span>
                     </p>
+                    {/* --- END: Modified section --- */}
                   </CardBody>
                 </Card>
               </Col>

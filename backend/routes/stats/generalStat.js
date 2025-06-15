@@ -44,7 +44,7 @@ router.get('/general', async (req, res) => {
       message: 'Query Successful',
       stat: {
         jumlah_rakyat: result.rows[0].TOTAL || 0,
-        purata_umur: result.rows[0].AVERAGE_AGE || 0,
+        purata_umur: Math.round(result.rows[0].AVERAGE_AGE) || 0,
         jumlah_kematian: result3.rows[0].TOTAL_DEATHS || 0,
         kad_hilang: ic_this_year || 0,
         peratus_peningkatan: percentage_difference
