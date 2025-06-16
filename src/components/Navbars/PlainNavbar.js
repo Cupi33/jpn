@@ -31,7 +31,7 @@ const PlainNavbar = () => {
             {/* We use the "tag" prop to make reactstrap's NavLink behave like react-router's Link */}
             <NavLink
               className="nav-link-icon"
-              to="/plain/data-kependudukan"
+              to="/plain/kependudukan"
               tag={Link}
             >
               <span className="nav-link-inner--text">Data Kependudukan</span>
