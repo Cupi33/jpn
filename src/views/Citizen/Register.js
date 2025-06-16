@@ -91,7 +91,6 @@ const Register = () => {
       if (ocrName) {
         const addressRegex = new RegExp(`${escapeRegex(ocrName)}\\s*\\n([\\s\\S]+?)(?=WARGANEGARA|Agama|ISLAM|LELAKI)`, 'i');
         const addressMatch = text.match(addressRegex);
-        // --- THIS IS THE CORRECTED LINE ---
         ocrAddress = addressMatch ? addressMatch[1].trim().replace(/\s+/g, ' ') : '';
       }
 
@@ -110,7 +109,6 @@ const Register = () => {
          return Swal.fire("Pengesahan Gagal", "Maklumat yang ditaip tidak sepadan dengan maklumat pada Kad Pengenalan yang dimuat naik.", "error");
       }
 
-      // --- THE DEBUGGING LOG IS HERE ---
       const dataToSend = {
         fullName: ocrName,
         icno: ocrIcNo,
@@ -123,12 +121,15 @@ const Register = () => {
       console.log("DATA BEING SENT TO BACKEND (/validate-mykad):");
       console.log(dataToSend);
       console.log("----------------------------------------");
-      // --- END OF DEBUGGING LOG ---
 
       // Call backend for final DB validation
       const validationResponse = await axios.post('http://localhost:5000/validate-mykad', dataToSend);
 
       if (validationResponse.data.success) {
+        // --- THIS IS THE ADDED LINE ---
+        console.log("✅ Validation Successful! Citizen ID from backend:", validationResponse.data.citizenID);
+        // --- END OF ADDED LINE ---
+
         Swal.fire("Disahkan!", "Maklumat Kad Pengenalan anda sah. Sila teruskan untuk mencipta akaun.", "success");
         setCitizenID(validationResponse.data.citizenID);
         setIsValidated(true);
@@ -159,7 +160,8 @@ const Register = () => {
         setUsername(''); setPassword(''); setConfirmPassword('');
         setTermsAccepted(false); setIsValidated(false); setCitizenID(null);
       }
-    } catch (error) {
+    } catch (error)
+    {
       const errorMessage = error.response?.data?.message || "Ralat pelayan: Tidak dapat mendaftar.";
       Swal.fire("Pendaftaran Gagal", errorMessage, "error");
     }
