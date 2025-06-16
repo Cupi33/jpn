@@ -12,28 +12,33 @@ import {
   Alert
 } from 'reactstrap';
 import Tesseract from 'tesseract.js';
+import * as pdfjsLib from 'pdfjs-dist/build/pdf';
+
+// --- THE FIX IS HERE ---
+// Instead of a CDN URL, we point to the local file in our `public` folder.
+// This is the most reliable method and avoids all network errors.
+pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
+
 
 const OcrUploader = () => {
-  // State to manage the selected file, loading status, OCR progress, and extracted data
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [ocrText, setOcrText] = useState('');
   const [extractedData, setExtractedData] = useState({ name: '', icNumber: '' });
+  
+  let worker = null;
 
-  // Handle the file selection from the input
   const handleFileChange = (event) => {
-    // Reset previous results when a new file is selected
     setSelectedFile(event.target.files[0]);
     setOcrText('');
     setExtractedData({ name: '', icNumber: '' });
     setProgress(0);
   };
 
-  // The main function to perform OCR
   const performOcr = async () => {
     if (!selectedFile) {
-      alert('Please select an image file first.');
+      alert('Please select a PDF file first.');
       return;
     }
 
@@ -41,68 +46,77 @@ const OcrUploader = () => {
     setProgress(0);
     setOcrText('');
 
-    // Tesseract.js worker to process the image
-    const worker = await Tesseract.createWorker({
-      logger: m => {
-        // Log the progress to update the UI
-        if (m.status === 'recognizing text') {
-          setProgress(Math.round(m.progress * 100));
-        }
-      },
-    });
-
     try {
-      // Load the English language model
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
-      
-      // Recognize the text from the selected file
-      const { data: { text } } = await worker.recognize(selectedFile);
-      setOcrText(text);
+      worker = await Tesseract.createWorker('eng', 1, {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setProgress(Math.round(m.progress * 100));
+          }
+        },
+      });
 
-      // Parse the extracted text to find the Name and IC Number
+      // --- PDF to Image Conversion (No changes needed here) ---
+      const fileReader = new FileReader();
+      const imageFromPdf = await new Promise((resolve, reject) => {
+        fileReader.onload = async function() {
+          const typedarray = new Uint8Array(this.result);
+          const pdf = await pdfjsLib.getDocument(typedarray).promise;
+          const page = await pdf.getPage(1);
+          const scale = 2.0;
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          await page.render({ canvasContext: context, viewport }).promise;
+          resolve(canvas.toDataURL('image/png'));
+        };
+        fileReader.onerror = reject;
+        fileReader.readAsArrayBuffer(selectedFile);
+      });
+      // --- End of PDF Conversion ---
+
+      const { data: { text } } = await worker.recognize(imageFromPdf);
+      
+      setOcrText(text);
       parseOcrData(text);
 
     } catch (error) {
-      console.error("OCR Error:", error);
+      console.error("OCR or PDF Processing Error:", error);
+      alert("An error occurred during processing. Please check the console for details.");
     } finally {
-      // Terminate the worker to free up resources
-      await worker.terminate();
+      if (worker) {
+        await worker.terminate();
+      }
       setIsLoading(false);
     }
   };
 
-  // Function to parse the raw OCR text using Regular Expressions (regex)
   const parseOcrData = (text) => {
-    // Regex to find a Malaysian IC Number (e.g., 900101-01-5555)
     const icRegex = /(\d{6}-\d{2}-\d{4})/;
-    
-    // Regex to find the name, which is usually under the "Nama" label
-    // This looks for "Nama", followed by a newline, and captures the entire next line.
     const nameRegex = /(?:Nama|Name)\s*\n(.+)/i;
-
     const icMatch = text.match(icRegex);
     const nameMatch = text.match(nameRegex);
-
     setExtractedData({
       name: nameMatch ? nameMatch[1].trim() : 'Not found',
       icNumber: icMatch ? icMatch[0].trim() : 'Not found',
     });
   };
 
+  // --- JSX remains the same ---
   return (
     <Container className="mt-5">
       <Row className="justify-content-center">
         <Col lg="8">
           <Card>
             <CardHeader>
-              <h3>ID Card OCR Scanner</h3>
-              <p className="text-muted">Upload an image of a MyKad to extract the Name and IC Number.</p>
+              <h3>ID Card OCR Scanner (PDF)</h3>
+              <p className="text-muted">Upload a PDF of a MyKad to extract the Name and IC Number.</p>
             </CardHeader>
             <CardBody>
               <Input 
                 type="file" 
-                accept="image/*" 
+                accept="application/pdf" 
                 onChange={handleFileChange} 
                 className="mb-3"
               />
@@ -112,10 +126,9 @@ const OcrUploader = () => {
                 disabled={!selectedFile || isLoading}
                 block
               >
-                {isLoading ? 'Processing...' : 'Scan Image'}
+                {isLoading ? 'Processing...' : 'Scan PDF'}
               </Button>
 
-              {/* Progress Bar and Results Section */}
               {isLoading && (
                 <div className="text-center mt-3">
                   <p>Recognizing text... please wait.</p>

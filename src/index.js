@@ -14,6 +14,7 @@ import AdminMenu from "layouts/AdminMenu";
 import AdminApplication from "layouts/AdminApplication";
 import PlainCitizen from "layouts/PlainCitizen"
 import StatisticAdmin from "layouts/statisticAdmin";
+import Plain from "layouts/Plain";
 
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -29,6 +30,7 @@ root.render(
       <Route path="/adminApplication/*" element={<AdminApplication />} />
       <Route path="/plainCitizen/*" element={<PlainCitizen />} />
       <Route path="/statistic/*" element={<StatisticAdmin />} />
+      <Route path="/plain/*" element={<Plain />} />
 
       <Route path="*" element={<Navigate to="/authCitizen/login" replace />} />
     </Routes>

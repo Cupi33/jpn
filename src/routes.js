@@ -22,6 +22,7 @@ import AdminStatistic from "views/Admin/AdminStatistic"
 import AdminStatisticNewborn from "views/Admin/AdminStatisticNewborn"
 import AdminStatisticDeath from "views/Admin/AdminStatisticDeath";
 import DigitalIDCard from "views/Citizen/DigitalCard";
+import OcrUploader from "views/Citizen/OcrUploader";
 
 
 
@@ -88,6 +89,23 @@ const routeGroups = {
         icon: "ni ni-shop text-green",
         component: <MenuUtama />,
       },
+    ],
+  },
+  Plain: {
+    layout: "/plain",
+    routes: [
+      {
+        path: "/card",
+        name: "Digital Card",
+        icon: "ni ni-card text-lilac",
+        component: <DigitalIDCard />,
+      },
+      {
+        path: "/ocr",
+        name: "OCR UPLOADER",
+        icon: "ni ni-card text-lilac",
+        component: <OcrUploader />,
+      }
     ],
   },
   applicationCitizen: {
