@@ -14,25 +14,30 @@ import {
 import Tesseract from 'tesseract.js';
 import * as pdfjsLib from 'pdfjs-dist/build/pdf';
 
-// --- THE FIX IS HERE ---
-// Instead of a CDN URL, we point to the local file in our `public` folder.
-// This is the most reliable method and avoids all network errors.
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
-
 
 const OcrUploader = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [ocrText, setOcrText] = useState('');
-  const [extractedData, setExtractedData] = useState({ name: '', icNumber: '' });
+  
+  // --- FIX #1: EXPAND THE STATE TO HOLD THE NEW DATA ---
+  const [extractedData, setExtractedData] = useState({
+    name: '',
+    icNumber: '',
+    address: '',
+    gender: '',
+    religion: ''
+  });
   
   let worker = null;
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
     setOcrText('');
-    setExtractedData({ name: '', icNumber: '' });
+    // Reset all fields
+    setExtractedData({ name: '', icNumber: '', address: '', gender: '', religion: '' });
     setProgress(0);
   };
 
@@ -92,18 +97,41 @@ const OcrUploader = () => {
     }
   };
 
+  // --- FIX #2: UPDATE THE PARSING LOGIC WITH NEW REGEX ---
   const parseOcrData = (text) => {
+    // Regex for existing fields (no changes)
     const icRegex = /(\d{6}-\d{2}-\d{4})/;
     const nameRegex = /(?:Nama|Name)\s*\n(.+)/i;
+
+    // --- NEW REGEX PATTERNS ---
+    // Address: Captures a multi-line block starting with common address terms
+    // and ending before the next known field like 'WARGANEGARA' or 'Agama'.
+    const addressRegex = /(NO\s|JALAN\s|KAMPUNG\s|Lrg\s|Lorong\s)[\s\S]+?(?=WARGANEGARA|Agama|ISLAM|LELAKI)/i;
+    
+    // Gender: Looks for the specific words
+    const genderRegex = /(LELAKI|PEREMPUAN)/i;
+    
+    // Religion: Looks for common Malaysian religions
+    const religionRegex = /(ISLAM|KRISTIAN|BUDDHA|HINDU)/i;
+
+    // --- Run all regex matches ---
     const icMatch = text.match(icRegex);
     const nameMatch = text.match(nameRegex);
+    const addressMatch = text.match(addressRegex);
+    const genderMatch = text.match(genderRegex);
+    const religionMatch = text.match(religionRegex);
+
+    // --- Update state with all found data ---
     setExtractedData({
       name: nameMatch ? nameMatch[1].trim() : 'Not found',
       icNumber: icMatch ? icMatch[0].trim() : 'Not found',
+      // We trim the address and replace multiple newlines with a single one for cleaner display.
+      address: addressMatch ? addressMatch[0].trim().replace(/\n\s*\n/g, '\n') : 'Not found',
+      gender: genderMatch ? genderMatch[0].trim() : 'Not found',
+      religion: religionMatch ? religionMatch[0].trim() : 'Not found',
     });
   };
 
-  // --- JSX remains the same ---
   return (
     <Container className="mt-5">
       <Row className="justify-content-center">
@@ -137,13 +165,19 @@ const OcrUploader = () => {
                   </Progress>
                 </div>
               )}
-
+              
+              {/* --- FIX #3: DISPLAY THE NEW EXTRACTED DATA --- */}
               {extractedData.name && !isLoading && (
                 <Alert color="success" className="mt-4">
                   <h4>Extracted Information</h4>
                   <hr />
                   <p><strong>Full Name:</strong> {extractedData.name}</p>
                   <p><strong>IC Number:</strong> {extractedData.icNumber}</p>
+                  {/* Use a <pre> tag for the address to respect its multi-line formatting */}
+                  <p><strong>Address:</strong></p>
+                  <pre style={{fontFamily: 'inherit', fontSize: 'inherit', margin: 0}}>{extractedData.address}</pre>
+                  <p><strong>Gender:</strong> {extractedData.gender}</p>
+                  <p><strong>Religion:</strong> {extractedData.religion}</p>
                 </Alert>
               )}
 
