@@ -115,4 +115,52 @@ router.get('/deathPerYear', async (req, res) => {
   }
 });
 
+router.get('/deathAppSummary', async (req, res) => {
+  try {
+    // Query both views in parallel for better performance
+    const [decisionResult, commentResult] = await Promise.all([
+      execute(`SELECT * FROM TOTAL_DECISION_DEATH`),
+      execute(`SELECT * FROM COMMENT_REJECT_DEATH`)
+    ]);
+
+    if (!decisionResult.rows || !commentResult.rows) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    // Prepare total accept & reject
+    let total_accept = 0;
+    let total_reject = 0;
+
+    decisionResult.rows.forEach(row => {
+      const decision = (row.DECISION || row.decision || '').toUpperCase();
+      const count = Number(row.TOTAL_APPLICATIONS || row.total_applications || 0);
+      if (decision === 'ACCEPT') {
+        total_accept = count;
+      } else if (decision === 'REJECT') {
+        total_reject = count;
+      }
+    });
+
+    // Prepare comment category counts
+    const comments = commentResult.rows.map(row => ({
+      comment_category: row.COMMENT_CATEGORY || row.comment_category,
+      total_comments: Number(row.TOTAL_COMMENTS || row.total_comments || 0)
+    }));
+
+    res.json({
+      success: true,
+      message: 'Death review summary retrieved successfully',
+      data: {
+        total_accept,
+        total_reject,
+        comments
+      }
+    });
+
+  } catch (err) {
+    console.error('Error executing /deathReviewSummary API:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 export default router;

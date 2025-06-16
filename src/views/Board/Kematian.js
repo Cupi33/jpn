@@ -18,17 +18,6 @@ import {
 
 import geoData from "../../data/malaysia-states.json";
 
-// --- MOCK / HARDCODED DATA ---
-// Only the annual overview chart remains hardcoded as per the requirements.
-const annualDeathsData = {
-  labels: ["2018", "2019", "2020", "2021", "2022", "2023", "2024"],
-  datasets: [
-    {
-      label: "Deaths", data: [170, 180, 195, 225, 205, 210, 220], borderColor: "#f5365c", backgroundColor: "#f5365c", pointBackgroundColor: "#f5365c", pointRadius: 3, pointHoverRadius: 5,
-    },
-  ],
-};
-
 // --- MAP COMPONENT (No changes needed) ---
 const MapChart = ({ data, stateNameMapping }) => {
     const [position, setPosition] = useState({ coordinates: [108, 4], zoom: 1 });
@@ -81,6 +70,22 @@ const MapChart = ({ data, stateNameMapping }) => {
 
 // --- MAIN DEATH STATISTIC COMPONENT ---
 const Kematian = (props) => {
+  // State for Annual Chart
+  const [annualChartData, setAnnualChartData] = useState({
+    labels: [],
+    datasets: [{
+      label: "Kematian",
+      data: [],
+      borderColor: "#f5365c",
+      backgroundColor: "#f5365c",
+      pointBackgroundColor: "#f5365c",
+      pointRadius: 3,
+      pointHoverRadius: 5,
+    }],
+  });
+  const [isAnnualChartLoading, setIsAnnualChartLoading] = useState(true);
+  const [annualRawStats, setAnnualRawStats] = useState([]); // To hold raw data for tooltip
+
   // State for Map/Table data
   const [deathTableData, setDeathTableData] = useState([]);
   const [deathMapData, setDeathMapData] = useState({});
@@ -112,6 +117,24 @@ const Kematian = (props) => {
     if (window.Chart) { parseOptions(Chart, chartOptions()); }
 
     const fetchAllData = async () => {
+        // NEW: Fetch data for the Annual Deaths Chart
+        setIsAnnualChartLoading(true);
+        try {
+            const response = await axios.get("http://localhost:5000/board/deathPerYear");
+            if (response.data?.success) {
+                const stats = response.data.stats;
+                setAnnualRawStats(stats); // Store raw data for tooltip
+                const labels = stats.map(d => d.death_year);
+                const dataPoints = stats.map(d => d.total_deaths);
+                setAnnualChartData(prev => ({
+                  ...prev,
+                  labels: labels,
+                  datasets: [{ ...prev.datasets[0], data: dataPoints }]
+                }));
+            }
+        } catch (error) { console.error("Error fetching annual death data:", error); }
+        finally { setIsAnnualChartLoading(false); }
+      
         // Fetch data for Map and Table
         setIsMapDataLoading(true);
         try {
@@ -188,6 +211,27 @@ const Kematian = (props) => {
     setGenderChartData(prevData => ({ ...prevData, datasets: [{ ...prevData.datasets[0], data: [maleTotal, femaleTotal] }] }));
   }, [selectedYear, allGenderData]);
 
+  // --- Custom Chart Options for Tooltip ---
+  const customAnnualChartOptions = {
+    ...annualDeathsChart.options,
+    maintainAspectRatio: false,
+    tooltips: {
+      callbacks: {
+        label: function (tooltipItem, data) {
+          const datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
+          const totalDeaths = tooltipItem.yLabel;
+          // Access the raw stats using the index of the hovered point
+          const avgAge = annualRawStats[tooltipItem.index]?.average_age_death;
+
+          let hoverLabel = `${datasetLabel}: ${totalDeaths.toLocaleString()}`;
+          if (avgAge) {
+            hoverLabel += ` | Purata Umur: ${avgAge.toFixed(1)}`;
+          }
+          return hoverLabel;
+        },
+      },
+    },
+  };
 
   return (
     <>
@@ -196,8 +240,14 @@ const Kematian = (props) => {
         <Row>
           <Col xl="12">
             <Card className="shadow">
-              <CardHeader className="bg-transparent"><Row className="align-items-center"><div className="col"><h6 className="text-uppercase text-muted ls-1 mb-1">Gambaran Keseluruhan</h6><h2 className="mb-0">Statistik Kematian Tahunan</h2></div></Row></CardHeader>
-              <CardBody><div className="chart" style={{ height: "350px" }}><Line data={annualDeathsData} options={{ ...annualDeathsChart.options, maintainAspectRatio: false }} /></div></CardBody>
+              <CardHeader className="bg-transparent"><Row className="align-items-center"><div className="col"><h6 className="text-uppercase text-muted ls-1 mb-1">Gambaran Keseluruhan</h6><h2 className="mb-0">Statistik Kematian 5 Tahun Terakhir</h2></div></Row></CardHeader>
+              <CardBody>
+                {isAnnualChartLoading ? (
+                  <div className="d-flex justify-content-center align-items-center" style={{ height: "350px" }}>Loading chart data...</div>
+                ) : (
+                  <div className="chart" style={{ height: "350px" }}><Line data={annualChartData} options={customAnnualChartOptions} /></div>
+                )}
+              </CardBody>
             </Card>
           </Col>
         </Row>
