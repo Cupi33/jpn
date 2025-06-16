@@ -18,14 +18,14 @@ router.get('/deathState', async (req, res) => {
     // First pass: calculate grand total
     result.rows.forEach(row => {
       // Depending on your DB client, use correct key for "total death"
-      const total = Number(row["total death"] || row["TOTAL DEATH"] || 0);
+      const total = Number(row["total_death"] || row["TOTAL DEATH"] || 0);
       grandTotal += total;
     });
 
     // Second pass: build stats with percentage
     result.rows.forEach(row => {
       const state = row.STATE || row.state;
-      const total = Number(row["total death"] || row["TOTAL DEATH"] || 0);
+      const total = Number(row["total_death"] || row["TOTAL DEATH"] || 0);
       const percentage = grandTotal > 0 ? parseFloat(((total / grandTotal) * 100).toFixed(2)) : 0;
 
       stats[state] = {

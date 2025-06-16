@@ -24,6 +24,7 @@ import AdminStatisticDeath from "views/Admin/AdminStatisticDeath";
 import DigitalIDCard from "views/Citizen/DigitalCard";
 import OcrUploader from "views/Citizen/OcrUploader";
 import Kependudukan from "views/Board/Kependudukan";
+import Kematian from "views/Board/Kematian";
 
 
 
@@ -55,12 +56,6 @@ const routeGroups = {
         name: "Statistik",
         icon: "ni ni-sound-wave text-lilac",
         component: <Statistic />,
-      },
-      {
-        path: "/card",
-        name: "Digital Card",
-        icon: "ni ni-card text-lilac",
-        component: <DigitalIDCard />,
       }
     ],
   },
@@ -112,6 +107,12 @@ const routeGroups = {
         name: "Kependudukan",
         icon: "ni ni-card text-lilac",
         component: <Kependudukan />,
+      },
+      {
+        path: "/kematian",
+        name: "Kematian",
+        icon: "ni ni-card text-lilac",
+        component: <Kematian />,
       },
     ],
   },

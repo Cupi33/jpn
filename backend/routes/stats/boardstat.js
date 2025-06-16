@@ -86,4 +86,33 @@ router.get('/kependudukan10tahun', async (req, res) => {
   }
 });
 
+router.get('/deathPerYear', async (req, res) => {
+  try {
+    // ✅ Query directly from your view
+    const sql = `SELECT * FROM DEATH_PER_YEAR ORDER BY death_year`;
+
+    const result = await execute(sql);
+
+    if (!result || !result.rows || result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'No data found' });
+    }
+
+    const stats = result.rows.map(row => ({
+      death_year: row.DEATH_YEAR || row.death_year,
+      total_deaths: Number(row.TOTAL_DEATHS || row.total_deaths || 0),
+      average_age_death: parseFloat((row.AVERAGE_AGE_DEATH || row.average_age_death || 0).toFixed(2))
+    }));
+
+    res.json({
+      success: true,
+      message: 'Yearly death statistics retrieved successfully',
+      stats
+    });
+
+  } catch (err) {
+    console.error('Error executing /deathPerYear API:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 export default router;

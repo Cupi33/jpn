@@ -60,7 +60,7 @@ const PlainNavbar = () => {
           <NavItem>
             <NavLink
               className="nav-link-icon"
-              to="/plain/data-kematian"
+              to="/plain/kematian"
               tag={Link}
             >
               <span className="nav-link-inner--text">Data Kematian</span>
