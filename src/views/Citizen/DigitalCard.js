@@ -1,20 +1,21 @@
 import React, { useRef, useState } from 'react';
-import { Card, CardBody, Container, Row, Col, Button } from 'reactstrap';
+import { CardBody, Container, Row, Col, Button } from 'reactstrap';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-// --- Image paths from public folder ---
+// --- UPDATED DATA & ASSETS TO MATCH MYKAD SAMPLE ---
 const cardHolderData = {
-  name: 'MOHAMAD AMIRUL BIN ABDULLAH',
-  icNumber: '900101-01-5555',
-  address: 'NO 1, JALAN PUTERI 1/2, BANDAR PUTERI, 47100 PUCHONG, SELANGOR',
+  name: 'ABD RAUF BIN HAMSAH',
+  icNumber: '460619-12-5087',
+  address: 'KAMPUNG MASJID\nP O BOX 42\n89007 KENINGAU\nSABAH',
   gender: 'LELAKI',
   citizenship: 'WARGANEGARA',
+  religion: 'ISLAM',
   photoUrl: process.env.PUBLIC_URL + '/user.png',
-  jataNegaraUrl: process.env.PUBLIC_URL + '/jata-negara.jpg',
-  myJpnLogoUrl: process.env.PUBLIC_URL + '/jpn_ori.png',
+  flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Flag_of_Malaysia.svg/125px-Flag_of_Malaysia.svg.png',
 };
 
+// Image preloader remains the same, it's very reliable.
 const preloadImages = (urls) => {
   const promises = urls.map(url => {
     return new Promise((resolve, reject) => {
@@ -29,147 +30,179 @@ const preloadImages = (urls) => {
 };
 
 const DigitalIDCard = () => {
-  const cardRef = useRef(null); // <-- This ref will now point to the wrapper div
+  const cardRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // PDF Download logic remains the same.
   const handleDownloadPdf = async () => {
-    const input = cardRef.current; // This will now correctly get the div
+    const input = cardRef.current;
     if (!input) {
-      console.error("Card element not found. The ref is not attached.");
+      console.error("Card element not found.");
       return;
     }
 
     setIsLoading(true);
-    console.log("STEP 1: Pre-loading all images...");
-
     try {
-      const imageUrls = [
-        cardHolderData.myJpnLogoUrl,
-        cardHolderData.jataNegaraUrl,
-        cardHolderData.photoUrl,
-      ];
+      const imageUrls = [cardHolderData.photoUrl, cardHolderData.flagUrl];
       await preloadImages(imageUrls);
-      console.log("STEP 2: All images are loaded. Now running html2canvas.");
-
-      const canvas = await html2canvas(input, {
-        scale: 2,
-        backgroundColor: '#eef7ff',
-        useCORS: true,
-      });
-
-      console.log("STEP 3: Canvas created successfully.");
-      const imgData = canvas.toDataURL('image/png');
       
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
+      const canvas = await html2canvas(input, {
+        scale: 2.5,
+        useCORS: true,
+        backgroundColor: null,
       });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth() - 30;
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a5' });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 15, 15, pdfWidth, pdfHeight);
-      console.log("STEP 4: Saving PDF.");
-      pdf.save('Digital-ID-Card.pdf');
-
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save('MyKad-Digital.pdf');
     } catch (error) {
-      console.error("A critical error occurred during PDF generation:", error);
-      alert("Sorry, could not generate the PDF. Please check the console for details.");
+      console.error("PDF generation error:", error);
+      alert("Could not generate PDF. Please check the console.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // --- CSS FOR AUTHENTIC MYKAD DESIGN ---
   const cardStyles = `
-    .id-card-wrapper { padding-top: 2rem; padding-bottom: 2rem; }
-    .id-card { max-width: 650px; margin: 0 auto; /* Removed margin-top/bottom */ border-radius: 15px; font-family: 'Arial', sans-serif; background-color: #eef7ff; border: 1px solid #cddcff; overflow: hidden; }
-    .id-card-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 2px solid #b0c4ff; }
-    .id-card-header h5 { font-weight: bold; color: #002366; margin: 0; }
-    .id-card-header img { height: 50px; }
-    .id-card-photo { width: 100%; max-width: 150px; height: auto; border-radius: 8px; border: 3px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-    .id-card-title { color: #003399; font-weight: 600; text-align: center; margin-bottom: 1.5rem; }
-    .data-label { font-size: 0.8rem; color: #555; text-transform: uppercase; margin-bottom: 2px; }
-    .data-value { font-size: 1rem; font-weight: bold; color: #111; word-wrap: break-word; }
-    .data-field { margin-bottom: 1.2rem; }
-    .page-logo { display: block; margin: 0 auto 20px auto; height: 50px; }
+    .mykad-card-wrapper {
+      padding: 2rem 0;
+    }
+    .mykad-card {
+      max-width: 800px;
+      margin: 1rem auto;
+      border-radius: 20px;
+      font-family: 'Helvetica Neue', 'Arial', sans-serif;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(120deg, #d4eaf7 0%, #a7d7f2 100%);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #fff3;
+    }
+    .mykad-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .mykad-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 25px;
+    }
+    .mykad-title h1 { font-size: 24px; color: #003366; margin: 0; font-weight: 700; letter-spacing: 1px; }
+    .mykad-title h2 { font-size: 30px; color: #003366; margin: 0; font-weight: 900; }
+    .mykad-logos { display: flex; align-items: center; gap: 15px; }
+    .mykad-logo-text { color: #0052a4; font-weight: 900; font-size: 28px; font-style: italic; }
+    .mykad-logo-text sup { color: #d42129; font-size: 16px; font-weight: 700; }
+    .mykad-flag { height: 35px; border: 1px solid #ccc; }
+    .mykad-body {
+      display: flex;
+      padding: 10px 25px 25px 25px;
+      gap: 20px;
+    }
+    .mykad-left-col { flex: 1.2; display: flex; flex-direction: column; }
+    .mykad-right-col { flex: 0.8; }
+    .mykad-ic-number { font-size: 28px; color: #1d3557; font-weight: 600; letter-spacing: 1px; margin-bottom: 20px; }
+    .gold-chip {
+      width: 60px; height: 50px; background: linear-gradient(135deg, #fde492, #d1a440);
+      border-radius: 6px; margin-bottom: 30px; border: 1px solid #b8913a;
+      position: relative;
+    }
+    .gold-chip::before, .gold-chip::after { content: ''; position: absolute; background: #b8913a; }
+    .gold-chip::before { width: 80%; height: 2px; top: 20px; left: 10%; }
+    .gold-chip::after { width: 2px; height: 70%; left: 30px; top: 15%; }
+    .mykad-field { margin-bottom: 12px; }
+    .mykad-field p { font-size: 16px; color: #1d3557; font-weight: 600; white-space: pre-wrap; margin: 0; line-height: 1.3; }
+    .photo-area { position: relative; }
+    .main-photo { width: 100%; max-width: 220px; border-radius: 8px; border: 4px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    .ghost-photo { position: absolute; top: -20px; left: -110px; opacity: 0.2; width: 130px; filter: grayscale(100%) contrast(1.5); }
+
+    /* --- CSS CHANGES ARE HERE --- */
+    .bottom-fields-container {
+      margin-top: 10px;
+      max-width: 220px; /* Match the photo's width for alignment */
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .bottom-fields-row {
+      display: flex;
+      justify-content: space-around; /* Distributes the items nicely */
+      margin-top: 5px;
+    }
+    /* --- END OF CSS CHANGES --- */
   `;
 
   return (
     <>
       <style>{cardStyles}</style>
-      <Container className="id-card-wrapper">
+      <Container className="mykad-card-wrapper">
         <Row className="justify-content-center">
-          <Col lg="10" xl="8">
-            <img 
-              src={cardHolderData.myJpnLogoUrl} 
-              alt="MyJPN Logo"
-              className="page-logo"
-            />
-            
-            {/* 
-              --- THE FIX IS HERE ---
-              We wrap the Card in a div and attach the ref to this div.
-              html2canvas will now capture this div and everything inside it.
-            */}
-            <div ref={cardRef} style={{ margin: '1rem auto' }}>
-              <Card className="id-card">
-                <CardBody style={{ padding: '0' }}>
-                  <div className="id-card-header">
-                    <h5>MALAYSIA</h5>
-                    <img src={cardHolderData.jataNegaraUrl} alt="Jata Negara" />
+          <Col lg="10" xl="9">
+            <div className="mykad-card" ref={cardRef}>
+              <div className="mykad-header">
+                {/* ...header content... */}
+                 <div className="mykad-title">
+                  <h1>KAD PENGENALAN</h1>
+                  <h2>MALAYSIA</h2>
+                </div>
+                <div className="mykad-logos">
+                  <span className="mykad-logo-text">MyKad<sup>®</sup></span>
+                  <img src={cardHolderData.flagUrl} alt="Malaysian Flag" className="mykad-flag" />
+                </div>
+              </div>
+
+              <CardBody className="mykad-body">
+                <div className="mykad-left-col">
+                  {/* ...left column content... */}
+                  <div className="mykad-ic-number">{cardHolderData.icNumber}</div>
+                  <div className="gold-chip"></div>
+                  <div className="mykad-field">
+                    <p>{cardHolderData.name}</p>
+                  </div>
+                  <div className="mykad-field">
+                    <p>{cardHolderData.address}</p>
+                  </div>
+                </div>
+
+                <div className="mykad-right-col">
+                  <div className="photo-area">
+                    <img src={cardHolderData.photoUrl} alt="Ghost" className="ghost-photo" />
+                    <img src={cardHolderData.photoUrl} alt="Card Holder" className="main-photo" />
                   </div>
                   
-                  <div style={{ padding: '1.5rem' }}>
-                    <h4 className="id-card-title">KAD PENGENALAN</h4>
-                    <Row>
-                      <Col md="4" className="text-center mb-4 mb-md-0 d-flex align-items-center justify-content-center">
-                        <img 
-                          src={cardHolderData.photoUrl} 
-                          alt="Card holder" 
-                          className="id-card-photo"
-                        />
-                      </Col>
-                      <Col md="8">
-                        {/* Data fields remain the same */}
-                        <div className="data-field">
-                          <div className="data-label">Nama</div>
-                          <div className="data-value">{cardHolderData.name}</div>
-                        </div>
-                        <div className="data-field">
-                          <div className="data-label">No. K/P</div>
-                          <div className="data-value">{cardHolderData.icNumber}</div>
-                        </div>
-                        <div className="data-field">
-                          <div className="data-label">Alamat</div>
-                          <div className="data-value">{cardHolderData.address}</div>
-                        </div>
-                        <Row>
-                          <Col xs="6">
-                            <div className="data-field">
-                              <div className="data-label">Jantina</div>
-                              <div className="data-value">{cardHolderData.gender}</div>
-                            </div>
-                          </Col>
-                          <Col xs="6">
-                            <div className="data-label">Warganegara</div>
-                            <div className="data-value">{cardHolderData.citizenship}</div>
-                          </Col>
-                        </Row>
-                      </Col>
-                    </Row>
+                  {/* --- JSX STRUCTURE IS CHANGED HERE --- */}
+                  <div className="bottom-fields-container">
+                    {/* First row: Citizenship */}
+                    <div className="mykad-field text-center">
+                      <p>{cardHolderData.citizenship}</p>
+                    </div>
+                    {/* Second row: Religion and Gender */}
+                    <div className="bottom-fields-row">
+                      <div className="mykad-field text-center">
+                        <p>{cardHolderData.religion}</p>
+                      </div>
+                      <div className="mykad-field text-center">
+                        <p>{cardHolderData.gender}</p>
+                      </div>
+                    </div>
                   </div>
-                </CardBody>
-              </Card>
+                  {/* --- END OF JSX CHANGES --- */}
+
+                </div>
+              </CardBody>
             </div>
-            {/* --- END OF FIX --- */}
 
             <div className="text-center mt-4">
               <Button color="primary" onClick={handleDownloadPdf} disabled={isLoading}>
                 {isLoading ? 'Preparing PDF...' : 'Download as PDF'}
               </Button>
             </div>
-
           </Col>
         </Row>
       </Container>
