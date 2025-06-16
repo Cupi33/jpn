@@ -60,7 +60,7 @@ router.post('/1', upload.single('document'), async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'IC Application sent successfully',
+      message: 'PERMOHONAN KAD PENGENALAN BERJAYA DIHANTAR',
       application: {
         appID: result.outBinds.appID,
         icAppID: result.outBinds.icAppID
@@ -109,7 +109,7 @@ router.post('/2', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'IC Application sent successfully',
+      message: 'PERMOHONAN KAD PENGENALAN BERJAYA DIHANTAR',
       application: {
         appID: result.outBinds.appID,
         icAppID: result.outBinds.icAppID

@@ -47,7 +47,7 @@ router.post('/1', upload.single('document'), async (req, res) => {
     // Step 6: Send success response
     res.status(201).json({
       success: true,
-      message: 'Death Application sent successfully',
+      message: 'PERMOHONAN PENDAFTARAN KEMATIAN BERJAYA DIHANTAR',
       application: {
         appID,
         deathAppID

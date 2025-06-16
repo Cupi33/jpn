@@ -51,7 +51,7 @@ router.post('/1', upload.single('document'), async (req, res) => {
     // Step 5: Send success response
     res.status(201).json({
       success: true,
-      message: 'Newborn Application sent successfully',
+      message: 'PERMOHONAN PENDAFTARAN BAYI BERJAYA DIHANTAR',
       application: {
         appID,
         nbAppID
