@@ -74,17 +74,23 @@ const Kematian = (props) => {
   const [annualChartData, setAnnualChartData] = useState({
     labels: [],
     datasets: [{
-      label: "Kematian",
-      data: [],
-      borderColor: "#f5365c",
-      backgroundColor: "#f5365c",
-      pointBackgroundColor: "#f5365c",
-      pointRadius: 3,
-      pointHoverRadius: 5,
+      label: "Kematian", data: [], borderColor: "#f5365c", backgroundColor: "#f5365c", pointBackgroundColor: "#f5365c", pointRadius: 3, pointHoverRadius: 5,
     }],
   });
   const [isAnnualChartLoading, setIsAnnualChartLoading] = useState(true);
-  const [annualRawStats, setAnnualRawStats] = useState([]); // To hold raw data for tooltip
+  const [annualRawStats, setAnnualRawStats] = useState([]);
+
+  // State for Death Application Summary
+  const [decisionChartData, setDecisionChartData] = useState({
+    labels: ["Diluluskan", "Ditolak"],
+    datasets: [{ data: [0, 0], backgroundColor: ["#2dce89", "#f5365c"], hoverBackgroundColor: ["#2dce89", "#f5365c"] }]
+  });
+  const [isDecisionLoading, setIsDecisionLoading] = useState(true);
+  const [rejectionReasonChartData, setRejectionReasonChartData] = useState({
+    labels: [],
+    datasets: [{ label: "Jumlah", data: [], backgroundColor: "#fb6340" }]
+  });
+  const [isRejectionLoading, setIsRejectionLoading] = useState(true);
 
   // State for Map/Table data
   const [deathTableData, setDeathTableData] = useState([]);
@@ -117,24 +123,39 @@ const Kematian = (props) => {
     if (window.Chart) { parseOptions(Chart, chartOptions()); }
 
     const fetchAllData = async () => {
-        // NEW: Fetch data for the Annual Deaths Chart
+        // Fetch data for the Annual Deaths Chart
         setIsAnnualChartLoading(true);
         try {
             const response = await axios.get("http://localhost:5000/board/deathPerYear");
             if (response.data?.success) {
                 const stats = response.data.stats;
-                setAnnualRawStats(stats); // Store raw data for tooltip
+                setAnnualRawStats(stats);
                 const labels = stats.map(d => d.death_year);
                 const dataPoints = stats.map(d => d.total_deaths);
-                setAnnualChartData(prev => ({
-                  ...prev,
-                  labels: labels,
-                  datasets: [{ ...prev.datasets[0], data: dataPoints }]
-                }));
+                setAnnualChartData(prev => ({...prev, labels: labels, datasets: [{ ...prev.datasets[0], data: dataPoints }]}));
             }
         } catch (error) { console.error("Error fetching annual death data:", error); }
         finally { setIsAnnualChartLoading(false); }
       
+        // Fetch data for Death Application Summary
+        setIsDecisionLoading(true);
+        setIsRejectionLoading(true);
+        try {
+            const response = await axios.get("http://localhost:5000/board/deathAppSummary");
+            if (response.data?.success) {
+                const { total_accept, total_reject, comments } = response.data.data;
+                setDecisionChartData(prev => ({...prev, datasets: [{ ...prev.datasets[0], data: [total_accept, total_reject] }]}));
+                
+                const reasonLabels = comments.map(c => c.comment_category);
+                const reasonData = comments.map(c => c.total_comments);
+                setRejectionReasonChartData(prev => ({...prev, labels: reasonLabels, datasets: [{ ...prev.datasets[0], data: reasonData }]}));
+            }
+        } catch (error) { console.error("Error fetching death application summary data:", error); }
+        finally {
+            setIsDecisionLoading(false);
+            setIsRejectionLoading(false);
+        }
+
         // Fetch data for Map and Table
         setIsMapDataLoading(true);
         try {
@@ -169,9 +190,7 @@ const Kematian = (props) => {
         setIsGenderLoading(true);
         try {
             const response = await axios.get("http://localhost:5000/deathStat/genderDeath5year");
-            if (response.data?.success) {
-                setAllGenderData(response.data.stats);
-            }
+            if (response.data?.success) { setAllGenderData(response.data.stats); }
         } catch (error) { console.error("Error fetching gender death data:", error); }
         finally { setIsGenderLoading(false); }
 
@@ -179,9 +198,7 @@ const Kematian = (props) => {
         setIsAvgAgeLoading(true);
         try {
             const response = await axios.get("http://localhost:5000/deathStat/avgAgeOfDeath");
-            if (response.data?.success) {
-                setAvgAgeData(response.data.stats);
-            }
+            if (response.data?.success) { setAvgAgeData(response.data.stats); }
         } catch (error) { console.error("Error fetching average age of death data:", error); }
         finally { setIsAvgAgeLoading(false); }
     };
@@ -192,45 +209,37 @@ const Kematian = (props) => {
   // --- Data Processing for Gender Chart ---
   useEffect(() => {
     if (!allGenderData || allGenderData.length === 0) return;
-
-    let maleTotal = 0;
-    let femaleTotal = 0;
-
-    if (selectedYear === "ALL") {
-      allGenderData.forEach(yearData => {
-        maleTotal += yearData.male;
-        femaleTotal += yearData.female;
-      });
-    } else {
-      const yearData = allGenderData.find(d => d.year === selectedYear);
-      if (yearData) {
-        maleTotal = yearData.male;
-        femaleTotal = yearData.female;
-      }
-    }
+    let maleTotal = 0; let femaleTotal = 0;
+    if (selectedYear === "ALL") { allGenderData.forEach(yearData => { maleTotal += yearData.male; femaleTotal += yearData.female; });
+    } else { const yearData = allGenderData.find(d => d.year === selectedYear); if (yearData) { maleTotal = yearData.male; femaleTotal = yearData.female; } }
     setGenderChartData(prevData => ({ ...prevData, datasets: [{ ...prevData.datasets[0], data: [maleTotal, femaleTotal] }] }));
   }, [selectedYear, allGenderData]);
 
-  // --- Custom Chart Options for Tooltip ---
+  // --- Custom Chart Options ---
   const customAnnualChartOptions = {
-    ...annualDeathsChart.options,
-    maintainAspectRatio: false,
+    ...annualDeathsChart.options, maintainAspectRatio: false,
     tooltips: {
       callbacks: {
         label: function (tooltipItem, data) {
           const datasetLabel = data.datasets[tooltipItem.datasetIndex].label || '';
           const totalDeaths = tooltipItem.yLabel;
-          // Access the raw stats using the index of the hovered point
           const avgAge = annualRawStats[tooltipItem.index]?.average_age_death;
-
           let hoverLabel = `${datasetLabel}: ${totalDeaths.toLocaleString()}`;
-          if (avgAge) {
-            hoverLabel += ` | Purata Umur: ${avgAge.toFixed(1)}`;
-          }
+          if (avgAge) { hoverLabel += ` | Purata Umur: ${avgAge.toFixed(1)}`; }
           return hoverLabel;
         },
       },
     },
+  };
+
+  const rejectionReasonChartOptions = {
+    ...deathsByAgeGroupChart.options, indexAxis: 'y', maintainAspectRatio: false,
+    scales: {
+        x: { ticks: { precision: 0 } }
+    },
+    plugins: {
+        legend: { display: false }
+    }
   };
 
   return (
@@ -242,17 +251,40 @@ const Kematian = (props) => {
             <Card className="shadow">
               <CardHeader className="bg-transparent"><Row className="align-items-center"><div className="col"><h6 className="text-uppercase text-muted ls-1 mb-1">Gambaran Keseluruhan</h6><h2 className="mb-0">Statistik Kematian 5 Tahun Terakhir</h2></div></Row></CardHeader>
               <CardBody>
-                {isAnnualChartLoading ? (
-                  <div className="d-flex justify-content-center align-items-center" style={{ height: "350px" }}>Loading chart data...</div>
-                ) : (
-                  <div className="chart" style={{ height: "350px" }}><Line data={annualChartData} options={customAnnualChartOptions} /></div>
-                )}
+                {isAnnualChartLoading ? ( <div className="d-flex justify-content-center align-items-center" style={{ height: "350px" }}>Loading chart data...</div>
+                ) : ( <div className="chart" style={{ height: "350px" }}><Line data={annualChartData} options={customAnnualChartOptions} /></div> )}
               </CardBody>
             </Card>
           </Col>
         </Row>
+        
+        {/* ROW 2: NEW - Application Summary Charts */}
+        <Row className="mt-5">
+            <Col xl="6" className="mb-5 mb-xl-0">
+                <Card className="shadow h-100">
+                    <CardHeader className="bg-transparent">
+                        <h2 className="mb-0">Jumlah Keputusan Permohonan Pendaftaran Kematian Dalam 12 Bulan</h2>
+                    </CardHeader>
+                    <CardBody>
+                        {isDecisionLoading ? ( <div className="d-flex justify-content-center align-items-center h-100">Loading...</div>
+                        ) : ( <div className="chart" style={{ height: "300px" }}><Pie data={decisionChartData} options={{...deathsByGenderChart.options, maintainAspectRatio: false }} /></div> )}
+                    </CardBody>
+                </Card>
+            </Col>
+            <Col xl="6">
+                <Card className="shadow h-100">
+                    <CardHeader className="bg-transparent">
+                        <h2 className="mb-0">Sebab Permohonan Ditolak</h2>
+                    </CardHeader>
+                    <CardBody>
+                         {isRejectionLoading ? ( <div className="d-flex justify-content-center align-items-center h-100">Loading...</div>
+                         ) : ( <div className="chart" style={{ height: "300px" }}><Bar data={rejectionReasonChartData} options={rejectionReasonChartOptions} /></div> )}
+                    </CardBody>
+                </Card>
+            </Col>
+        </Row>
 
-        {/* ROW 2: DEMOGRAPHIC BREAKDOWN DISPLAYS */}
+        {/* ROW 3: DEMOGRAPHIC BREAKDOWN DISPLAYS */}
         <Row className="mt-5">
           <Col xl="4" className="mb-5 mb-xl-0">
             <Card className="shadow h-100">
@@ -260,11 +292,8 @@ const Kematian = (props) => {
                 <div><h6 className="text-uppercase text-muted ls-1 mb-1">Demografik</h6><h2 className="mb-0">Kematian Mengikut Umur</h2></div>
               </CardHeader>
               <CardBody>
-                {isAgeGroupLoading ? (
-                  <div className="d-flex justify-content-center align-items-center h-100">Loading...</div>
-                ) : (
-                  <div className="chart" style={{ height: "300px" }}><Bar data={ageGroupChartData} options={{ ...deathsByAgeGroupChart.options, maintainAspectRatio: false }} /></div>
-                )}
+                {isAgeGroupLoading ? ( <div className="d-flex justify-content-center align-items-center h-100">Loading...</div>
+                ) : ( <div className="chart" style={{ height: "300px" }}><Bar data={ageGroupChartData} options={{ ...deathsByAgeGroupChart.options, maintainAspectRatio: false }} /></div> )}
               </CardBody>
             </Card>
           </Col>
@@ -282,11 +311,8 @@ const Kematian = (props) => {
                 </div>
               </CardHeader>
               <CardBody>
-                {isGenderLoading ? (
-                   <div className="d-flex justify-content-center align-items-center h-100">Loading...</div>
-                ) : (
-                  <div className="chart" style={{ height: "300px" }}><Pie data={genderChartData} options={{ ...deathsByGenderChart.options, maintainAspectRatio: false }} /></div>
-                )}
+                {isGenderLoading ? ( <div className="d-flex justify-content-center align-items-center h-100">Loading...</div>
+                ) : ( <div className="chart" style={{ height: "300px" }}><Pie data={genderChartData} options={{ ...deathsByGenderChart.options, maintainAspectRatio: false }} /></div> )}
               </CardBody>
             </Card>
           </Col>
@@ -299,8 +325,7 @@ const Kematian = (props) => {
                 </div>
               </CardHeader>
               <CardBody>
-                {isAvgAgeLoading ? (
-                  <div className="d-flex justify-content-center align-items-center h-100">Loading...</div>
+                {isAvgAgeLoading ? ( <div className="d-flex justify-content-center align-items-center h-100">Loading...</div>
                 ) : (
                   <Row className="h-100 align-items-center">
                     <Col xs="6" className="text-center">
@@ -322,17 +347,14 @@ const Kematian = (props) => {
           </Col>
         </Row>
         
-        {/* ROW 3: HEATMAP AND DATA TABLE */}
+        {/* ROW 4: HEATMAP AND DATA TABLE */}
         <Row className="mt-5">
           <Col xl="7" className="mb-5 mb-xl-0">
             <Card className="shadow h-100">
               <CardHeader className="border-0"><h3 className="mb-0">Peta Taburan Kematian Di Malaysia</h3></CardHeader>
               <CardBody>
-                 {isMapDataLoading ? (
-                   <div className="text-center">Loading map data...</div>
-                 ) : (
-                   <MapChart data={deathMapData} stateNameMapping={stateNameMapping} />
-                 )}
+                 {isMapDataLoading ? ( <div className="text-center">Loading map data...</div>
+                 ) : ( <MapChart data={deathMapData} stateNameMapping={stateNameMapping} /> )}
               </CardBody>
             </Card>
           </Col>
@@ -342,8 +364,7 @@ const Kematian = (props) => {
               <Table className="align-items-center table-flush" responsive>
                 <thead className="thead-light"><tr><th scope="col">Negeri</th><th scope="col">Jumlah Kematian</th><th scope="col">Peratusan</th></tr></thead>
                 <tbody>
-                  {isMapDataLoading ? (
-                    <tr><td colSpan="3" className="text-center">Loading data...</td></tr>
+                  {isMapDataLoading ? ( <tr><td colSpan="3" className="text-center">Loading data...</td></tr>
                   ) : (
                     deathTableData.map((item, index) => (
                       <tr key={index}>
