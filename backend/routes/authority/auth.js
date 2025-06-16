@@ -142,6 +142,19 @@ router.post('/register', async (req, res) => {
       });
     }
 
+    const checkAge = await execute(
+      `SELECT get_age(date_of_birth) as "age" FROM citizen
+      WHERE citizenid = :1 `,
+      [citizenID]
+    );
+
+    if (checkAge.rows[0].age < 12) {
+      return res.status(409).json({
+        success: false,
+        message: 'Anda mesti berusia sekurang-kurangnya 12 tahun untuk mendaftar akaun'
+      });
+    }
+
     // Insert the new account
     await execute(
       `INSERT INTO account (citizenID, username, password, statusaccount)

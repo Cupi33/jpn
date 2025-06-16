@@ -126,10 +126,7 @@ const Register = () => {
       const validationResponse = await axios.post('http://localhost:5000/validate-mykad', dataToSend);
 
       if (validationResponse.data.success) {
-        // --- THIS IS THE ADDED LINE ---
         console.log("✅ Validation Successful! Citizen ID from backend:", validationResponse.data.citizenID);
-        // --- END OF ADDED LINE ---
-
         Swal.fire("Disahkan!", "Maklumat Kad Pengenalan anda sah. Sila teruskan untuk mencipta akaun.", "success");
         setCitizenID(validationResponse.data.citizenID);
         setIsValidated(true);
@@ -142,11 +139,30 @@ const Register = () => {
     }
   };
 
-  // handleRegister function remains the same
+  // --- START OF UPDATED handleRegister FUNCTION ---
   const handleRegister = async () => {
-    if (!termsAccepted) return Swal.fire("Perhatian", "Anda mesti bersetuju dengan terma dan syarat.", "warning");
-    if (!username || !password || !confirmPassword) return Swal.fire("Ralat", "Sila lengkapkan nama pengguna dan kata laluan.", "error");
-    if (password !== confirmPassword) return Swal.fire("Ralat", "Kata laluan tidak sepadan.", "error");
+    // --- Validation Block ---
+    if (!termsAccepted) {
+      return Swal.fire("Perhatian", "Anda mesti bersetuju dengan terma dan syarat.", "warning");
+    }
+    if (!username || !password || !confirmPassword) {
+      return Swal.fire("Ralat", "Sila lengkapkan nama pengguna dan kata laluan.", "error");
+    }
+    if (username.length < 5) {
+      return Swal.fire("Ralat Nama Pengguna", "Nama pengguna mesti sekurang-kurangnya 5 aksara.", "error");
+    }
+    if (password.length < 6) {
+      return Swal.fire("Ralat Kata Laluan", "Kata laluan mesti sekurang-kurangnya 6 aksara.", "error");
+    }
+    // Check for at least two numbers in the password
+    const numbersInPassword = password.match(/\d/g) || [];
+    if (numbersInPassword.length < 2) {
+      return Swal.fire("Ralat Kata Laluan", "Kata laluan mesti mengandungi sekurang-kurangnya dua nombor.", "error");
+    }
+    if (password !== confirmPassword) {
+      return Swal.fire("Ralat", "Kata laluan dan konfirmasi kata laluan tidak sepadan.", "error");
+    }
+    // --- End of Validation Block ---
     
     try {
       const response = await axios.post('http://localhost:5000/register', {
@@ -160,14 +176,13 @@ const Register = () => {
         setUsername(''); setPassword(''); setConfirmPassword('');
         setTermsAccepted(false); setIsValidated(false); setCitizenID(null);
       }
-    } catch (error)
-    {
+    } catch (error) {
       const errorMessage = error.response?.data?.message || "Ralat pelayan: Tidak dapat mendaftar.";
       Swal.fire("Pendaftaran Gagal", errorMessage, "error");
     }
   };
+  // --- END OF UPDATED handleRegister FUNCTION ---
 
-  // JSX remains the same
   return (
     <Col lg="6" md="8">
       <Card className="bg-secondary shadow border-0 p-4">
