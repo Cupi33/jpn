@@ -5,12 +5,12 @@ import html2canvas from 'html2canvas';
 
 // --- UPDATED DATA & ASSETS TO MATCH MYKAD SAMPLE ---
 const cardHolderData = {
-  name: 'ABD RAUF BIN HAMSAH',
-  icNumber: '460619-12-5087',
-  address: 'KAMPUNG MASJID\nP O BOX 42\n89007 KENINGAU\nSABAH',
-  gender: 'LELAKI',
+  name: 'LEE TING TING',
+  icNumber: '050619091990',
+  address: 'Taman Tunku 98000 Miri,\n Sarawak',
+  gender: 'PEREMPUAN',
   citizenship: 'WARGANEGARA',
-  religion: 'ISLAM',
+  religion: 'BUDDHA',
   photoUrl: process.env.PUBLIC_URL + '/user.png',
   flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Flag_of_Malaysia.svg/125px-Flag_of_Malaysia.svg.png',
 };

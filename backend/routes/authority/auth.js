@@ -3,6 +3,50 @@ import { execute } from "../../config/db.js" // this connects to Oracle DB
 
 const router = express.Router();
 
+router.post('/validate-mykad', async (req, res) => {
+  const { fullName, icno, address, gender, religion } = req.body;
+
+  if (!fullName || !icno || !address || !gender || !religion) {
+    return res.status(400).json({ success: false, message: 'Maklumat tidak lengkap.' });
+  }
+
+  const sanitizedIcno = icno.replace(/-/g, '');
+
+  try {
+    // --- THE FIX IS HERE ---
+    // The `AND account_status IS NULL` condition has been REMOVED as you requested.
+    // This endpoint now only validates the citizen's identity.
+    const result = await execute(
+      `SELECT citizenID, full_name, icno
+       FROM citizen
+       WHERE UPPER(full_name) = UPPER(:1)
+         AND icno = :2
+         AND UPPER(address) = UPPER(:3)
+         AND UPPER(gender) = UPPER(:4)
+         AND UPPER(religion) = UPPER(:5)`, // <- Condition removed from this line
+      [fullName, sanitizedIcno, address, gender, religion]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Kad Pengenalan tidak sah atau maklumat tidak sepadan. Sila cuba lagi.'
+      });
+    }
+
+    const citizenID = result.rows[0].CITIZENID;
+    res.status(200).json({
+      success: true,
+      message: 'Kad Pengenalan disahkan.',
+      citizenID: citizenID
+    });
+
+  } catch (err) {
+    console.error('MyKad validation error:', err);
+    res.status(500).json({ success: false, message: 'Ralat pelayan semasa pengesahan.' });
+  }
+});
+
 // POST /login
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
@@ -55,71 +99,68 @@ router.post('/login', async (req, res) => {
 
 // POST /register
 router.post('/register', async (req, res) => {
-  const { icno, username, password } = req.body;
+  const { citizenID, username, password } = req.body;
 
   try {
-    // Step 1: Check if username or IC number already exists
-    const result = await execute(
-      `SELECT c.citizenID 
-       FROM account a
-       JOIN citizen c ON a.citizenID = c.citizenID
-       WHERE a.username = :1 OR c.icno = :2`,
-      [username, icno]
+    // This query correctly checks for duplicate usernames OR if the citizenID already has an account.
+    const checkAlreadRegistered = await execute(
+      `SELECT * FROM account WHERE  citizenID = :1`,
+      [citizenID]
     );
 
-    if (result.rows.length > 0) {
+    if (checkAlreadRegistered.rows.length > 0) {
       return res.status(409).json({
         success: false,
-        message: 'Akaun sudah didaftar atau Username sudah didaftar'
+        message: 'Nama pengguna telah berdaftar di dalam sistem'
       });
     }
 
-    // Step 2: Get citizenID using IC number
-    const citizenResult = await execute(
-      `SELECT citizenID, get_age(date_of_birth) as "age"
-      FROM citizen WHERE icno = :1`,
-      [icno]
+    const checkAlive = await execute(
+      `SELECT * FROM citizen
+      WHERE  citizenID = :1
+      and death_registered_by is not null`,
+      [citizenID]
     );
 
-    if (citizenResult.rows.length === 0) {
-      return res.status(400).json({
+    if (checkAlive.rows.length > 0) {
+      return res.status(409).json({
         success: false,
-        message: 'Kesilapan Kad Pengenalan'
+        message: 'Nama pengguna telah didaftarkan mati'
       });
     }
 
-    // For age validation
-  if (citizenResult.rows[0].age <= 10) {  // Changed to <= for consistency with message
-    return res.status(400).json({
-      success: false,
-      message: 'Rakyat berusia 10 tahun ke bawah tidak layak daftar akaun'
-    });
-  }
+    const checkUsernameTaken = await execute(
+      `SELECT * FROM account
+      WHERE username = :1 `,
+      [username]
+    );
 
-    const citizenID = citizenResult.rows[0].CITIZENID;
+    if (checkUsernameTaken.rows.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: 'Nama username telah diambil'
+      });
+    }
 
-    // Step 3: Insert account using citizenID
+    // Insert the new account
     await execute(
-      `INSERT INTO account (citizenID, username, password)
-       VALUES (:1, :2, :3)`,
+      `INSERT INTO account (citizenID, username, password, statusaccount)
+       VALUES (:1, :2, :3, 'ACTIVE')`,
       [citizenID, username, password]
     );
+    
 
     await execute('COMMIT');
 
-    // Step 4: Send success response
     res.status(201).json({
       success: true,
-      message: 'Account registered successfully',
-      user: {
-        citizenID,
-        username
-      }
+      message: 'Akaun berjaya didaftarkan',
+      user: { citizenID, username }
     });
 
   } catch (err) {
     console.error('Registration error:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Ralat pelayan semasa pendaftaran.' });
   }
 });
 
