@@ -23,6 +23,7 @@ import AdminStatisticNewborn from "views/Admin/AdminStatisticNewborn"
 import AdminStatisticDeath from "views/Admin/AdminStatisticDeath";
 import DigitalIDCard from "views/Citizen/DigitalCard";
 import OcrUploader from "views/Citizen/OcrUploader";
+import Kependudukan from "views/Board/Kependudukan";
 
 
 
@@ -105,7 +106,13 @@ const routeGroups = {
         name: "OCR UPLOADER",
         icon: "ni ni-card text-lilac",
         component: <OcrUploader />,
-      }
+      },
+      {
+        path: "/kependudukan",
+        name: "Kependudukan",
+        icon: "ni ni-card text-lilac",
+        component: <Kependudukan />,
+      },
     ],
   },
   applicationCitizen: {

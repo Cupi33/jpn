@@ -13,6 +13,7 @@ import adminStat from './routes/stats/adminStat.js'
 import newbornstat from './routes/stats/newbornStat.js'
 import deathstat from './routes/stats/deathStat.js'
 import apiLZ from './routes/govApi/apiLZ.js'
+import boardstat from './routes/stats/boardstat.js'
 
 const app = express();
 app.use(cors(
@@ -37,6 +38,7 @@ app.use('/inbox',InboxApi);
 app.use('/newbornStat',newbornstat);
 app.use('/deathstat',deathstat);
 app.use('/apiLZ',apiLZ);
+app.use('/board',boardstat);
 
 const PORT = 5000;
 app.listen(PORT, '0.0.0.0', () => {
