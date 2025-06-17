@@ -17,7 +17,7 @@ const PlainNavbar = () => {
     // We use a "transparent" color navbar and expand on "lg" (large) screens
     <Navbar className="navbar-top navbar-horizontal navbar-dark" expand="lg">
       <Container className="px-4">
-        <NavbarBrand to="/plain/dashboard" tag={Link}>
+        <NavbarBrand to="/plain/kependudukan" tag={Link}>
           {/* You can put your app name or logo here */}
           Sistem Informasi
         </NavbarBrand>
@@ -40,7 +40,7 @@ const PlainNavbar = () => {
           <NavItem>
             <NavLink
               className="nav-link-icon"
-              to="/plain/data-permohonan-kp"
+              to="/plain/kadpengenalan"
               tag={Link}
             >
               <span className="nav-link-inner--text">

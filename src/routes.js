@@ -26,6 +26,7 @@ import OcrUploader from "views/Citizen/OcrUploader";
 import Kependudukan from "views/Board/Kependudukan";
 import Kematian from "views/Board/Kematian";
 import KelahiranBayi from "views/Board/KelahiranBayi";
+import KadPengenalan from "views/Board/KadPengenalan";
 
 
 
@@ -120,6 +121,12 @@ const routeGroups = {
         name: "Kelahiran",
         icon: "ni ni-card text-lilac",
         component: <KelahiranBayi />,
+      },
+      {
+        path: "/kadpengenalan",
+        name: "Kad Pengenalan",
+        icon: "ni ni-card text-lilac",
+        component: <KadPengenalan />,
       },
     ],
   },
