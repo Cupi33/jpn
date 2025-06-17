@@ -1,11 +1,14 @@
 // KelahiranBayi.js
 
 import { useEffect, useState } from "react";
-import { Line, Pie, Doughnut, Bar } from "react-chartjs-2"; // Added Bar
+import { Line, Pie, Doughnut, Bar } from "react-chartjs-2";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import { Card, CardHeader, CardBody, Table, Container, Row, Col, Progress, Button, Input } from "reactstrap";
 import Chart from "chart.js";
+
+// Import Modal
+import KelahiranInsightsModal from "../../components/Modals/KelahiranInsightModal"; // Adjust path if needed
 
 // Import configurations from chartAdmin2.js
 import {
@@ -99,28 +102,18 @@ const KelahiranBayi = (props) => {
   const [birthTableData, setBirthTableData] = useState([]);
   const [birthMapData, setBirthMapData] = useState({});
 
+  // State for Modal
+  const [isInsightsModalOpen, setInsightsModalOpen] = useState(false);
+  const [insightsData, setInsightsData] = useState(null);
+  const toggleInsightsModal = () => setInsightsModalOpen(!isInsightsModalOpen);
+
+
   // State for the main overview chart (Births vs Deaths)
   const [birthDeathChartData, setBirthDeathChartData] = useState({
     labels: [],
     datasets: [
-      {
-        label: "Kelahiran Bayi", 
-        data: [], 
-        borderColor: "#2dce89", 
-        backgroundColor: "#2dce89", 
-        pointBackgroundColor: "#2dce89", 
-        pointRadius: 3, 
-        pointHoverRadius: 5,
-      },
-      {
-        label: "Jumlah Kematian", 
-        data: [], 
-        borderColor: "#fb6340", 
-        backgroundColor: "#fb6340", 
-        pointBackgroundColor: "#fb6340", 
-        pointRadius: 3, 
-        pointHoverRadius: 5,
-      },
+      { label: "Kelahiran Bayi", data: [], borderColor: "#2dce89", backgroundColor: "#2dce89", pointBackgroundColor: "#2dce89", pointRadius: 3, pointHoverRadius: 5 },
+      { label: "Jumlah Kematian", data: [], borderColor: "#fb6340", backgroundColor: "#fb6340", pointBackgroundColor: "#fb6340", pointRadius: 3, pointHoverRadius: 5 },
     ],
   });
 
@@ -143,34 +136,18 @@ const KelahiranBayi = (props) => {
   // States for the 5-year trend chart
   const [birthTrendChartData, setBirthTrendChartData] = useState({
     labels: [],
-    datasets: [{ 
-      label: "Kelahiran Bayi", 
-      data: [],
-      backgroundColor: "#11cdef",
-      borderColor: "#11cdef",
-      borderWidth: 2,
-      fill: false
-    }],
+    datasets: [{ label: "Kelahiran Bayi", data: [], backgroundColor: "#11cdef", borderColor: "#11cdef", borderWidth: 2, fill: false }],
   });
   const [birthTrendIndicators, setBirthTrendIndicators] = useState([]);
 
   // States for Application Summary Charts
   const [appDecisionChartData, setAppDecisionChartData] = useState({
     labels: ['Diterima', 'Ditolak'],
-    datasets: [{ 
-      data: [0, 0], 
-      backgroundColor: ['#2dce89', '#f5365c'], 
-      hoverBackgroundColor: ['#2dce89', '#f5365c'] 
-    }],
+    datasets: [{ data: [0, 0], backgroundColor: ['#2dce89', '#f5365c'], hoverBackgroundColor: ['#2dce89', '#f5365c'] }],
   });
   const [rejectionReasonChartData, setRejectionReasonChartData] = useState({
     labels: [],
-    datasets: [{ 
-      label: 'Jumlah Permohonan', 
-      data: [], 
-      backgroundColor: '#fb6340', 
-      borderColor: '#fb6340'
-    }],
+    datasets: [{ label: 'Jumlah Permohonan', data: [], backgroundColor: '#fb6340', borderColor: '#fb6340' }],
   });
 
 
@@ -187,41 +164,23 @@ const KelahiranBayi = (props) => {
         const appSummaryApiData = await appSummaryResponse.json();
         if (appSummaryApiData.success && appSummaryApiData.data) {
           const { total_accept, total_reject, comments } = appSummaryApiData.data;
-          
-          // Update Pie Chart for application decisions
-          setAppDecisionChartData(prevData => ({
-            ...prevData,
-            datasets: [{...prevData.datasets[0], data: [total_accept, total_reject]}]
-          }));
-
-          // --- CORRECTED: Update Bar Chart for rejection reasons, ensuring all categories are shown ---
+          setAppDecisionChartData(prevData => ({ ...prevData, datasets: [{...prevData.datasets[0], data: [total_accept, total_reject]}] }));
           setRejectionReasonChartData({
-            labels: comments.map(c => c.comment_category), // Use the full 'comments' array
-            datasets: [{
-              label: 'Jumlah Permohonan',
-              data: comments.map(c => c.total_comments), // Use the full 'comments' array
-              backgroundColor: '#fb6340', // Color consistent with 'rejection'
-              borderColor: '#fb6340'
-            }]
+            labels: comments.map(c => c.comment_category),
+            datasets: [{ label: 'Jumlah Permohonan', data: comments.map(c => c.total_comments), backgroundColor: '#fb6340', borderColor: '#fb6340' }]
           });
         }
 
         // Fetch birth vs death data for the main chart
         const birthDeathResponse = await fetch("http://localhost:5000/board/birthDeath5Year");
         const birthDeathApiData = await birthDeathResponse.json();
+        let yearLabels = [];
         if (birthDeathApiData.success && birthDeathApiData.stats) {
-          const sortedStats = birthDeathApiData.stats.sort((a, b) => a.year - b.year);
-          const labels = sortedStats.map(item => item.year);
-          const newbornData = sortedStats.map(item => item.total_newborns);
-          const deathData = sortedStats.map(item => item.total_deaths);
-
-          setBirthDeathChartData(prevData => ({
-            labels: labels,
-            datasets: [
-              { ...prevData.datasets[0], data: newbornData },
-              { ...prevData.datasets[1], data: deathData }
-            ]
-          }));
+            const sortedStats = birthDeathApiData.stats.sort((a, b) => a.year - b.year);
+            yearLabels = sortedStats.map(item => item.year);
+            const newbornData = sortedStats.map(item => item.total_newborns);
+            const deathData = sortedStats.map(item => item.total_deaths);
+            setBirthDeathChartData(prevData => ({ labels: yearLabels, datasets: [ { ...prevData.datasets[0], data: newbornData }, { ...prevData.datasets[1], data: deathData } ] }));
         }
 
         // Fetch state-wise birth data
@@ -234,23 +193,19 @@ const KelahiranBayi = (props) => {
             processedMapData[mapKey] = { total: stateApiData.stats[stateKey].total_population, percentage: stateApiData.stats[stateKey].percentage };
           }
           setBirthMapData(processedMapData);
-
           const formattedTableData = Object.entries(stateApiData.stats)
             .map(([stateName, data]) => ({ state: stateName, births: data.total_population, percentage: data.percentage }))
             .sort((a, b) => b.births - a.births);
           setBirthTableData(formattedTableData);
         }
 
-        // Fetch 5-year trend data
+        // Fetch 5-year trend data (and fix the missing year issue)
         const trendResponse = await fetch("http://localhost:5000/newbornStat/newbornTotal5year");
         const trendApiData = await trendResponse.json();
         if (trendApiData.success && trendApiData.stats) {
-          setBirthTrendChartData(prev => ({
-            ...prev,
-            labels: trendApiData.stats.map(item => item.birth_year),
-            datasets: [{ ...prev.datasets[0], data: trendApiData.stats.map(item => item.total_newborn) }]
-          }));
-          setBirthTrendIndicators(trendApiData.stats);
+            const trendStatsWithYears = trendApiData.stats.map((item, index) => ({ ...item, birth_year: yearLabels[index] || 'N/A' }));
+            setBirthTrendChartData(prev => ({ ...prev, labels: yearLabels, datasets: [{ ...prev.datasets[0], data: trendApiData.stats.map(item => item.total_newborn) }] }));
+            setBirthTrendIndicators(trendStatsWithYears);
         }
 
         // Fetch yearly ethnicity data from the new endpoint
@@ -270,6 +225,53 @@ const KelahiranBayi = (props) => {
     fetchAllData();
   }, []);
 
+  // --- Data Processing for Insights Modal ---
+  useEffect(() => {
+    // Ensure all necessary data is loaded before generating insights
+    if (birthTableData.length > 0 && birthDeathChartData.labels.length > 0 && rejectionReasonChartData.labels.length > 0) {
+      // 1. & 2. Most & Fewest Births
+      const mostBirths = {
+        name: birthTableData[0].state,
+        count: birthTableData[0].births,
+      };
+      const fewestBirths = {
+        name: birthTableData[birthTableData.length - 1].state,
+        count: birthTableData[birthTableData.length - 1].births,
+      };
+
+      // 3. Births per year
+      const birthsPerYear = birthDeathChartData.labels.map((year, index) => ({
+        year: year,
+        count: birthDeathChartData.datasets[0].data[index],
+      }));
+      const totalBirths = birthsPerYear.reduce((sum, item) => sum + item.count, 0);
+
+      // 4. Top Rejection Reason
+      const rejectionCounts = rejectionReasonChartData.datasets[0].data;
+      const maxCount = Math.max(...rejectionCounts);
+      const maxIndex = rejectionCounts.indexOf(maxCount);
+      const topRejectionReason = {
+        reason: rejectionReasonChartData.labels[maxIndex] || 'N/A',
+        count: maxCount || 0,
+      };
+
+      // 5. & 6. Generate dynamic analysis text
+      const birthStatusAnalysisText = `Berdasarkan data pendaftaran, majoriti kelahiran yang direkodkan adalah sah taraf. Terdapat corak yang menunjukkan bahawa sebab penolakan utama seperti "${topRejectionReason.reason}" sering berlaku di kawasan bandar yang padat, menandakan keperluan untuk meningkatkan kesedaran tentang prosedur pendaftaran yang betul.`;
+      const overallAnalysisText = `Dalam tempoh 5 tahun, sejumlah ${totalBirths.toLocaleString()} kelahiran telah direkodkan di seluruh Malaysia. ${mostBirths.name} menjadi penyumbang utama dengan ${mostBirths.count.toLocaleString()} kelahiran, manakala ${fewestBirths.name} mencatatkan jumlah terendah. Trend tahunan menunjukkan variasi, memberikan gambaran tentang dinamik populasi negara. Analisis lanjut diperlukan untuk mengkaji faktor-faktor yang mempengaruhi kadar kelahiran di setiap negeri.`;
+
+      // Set the final insights object into state
+      setInsightsData({
+        mostBirths,
+        fewestBirths,
+        birthsPerYear,
+        topRejectionReason,
+        birthStatusAnalysisText,
+        overallAnalysisText,
+      });
+    }
+  }, [birthTableData, birthDeathChartData, rejectionReasonChartData]); // Dependencies ensure this runs when data is ready
+
+
   // --- Data Processing for Gender Chart ---
   useEffect(() => {
     let maleTotal = 0; let femaleTotal = 0;
@@ -285,16 +287,12 @@ const KelahiranBayi = (props) => {
         femaleTotal = stateData.PEREMPUAN.total; 
       }
     }
-    setGenderChartData(prevData => ({ 
-      ...prevData, 
-      datasets: [{ ...prevData.datasets[0], data: [maleTotal, femaleTotal] }] 
-    }));
+    setGenderChartData(prevData => ({ ...prevData, datasets: [{ ...prevData.datasets[0], data: [maleTotal, femaleTotal] }] }));
   }, [selectedGenderState]);
 
-  // --- Data Processing for Ethnicity Chart based on Year and new API structure ---
+  // --- Data Processing for Ethnicity Chart ---
   useEffect(() => {
     if (yearlyRaceData.length === 0) return;
-
     let dataForChart = [0, 0, 0, 0];
     if (selectedEthnicityYear === "ALL") {
       const totals = yearlyRaceData.reduce((acc, yearData) => {
@@ -312,10 +310,7 @@ const KelahiranBayi = (props) => {
         dataForChart = [melayu, cina, india, lain];
       }
     }
-    setEthnicityChartData(prevData => ({ 
-      ...prevData, 
-      datasets: [{ ...prevData.datasets[0], data: dataForChart }] 
-    }));
+    setEthnicityChartData(prevData => ({ ...prevData, datasets: [{ ...prevData.datasets[0], data: dataForChart }] }));
   }, [selectedEthnicityYear, yearlyRaceData]);
 
 
@@ -332,6 +327,16 @@ const KelahiranBayi = (props) => {
                     <h6 className="text-uppercase text-muted ls-1 mb-1">Gambaran Keseluruhan</h6>
                     <h2 className="mb-0">Jumlah Kelahiran Bayi vs Jumlah Kematian</h2>
                   </div>
+                  {/* --- NEW BUTTON --- */}
+                  <div className="col text-right">
+                    <Button
+                      color="primary"
+                      onClick={toggleInsightsModal}
+                      size="sm"
+                    >
+                      Analisis Lanjut
+                    </Button>
+                  </div>
                 </Row>
               </CardHeader>
               <CardBody>
@@ -342,6 +347,8 @@ const KelahiranBayi = (props) => {
             </Card>
           </Col>
         </Row>
+
+        {/* ... (Rest of your JSX code for other rows remains the same) ... */}
 
         {/* ROW 2: DEMOGRAPHIC BREAKDOWN CHARTS */}
         <Row className="mt-5">
@@ -555,6 +562,12 @@ const KelahiranBayi = (props) => {
         </Row>
       </Container>
       <ReactTooltip id="map-tooltip" />
+      {/* --- RENDER THE MODAL --- */}
+      <KelahiranInsightsModal 
+        isOpen={isInsightsModalOpen}
+        toggle={toggleInsightsModal}
+        insights={insightsData}
+      />
     </>
   );
 };
