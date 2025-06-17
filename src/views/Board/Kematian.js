@@ -15,6 +15,7 @@ import {
   deathsByAgeGroupChart,
   stateNameMapping,
 } from "variables/chartAdmin3";
+import { useNavigate } from "react-router-dom";
 
 import geoData from "../../data/malaysia-states.json";
 // NEW: Import the modal component
@@ -72,6 +73,19 @@ const MapChart = ({ data, stateNameMapping }) => {
 
 // --- MAIN DEATH STATISTIC COMPONENT ---
 const Kematian = (props) => {
+
+  const navigate = useNavigate();
+    useEffect(() => {
+      const staffID = sessionStorage.getItem('staffID');
+      const username = sessionStorage.getItem('username');
+  
+      // If staffID or username is not found, redirect to login page
+      if (!staffID || !username) {
+        console.log("Authentication credentials not found. Redirecting...");
+        navigate('/authAdmin/loginAdmin');
+      }
+    }, [navigate]);
+
   // NEW: State for the modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [insightsData, setInsightsData] = useState(null);

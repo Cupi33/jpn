@@ -6,6 +6,7 @@ import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simp
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import { Card, CardHeader, CardBody, Table, Container, Row, Col, Progress, Button, Input } from "reactstrap";
 import Chart from "chart.js";
+import { useNavigate } from "react-router-dom";
 
 // Import Modal
 import KelahiranInsightsModal from "../../components/Modals/KelahiranInsightModal"; // Adjust path if needed
@@ -19,6 +20,7 @@ import {
   ageGroupChart,
   maritalStatusChart,
 } from "variables/chartAdmin2";
+
 
 import geoData from "../../data/malaysia-states.json";
 
@@ -99,6 +101,19 @@ const MapChart = ({ data, stateNameMapping }) => {
 
 // --- MAIN KELAHIRAN BAYI COMPONENT ---
 const KelahiranBayi = (props) => {
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    const staffID = sessionStorage.getItem('staffID');
+    const username = sessionStorage.getItem('username');
+
+    // If staffID or username is not found, redirect to login page
+    if (!staffID || !username) {
+      console.log("Authentication credentials not found. Redirecting...");
+      navigate('/authAdmin/loginAdmin');
+    }
+  }, [navigate]);
+
   const [birthTableData, setBirthTableData] = useState([]);
   const [birthMapData, setBirthMapData] = useState({});
 

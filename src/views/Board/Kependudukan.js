@@ -7,6 +7,7 @@ import {
   Card, CardHeader, CardBody, Table, Container, Row, Col, Progress, Button, Input, CardTitle
 } from "reactstrap";
 import Chart from "chart.js";
+import { useNavigate } from "react-router-dom";
 
 // Import configurations and data-fetching logic
 import {
@@ -76,6 +77,19 @@ const MapChart = ({ data, stateNameMapping }) => {
 
 // --- MAIN KEPENDUDUKAN COMPONENT ---
 const Kependudukan = (props) => {
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    const staffID = sessionStorage.getItem('staffID');
+    const username = sessionStorage.getItem('username');
+
+    // If staffID or username is not found, redirect to login page
+    if (!staffID || !username) {
+      console.log("Authentication credentials not found. Redirecting...");
+      navigate('/authAdmin/loginAdmin');
+    }
+  }, [navigate]);
+  
   // --- STATE MANAGEMENT ---
   const [populationTableData, setPopulationTableData] = useState([]);
   const [populationMapData, setPopulationMapData] = useState({});

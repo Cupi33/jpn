@@ -3,6 +3,7 @@ import axios from "axios"; // Import axios for API calls
 import {  Pie, Bar } from "react-chartjs-2";
 import { Card, CardHeader, CardBody, Container, Row, Col } from "reactstrap";
 import Chart from "chart.js";
+import { useNavigate } from "react-router-dom";
 
 // Import configurations from a chart configuration file
 import {
@@ -15,6 +16,18 @@ import {
 
 // --- MAIN IDENTITY CARD STATISTIC COMPONENT ---
 const KadPengenalan = (props) => {
+
+  const navigate = useNavigate();
+    useEffect(() => {
+      const staffID = sessionStorage.getItem('staffID');
+      const username = sessionStorage.getItem('username');
+  
+      // If staffID or username is not found, redirect to login page
+      if (!staffID || !username) {
+        console.log("Authentication credentials not found. Redirecting...");
+        navigate('/authAdmin/loginAdmin');
+      }
+    }, [navigate]);
 
   // State for the Performance Chart (from API)
   const [performanceChartData, setPerformanceChartData] = useState({
