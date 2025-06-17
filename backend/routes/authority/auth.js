@@ -182,7 +182,7 @@ router.post('/loginStaff', async (req, res) => {
 
   try {
     const result = await execute(
-      `SELECT staffID AS "staffID", username AS "username" 
+      `SELECT staffID AS "staffID", username AS "username", role AS "role" 
         FROM STAFF 
         WHERE username = :1 AND password = :2`,
       [username, password]  // this is NOT safe for real apps, but okay for learning
@@ -201,6 +201,7 @@ router.post('/loginStaff', async (req, res) => {
       user: {
         id: user.staffID,         // match your table columns
         username: user.username,
+        role : user.role
       }
     });
 
