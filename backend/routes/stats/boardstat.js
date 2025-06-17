@@ -8,7 +8,7 @@ router.get('/kependudukan10tahun', async (req, res) => {
     // Query all three views
     const [deathResult, newbornResult, ageResult] = await Promise.all([
       execute(`SELECT * FROM DEATH_TOTAL5YEAR`),
-      execute(`SELECT * FROM NEWBORN_TOTAL_5YEAR`),
+      execute(`SELECT * FROM NEWBORN_TOTAL_5YEAR_STATE`),
       execute(`SELECT * FROM AVG_AGE_STATES`)
     ]);
 
@@ -160,6 +160,100 @@ router.get('/deathAppSummary', async (req, res) => {
   } catch (err) {
     console.error('Error executing /deathReviewSummary API:', err);
     res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.get('/birthDeath5Year', async (req, res) => {
+  try {
+    const [newbornResult, deathResult] = await Promise.all([
+      execute(`SELECT * FROM TOTAL_NEWBORN_5YEARS`),
+      execute(`SELECT DEATH_YEAR, TOTAL_DEATHS FROM DEATH_PER_YEAR`)
+    ]);
+
+    if (!newbornResult.rows || !deathResult.rows) {
+      return res.status(400).json({ success: false, message: 'Query returned no results' });
+    }
+
+    // Map death data by year
+    const deathMap = {};
+    deathResult.rows.forEach(row => {
+      const year = row.DEATH_YEAR || row.death_year;
+      deathMap[year] = Number(row.TOTAL_DEATHS || row.total_deaths || 0);
+    });
+
+    // Merge newborn + death by year
+    const stats = newbornResult.rows.map(row => {
+      const year = row.BIRTH_YEAR || row.birth_year;
+      const total_newborns = Number(row.TOTAL_NEWBORNS || row.total_newborns || 0);
+      const total_deaths = deathMap[year] || 0;
+
+      return {
+        year,
+        total_newborns,
+        total_deaths
+      };
+    });
+
+    res.json({
+      success: true,
+      message: 'Newborn and death statistics per year retrieved successfully',
+      stats
+    });
+
+  } catch (err) {
+    console.error('Error executing /birthDeath5Year API:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.get('/newbornAppSummary', async (req, res) => {
+  try {
+    const [decisionResult, commentResult] = await Promise.all([
+      execute(`SELECT * FROM TOTAL_DECISION_NEWBORN`),     // ✅ Adjusted view
+      execute(`SELECT * FROM COMMENT_REJECT_NEWBORN`)      // ✅ Adjusted view
+    ]);
+
+    if (!decisionResult.rows || !commentResult.rows) {
+      return res.status(400).json({
+        success: false,
+        message: 'Query returned no results'
+      });
+    }
+
+    let total_accept = 0;
+    let total_reject = 0;
+
+    decisionResult.rows.forEach(row => {
+      const decision = (row.DECISION || row.decision || '').toUpperCase();
+      const count = Number(row.TOTAL_APPLICATIONS || row.total_applications || 0);
+      if (decision === 'ACCEPT') {
+        total_accept = count;
+      } else if (decision === 'REJECT') {
+        total_reject = count;
+      }
+    });
+
+    const comments = commentResult.rows.map(row => ({
+      comment_category: row.COMMENT_CATEGORY || row.comment_category,
+      total_comments: Number(row.TOTAL_COMMENTS || row.total_comments || 0)
+    }));
+
+    res.json({
+      success: true,
+      message: 'Newborn review summary retrieved successfully',
+      data: {
+        total_accept,
+        total_reject,
+        comments
+      }
+    });
+
+  } catch (err) {
+    console.error('Error executing /newbornAppSummary API:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
   }
 });
 

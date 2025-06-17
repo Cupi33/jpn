@@ -25,6 +25,7 @@ import DigitalIDCard from "views/Citizen/DigitalCard";
 import OcrUploader from "views/Citizen/OcrUploader";
 import Kependudukan from "views/Board/Kependudukan";
 import Kematian from "views/Board/Kematian";
+import KelahiranBayi from "views/Board/KelahiranBayi";
 
 
 
@@ -113,6 +114,12 @@ const routeGroups = {
         name: "Kematian",
         icon: "ni ni-card text-lilac",
         component: <Kematian />,
+      },
+      {
+        path: "/kelahiran",
+        name: "Kelahiran",
+        icon: "ni ni-card text-lilac",
+        component: <KelahiranBayi />,
       },
     ],
   },

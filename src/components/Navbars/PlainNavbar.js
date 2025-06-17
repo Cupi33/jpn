@@ -51,7 +51,7 @@ const PlainNavbar = () => {
           <NavItem>
             <NavLink
               className="nav-link-icon"
-              to="/plain/data-kelahiran"
+              to="/plain/kelahiran"
               tag={Link}
             >
               <span className="nav-link-inner--text">Data Kelahiran Bayi</span>
