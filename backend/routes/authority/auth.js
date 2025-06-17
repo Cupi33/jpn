@@ -1,7 +1,11 @@
+// --- START OF FILE auth.js ---
+
 import express from 'express';
+import bcrypt from 'bcrypt';
 import { execute } from "../../config/db.js" // this connects to Oracle DB
 
 const router = express.Router();
+const saltRounds = 10; // Standard cost factor for bcrypt
 
 router.post('/validate-mykad', async (req, res) => {
   const { fullName, icno, address, gender, religion } = req.body;
@@ -13,9 +17,6 @@ router.post('/validate-mykad', async (req, res) => {
   const sanitizedIcno = icno.replace(/-/g, '');
 
   try {
-    // --- THE FIX IS HERE ---
-    // The `AND account_status IS NULL` condition has been REMOVED as you requested.
-    // This endpoint now only validates the citizen's identity.
     const result = await execute(
       `SELECT citizenID, full_name, icno
        FROM citizen
@@ -23,7 +24,7 @@ router.post('/validate-mykad', async (req, res) => {
          AND icno = :2
          AND UPPER(address) = UPPER(:3)
          AND UPPER(gender) = UPPER(:4)
-         AND UPPER(religion) = UPPER(:5)`, // <- Condition removed from this line
+         AND UPPER(religion) = UPPER(:5)`,
       [fullName, sanitizedIcno, address, gender, religion]
     );
 
@@ -47,53 +48,91 @@ router.post('/validate-mykad', async (req, res) => {
   }
 });
 
-// POST /login
+// POST /login (*** CORRECTED LOGIC FLOW ***)
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
+  console.log(`Extracted username: [${username}] | Extracted password: [${password}]`);
+
+  if (!username || !password) {
+    return res.status(400).json({ success: false, message: 'Username atau kata laluan tidak diberikan.' });
+  }
 
   try {
-    const result = await execute(
-      `SELECT citizenID AS "citizenID", username AS "username" 
-        FROM account 
-        WHERE username = :1 AND password = :2`,
-      [username, password]  // this is NOT safe for real apps, but okay for learning
+    // --- STEP 1: TRY LEGACY LOGIN ---
+    const legacyResult = await execute(
+      `SELECT citizenID AS "citizenID", username AS "username"
+       FROM account
+       WHERE UPPER(username) = UPPER(:1) AND password = hash_password(:2)`,
+      [username, password]
     );
 
-    if (result.rows.length === 0) 
-      {
-      return res.status(401).json({ success: false, message: 'Salah username atau kata laluan' });
+    console.log('[RESULT-LEGACY] Rows returned:', legacyResult.rows.length);
+
+    if (legacyResult.rows.length > 0) {
+      const user = legacyResult.rows[0];
+
+      // Check account status BEFORE upgrading password
+      const statusResult = await execute(`SELECT statusaccount FROM account WHERE citizenID = :1`, [user.citizenID]);
+      if (statusResult.rows.length > 0 && statusResult.rows[0].STATUSACCOUNT === 'INACTIVE') {
+        console.log(`[FAILURE-LEGACY] Account for user ID ${user.citizenID} is INACTIVE.`);
+        return res.status(401).json({ success: false, message: 'Akaun Tidak Aktif' });
       }
 
-      const user = result.rows[0];
-      const citizenID = user.citizenID;
+      // Upgrade password to bcrypt in the background (no need to await if not critical for this response)
+      console.log(`[UPGRADE-LEGACY] Upgrading password for user ID: ${user.citizenID}...`);
+      bcrypt.hash(password, saltRounds).then(newHashedPassword => {
+        execute(
+          `UPDATE account SET password = :1 WHERE citizenID = :2`,
+          [newHashedPassword, user.citizenID]
+        ).then(() => execute('COMMIT')).then(() => {
+            console.log(`[UPGRADE-LEGACY] Password for user ID ${user.citizenID} upgraded successfully.`);
+        }).catch(err => console.error("Password upgrade failed:", err));
+      });
+      
+      // *** THE FIX IS HERE: Immediately return success response ***
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        user: { id: user.citizenID, username: user.username }
+      });
+    }
 
-      const result2 = await execute(
-      `SELECT * 
-        FROM CITIZEN CT
-        JOIN ACCOUNT AC
-        ON CT.CITIZENID = AC.CITIZENID
-        WHERE CT.CITIZENID = :citizenID AND AC.STATUSACCOUNT = 'INACTIVE' 
-        `,
-      [citizenID] 
+
+    // --- STEP 2: TRY MODERN BCRYPT LOGIN ---
+    const modernResult = await execute(
+      `SELECT citizenID AS "citizenID", username AS "username", password AS "password"
+       FROM account
+       WHERE UPPER(username) = UPPER(:1)`,
+      [username]
     );
 
-    if (result2.rows.length > 0) 
-      {
-      return res.status(401).json({ success: false, message: 'Akaun Tidak Aktif' });
-      }
+    if (modernResult.rows.length > 0) {
+      const user = modernResult.rows[0];
+      if (user.password && user.password.startsWith('$2b$')) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (isMatch) {
+          console.log(`[SUCCESS-MODERN] Login successful for user ID: ${user.citizenID}.`);
+          // Check account status
+           const statusResult = await execute(`SELECT statusaccount FROM account WHERE citizenID = :1`, [user.citizenID]);
+          if (statusResult.rows.length > 0 && statusResult.rows[0].STATUSACCOUNT === 'INACTIVE') {
+            return res.status(401).json({ success: false, message: 'Akaun Tidak Aktif' });
+          }
 
-    res.json({
-      success: true,
-      message: 'Login successful',
-      user: {
-        id: user.citizenID,         // match your table columns
-        username: user.username,
+          return res.json({
+            success: true,
+            message: 'Login successful',
+            user: { id: user.citizenID, username: user.username }
+          });
+        }
       }
-    });
+    }
+
+    // --- STEP 3: BOTH FAILED ---
+    console.log('[FAILURE] Both legacy and modern login checks failed.');
+    return res.status(401).json({ success: false, message: 'Salah username atau kata laluan' });
 
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error during login process.' });
   }
 });
 
@@ -102,66 +141,38 @@ router.post('/register', async (req, res) => {
   const { citizenID, username, password } = req.body;
 
   try {
-    // This query correctly checks for duplicate usernames OR if the citizenID already has an account.
     const checkAlreadRegistered = await execute(
-      `SELECT * FROM account WHERE  citizenID = :1`,
-      [citizenID]
+      `SELECT * FROM account WHERE  citizenID = :1`, [citizenID]
     );
-
     if (checkAlreadRegistered.rows.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: 'Nama pengguna telah berdaftar di dalam sistem'
-      });
+      return res.status(409).json({ success: false, message: 'Nama pengguna telah berdaftar di dalam sistem' });
     }
-
     const checkAlive = await execute(
-      `SELECT * FROM citizen
-      WHERE  citizenID = :1
-      and death_registered_by is not null`,
-      [citizenID]
+      `SELECT * FROM citizen WHERE citizenID = :1 and death_registered_by is not null`, [citizenID]
     );
-
     if (checkAlive.rows.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: 'Nama pengguna telah didaftarkan mati'
-      });
+      return res.status(409).json({ success: false, message: 'Nama pengguna telah didaftarkan mati' });
     }
-
     const checkUsernameTaken = await execute(
-      `SELECT * FROM account
-      WHERE username = :1 `,
-      [username]
+      `SELECT * FROM account WHERE username = :1 `, [username]
     );
-
     if (checkUsernameTaken.rows.length > 0) {
-      return res.status(409).json({
-        success: false,
-        message: 'Nama username telah diambil'
-      });
+      return res.status(409).json({ success: false, message: 'Nama username telah diambil' });
     }
-
     const checkAge = await execute(
-      `SELECT get_age(date_of_birth) as "age" FROM citizen
-      WHERE citizenid = :1 `,
-      [citizenID]
+      `SELECT get_age(date_of_birth) as "age" FROM citizen WHERE citizenid = :1 `, [citizenID]
     );
-
     if (checkAge.rows[0].age < 12) {
-      return res.status(409).json({
-        success: false,
-        message: 'Anda mesti berusia sekurang-kurangnya 12 tahun untuk mendaftar akaun'
-      });
+      return res.status(409).json({ success: false, message: 'Anda mesti berusia sekurang-kurangnya 12 tahun untuk mendaftar akaun' });
     }
 
-    // Insert the new account
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     await execute(
       `INSERT INTO account (citizenID, username, password, statusaccount)
        VALUES (:1, :2, :3, 'ACTIVE')`,
-      [citizenID, username, password]
+      [citizenID, username, hashedPassword]
     );
-    
 
     await execute('COMMIT');
 
@@ -179,29 +190,27 @@ router.post('/register', async (req, res) => {
 
 router.post('/loginStaff', async (req, res) => {
   const { username, password } = req.body;
-
   try {
     const result = await execute(
       `SELECT staffID AS "staffID", username AS "username", role AS "role" 
         FROM STAFF 
         WHERE username = :1 AND password = :2`,
-      [username, password]  // this is NOT safe for real apps, but okay for learning
+      [username, password]
     );
 
-    if (result.rows.length === 0) 
-      {
+    if (result.rows.length === 0) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
-      }
+    }
 
-      const user = result.rows[0];
+    const user = result.rows[0];
 
     res.json({
       success: true,
       message: 'Login successful',
       user: {
-        id: user.staffID,         // match your table columns
+        id: user.staffID,
         username: user.username,
-        role : user.role
+        role: user.role
       }
     });
 
@@ -212,79 +221,74 @@ router.post('/loginStaff', async (req, res) => {
 });
 
 router.post('/changeUsername', async (req, res) => {
-  const { username, citizenID} = req.body;
-
-  try {
-    const result = await execute(
-      `SELECT *
-        FROM account 
-        WHERE username = :1 `,
-      [username]  
-    );
-
-    if (result.rows.length > 0) 
-      {
-      return res.status(401).json({ success: false, message: 'Username sudah diguna penggua lain' });
-      }
-
-
-      const result2 = await execute(
-      `UPDATE ACCOUNT
-      SET username = :1
-      WHERE CITIZENID = :2
-        `,
-      [username, citizenID] 
-    );
-
-    if (result2.rowsAffected === 0) {
-  return res.status(404).json({
-    success: false,
-    message: 'Citizen ID tidak dijumpai atau tiada perubahan berlaku',
-  });
-}
-
-    res.json({
-      success: true,
-      message: 'Username berjaya diubah',
-    });
-
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+    const { username, citizenID} = req.body;
+    try {
+        const result = await execute(`SELECT * FROM account WHERE username = :1`, [username]);
+        if (result.rows.length > 0) {
+            return res.status(401).json({ success: false, message: 'Username sudah diguna penggua lain' });
+        }
+        const result2 = await execute(`UPDATE ACCOUNT SET username = :1 WHERE CITIZENID = :2`, [username, citizenID]);
+        if (result2.rowsAffected === 0) {
+            return res.status(404).json({ success: false, message: 'Citizen ID tidak dijumpai atau tiada perubahan berlaku' });
+        }
+        res.json({ success: true, message: 'Username berjaya diubah' });
+    } catch (err) {
+        console.error('Change username error:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 });
 
 router.post('/changePassword', async (req, res) => {
   const { oldpassword, newpassword, username } = req.body;
 
   try {
-    // Step 1: Check if old password matches
-    const result = await execute(
-      `SELECT * FROM account WHERE username = :1 AND password = :2`,
+    let passwordIsValid = false;
+    let userAccount = null;
+
+    // First, check if the old password is a legacy hash
+    const legacyCheck = await execute(
+      `SELECT * FROM account WHERE UPPER(username) = UPPER(:1) AND password = hash_password(:2)`,
       [username, oldpassword]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ success: false, message: 'Salah kata laluan' });
+    if (legacyCheck.rows.length > 0) {
+      passwordIsValid = true;
+      userAccount = legacyCheck.rows[0];
+    } else {
+      // If not, check if it's a modern bcrypt hash
+      const modernCheck = await execute(
+        `SELECT * FROM account WHERE UPPER(username) = UPPER(:1)`,
+        [username]
+      );
+      if (modernCheck.rows.length > 0) {
+        userAccount = modernCheck.rows[0];
+        if (userAccount.PASSWORD && userAccount.PASSWORD.startsWith('$2b$')) {
+          const isMatch = await bcrypt.compare(oldpassword, userAccount.PASSWORD);
+          if (isMatch) {
+            passwordIsValid = true;
+          }
+        }
+      }
+    }
+    
+    // If neither method validated the old password, fail.
+    if (!passwordIsValid) {
+      return res.status(401).json({ success: false, message: 'Salah kata laluan lama' });
     }
 
-    if(oldpassword === newpassword)
-    {
-      return res.status(401).json({ success: false, message: 'Sila gunakan kata laluan yang berbeza daripada kata laluan sebelumnya' });
+    // Now, proceed with the password change
+    if (oldpassword === newpassword) {
+      return res.status(400).json({ success: false, message: 'Sila gunakan kata laluan yang berbeza daripada kata laluan sebelumnya' });
     }
 
-    // Step 2: Update the password
-    const result2 = await execute(
-      `UPDATE account SET password = :1 WHERE username = :2`,
-      [newpassword, username]
+    const hashedNewPassword = await bcrypt.hash(newpassword, saltRounds);
+    
+    await execute(
+      `UPDATE account SET password = :1 WHERE UPPER(username) = UPPER(:2)`,
+      [hashedNewPassword, username]
     );
-
-    if (result2.rowsAffected === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'USERNAME TIDAK DIJUMPAI',
-      });
-    }
+    
+    await execute('COMMIT');
 
     res.json({
       success: true,
@@ -298,38 +302,27 @@ router.post('/changePassword', async (req, res) => {
 });
 
 router.get('/validMykad', async (req, res) => {
-
-  const { citizenID } = req.query;
-  try {
-    const result = await execute(`
-      SELECT valid_mykad(:1) from dual
-    `,[citizenID]);
-
-    
-    
-    res.json({ 
-      success: true, 
-      message: 'Query Successful', 
-      stat: result.rows 
-    });
-
-  } catch (err) {
-    console.error('Retrieval error for /validMykad:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
+    const { citizenID } = req.query;
+    try {
+        const result = await execute(`SELECT valid_mykad(:1) from dual`, [citizenID]);
+        res.json({ success: true, message: 'Query Successful', stat: result.rows });
+    } catch (err) {
+        console.error('Retrieval error for /validMykad:', err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
 });
 
+// POST /forgetPasswordCheck
 router.post('/forgetPasswordCheck', async (req, res) => {
   const { icno, username, password } = req.body;
 
   try {
-    // Step 1: Check if username or IC number exists
     const result = await execute(
       `SELECT ac.citizenID as CITIZENID
       FROM citizen ct
       join account ac
       on ct.citizenid = ac.citizenid
-      WHERE UPPER(ac.username) = UPPER(:1) 
+      WHERE UPPER(ac.username) = UPPER(:1)
         AND ct.icno = :2
         AND ct.death_registered_by IS NULL`,
       [username, icno]
@@ -343,16 +336,15 @@ router.post('/forgetPasswordCheck', async (req, res) => {
     }
 
     const citizenID = result.rows[0].CITIZENID;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Step 2: Update account password
     await execute(
       `UPDATE ACCOUNT
       SET PASSWORD = :1
       WHERE CITIZENID = :2`,
-      [password, citizenID] // replace 'password' with 'hashedPassword' if hashing
+      [hashedPassword, citizenID]
     );
 
-    // Optional: Commit depending on your DB setup
     await execute('COMMIT');
 
     res.status(200).json({
