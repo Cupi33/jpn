@@ -66,6 +66,17 @@ const PlainNavbar = () => {
               <span className="nav-link-inner--text">Data Kematian</span>
             </NavLink>
           </NavItem>
+          {/* START: Added Log Keluar NavItem */}
+          <NavItem>
+            <NavLink
+              className="nav-link-icon"
+              to="/authAdmin/loginAdmin"
+              tag={Link}
+            >
+              <span className="nav-link-inner--text">Log Keluar</span>
+            </NavLink>
+          </NavItem>
+          {/* END: Added Log Keluar NavItem */}
         </Nav>
       </Container>
     </Navbar>
