@@ -5,10 +5,10 @@ import html2canvas from 'html2canvas';
 
 // --- UPDATED DATA & ASSETS TO MATCH MYKAD SAMPLE ---
 const cardHolderData = {
-  name: 'Zahra Binti Azlan',
-  icNumber: '120912063190',
-  address: 'Taman Indah 43000 Kajang,\n Selangor',
-  gender: 'PEREMPUAN',
+  name: 'Mohd Asri Bin Hashim',
+  icNumber: '830412138839',
+  address: 'Taman Meru Bestari, 30020 Ipoh,\n Perak',
+  gender: 'LELAKI',
   citizenship: 'WARGANEGARA',
   religion: 'ISLAM',
   photoUrl: process.env.PUBLIC_URL + '/user.png',
