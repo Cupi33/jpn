@@ -257,4 +257,131 @@ router.get('/newbornAppSummary', async (req, res) => {
   }
 });
 
+
+router.get('/icApplicationSummary', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM TOTAL_ICAPP_12MONTHS_DECISION`);
+
+    if (!result.rows || result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No IC application data found for the past 12 months'
+      });
+    }
+
+    // Map short codes to user-friendly descriptions
+    const reasonMap = {
+      ha: 'Kehilangan Kad',
+      ta: 'Tukar Alamat',
+      mykid: 'Tukar Daripada MYKID ke MYKAD'
+    };
+
+    const stats = result.rows.map(row => {
+      const rawReason = (row.REASON || row.reason || '').toLowerCase();
+      const description = reasonMap[rawReason] || 'Tidak Diketahui';
+      return {
+        reason: description,
+        total_applications: Number(row.TOTAL_APPLICATIONS || row.total_applications || 0),
+        total_accepted: Number(row.TOTAL_ACCEPTED || row.total_accepted || 0),
+        total_rejected: Number(row.TOTAL_REJECTED || row.total_rejected || 0)
+      };
+    });
+
+    res.json({
+      success: true,
+      message: 'IC application summary retrieved successfully',
+      data: stats
+    });
+
+  } catch (err) {
+    console.error('Error fetching IC application summary:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.get('/icRejectComments', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM COMMENT_REJECT_IC`);
+
+    if (!result.rows || result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No IC rejection comment data found'
+      });
+    }
+
+    const comments = result.rows.map(row => ({
+      comment_category: row.COMMENT_CATEGORY || row.comment_category,
+      total_comments: Number(row.TOTAL_COMMENTS || row.total_comments || 0)
+    }));
+
+    res.json({
+      success: true,
+      message: 'IC rejection comment summary retrieved successfully',
+      data: comments
+    });
+
+  } catch (err) {
+    console.error('Error fetching IC rejection comments:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.get('/icApplicationByGender', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM ICAPP_REVIEW_GENDER`);
+
+    if (!result.rows || result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No IC application data found by gender'
+      });
+    }
+
+    const data = result.rows.map(row => ({
+      gender: (row.GENDER || row.gender || '').toUpperCase(),
+      total_ic_applications: Number(row.TOTAL_IC_APPLICATIONS || row.total_ic_applications || 0),
+      avg_age: parseFloat((row.AVG_AGE || row.avg_age || 0).toFixed(2))
+    }));
+
+    res.json({
+      success: true,
+      message: 'IC application statistics by gender retrieved successfully',
+      data
+    });
+
+  } catch (err) {
+    console.error('Error fetching IC application stats by gender:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+router.get('/icApplicationByAgeGroup', async (req, res) => {
+  try {
+    const result = await execute(`SELECT * FROM AGE_GROUP_ICAPP`);
+
+    if (!result.rows || result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No IC application data found by age group'
+      });
+    }
+
+    const data = result.rows.map(row => ({
+      age_group: row.AGE_GROUP || row.age_group,
+      total_ic_applications: Number(row.TOTAL_IC_APPLICATIONS || row.total_ic_applications || 0)
+    }));
+
+    res.json({
+      success: true,
+      message: 'IC application statistics by age group retrieved successfully',
+      data
+    });
+
+  } catch (err) {
+    console.error('Error fetching IC application data by age group:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 export default router;
