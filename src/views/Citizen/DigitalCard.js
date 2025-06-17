@@ -5,12 +5,12 @@ import html2canvas from 'html2canvas';
 
 // --- UPDATED DATA & ASSETS TO MATCH MYKAD SAMPLE ---
 const cardHolderData = {
-  name: 'LEE TING TING',
-  icNumber: '050619091990',
-  address: 'Taman Tunku 98000 Miri,\n Sarawak',
+  name: 'Zahra Binti Azlan',
+  icNumber: '120912063190',
+  address: 'Taman Indah 43000 Kajang,\n Selangor',
   gender: 'PEREMPUAN',
   citizenship: 'WARGANEGARA',
-  religion: 'BUDDHA',
+  religion: 'ISLAM',
   photoUrl: process.env.PUBLIC_URL + '/user.png',
   flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Flag_of_Malaysia.svg/125px-Flag_of_Malaysia.svg.png',
 };

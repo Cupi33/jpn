@@ -18,7 +18,7 @@ const AdminNavbar = () => {
     <>
       <Navbar className="navbar-top navbar-horizontal navbar-dark" expand="md">
         <Container className="px-4">
-          <NavbarBrand to="/" tag={Link}>
+          <NavbarBrand to="/adminMenu/dashboard" tag={Link}>
             <img
               alt="..."
               src={require("../../assets/img/icons/common/logo.png")}
@@ -32,7 +32,7 @@ const AdminNavbar = () => {
             <div className="navbar-collapse-header d-md-none">
               <Row>
                 <Col className="collapse-brand" xs="6">
-                  <Link to="/authCitizen/MenuUtama">
+                  <Link to="/adminMenu/dashboard">
                     <img
                       alt="..."
                       src={require("../../assets/img/icons/common/logo.png")}

@@ -50,7 +50,7 @@ const CitizenMenu = (props) => {
         routes={routes}
         logo={{
           innerLink: "/citizenMenu/index",
-          imgSrc: require("../assets/img/brand/argon-react.png"),
+          imgSrc: require("../assets/img/icons/common/logo.png"),
           imgAlt: "...",
         }}
       />
