@@ -348,7 +348,7 @@ const handleViewDocument = async () => {
                               </Button>
                               <Button 
                                 color="secondary" 
-                                onClick={() => window.open(`http://localhost:5000/newbornapply/document/${appID}?appType=IC`, '_blank')}
+                                onClick={() => window.open(`http://localhost:5000/newbornapply/document/${appID}?appType=${appType}`, '_blank')}
                                 size="sm"
                               >
                                 Download
