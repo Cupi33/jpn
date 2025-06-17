@@ -248,15 +248,15 @@ const KelahiranBayi = (props) => {
 
       // 4. Top Rejection Reason
       const rejectionCounts = rejectionReasonChartData.datasets[0].data;
-      const maxCount = Math.max(...rejectionCounts);
+      const maxCount = rejectionCounts.length > 0 ? Math.max(...rejectionCounts) : 0;
       const maxIndex = rejectionCounts.indexOf(maxCount);
       const topRejectionReason = {
         reason: rejectionReasonChartData.labels[maxIndex] || 'N/A',
         count: maxCount || 0,
       };
 
-      // 5. & 6. Generate dynamic analysis text
-      const birthStatusAnalysisText = `Berdasarkan data pendaftaran, majoriti kelahiran yang direkodkan adalah sah taraf. Terdapat corak yang menunjukkan bahawa sebab penolakan utama seperti "${topRejectionReason.reason}" sering berlaku di kawasan bandar yang padat, menandakan keperluan untuk meningkatkan kesedaran tentang prosedur pendaftaran yang betul.`;
+      // 5. & 6. Generate dynamic analysis text (CORRECTED)
+      const birthStatusAnalysisText = `Walaupun majoriti permohonan pendaftaran diterima, isu penolakan masih menjadi satu cabaran. Sebab penolakan utama, iaitu "${topRejectionReason.reason}" (${topRejectionReason.count.toLocaleString()} kes), menyumbang kepada sebahagian besar permohonan yang gagal. Ini menandakan bahawa proses pengumpulan dan pengesahan dokumen merupakan halangan utama bagi pemohon, dan usaha untuk mempermudah atau memberi panduan yang lebih jelas boleh membantu mengurangkan kadar penolakan pada masa hadapan.`;
       const overallAnalysisText = `Dalam tempoh 5 tahun, sejumlah ${totalBirths.toLocaleString()} kelahiran telah direkodkan di seluruh Malaysia. ${mostBirths.name} menjadi penyumbang utama dengan ${mostBirths.count.toLocaleString()} kelahiran, manakala ${fewestBirths.name} mencatatkan jumlah terendah. Trend tahunan menunjukkan variasi, memberikan gambaran tentang dinamik populasi negara. Analisis lanjut diperlukan untuk mengkaji faktor-faktor yang mempengaruhi kadar kelahiran di setiap negeri.`;
 
       // Set the final insights object into state
