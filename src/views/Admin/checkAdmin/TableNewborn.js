@@ -19,198 +19,222 @@ import {
   import axios from "axios";
   
   const TableNewborn = () => {
-
     const location = useLocation();
+    const navigate = useNavigate();
+    
     const [isLoading, setIsLoading] = useState(true);
     const [application, setApplication] = useState(null);
     const [error, setError] = useState(null);
     const appType = "NEWBORN"; // initialize appType
 
+    // State for the new comment section
+    const [selectedCommentOption, setSelectedCommentOption] = useState("");
+    const [customComment, setCustomComment] = useState("");
 
-const [isPdfLoading, setIsPdfLoading] = useState(false);
-const [pdfError, setPdfError] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isPdfLoading, setIsPdfLoading] = useState(false);
+    const [pdfError, setPdfError] = useState(null);
 
     // Get appID from URL query parameters
-  const queryParams = new URLSearchParams(location.search);
-  const appID = queryParams.get('appID');
-  const navigate = useNavigate();
-  const [comment, setComment] = useState("");
+    const queryParams = new URLSearchParams(location.search);
+    const appID = queryParams.get('appID');
 
-  //stored staffID and username
-  useEffect(() => {
-    const storedStaffID = sessionStorage.getItem('staffID');
-    const storedUsername = sessionStorage.getItem('username');
+    //stored staffID and username
+    useEffect(() => {
+        const storedStaffID = sessionStorage.getItem('staffID');
+        const storedUsername = sessionStorage.getItem('username');
 
-    if (storedStaffID && storedUsername) {
-      console.log("staffid :", storedStaffID);
-      console.log("username :", storedUsername);
-      setIsLoading(false);
-    } else {
-      navigate('/authAdmin/loginAdmin');
-    }
-  }, [navigate]);
+        if (storedStaffID && storedUsername) {
+        console.log("staffid :", storedStaffID);
+        console.log("username :", storedUsername);
+        setIsLoading(false);
+        } else {
+        navigate('/authAdmin/loginAdmin');
+        }
+    }, [navigate]);
   
     // Fetch application details when component mounts
-  useEffect(() => {
-    const fetchApplicationDetails = async () => {
-      try {
-        console.log("Current appID:", appID);
-        const response = await axios.get(`http://localhost:5000/newbornapply/newbornDetail/${appID}`);
-        if (response.data.success)
-           {
-            setApplication(response.data.data);
-            const fatherID = response.data.data.FATHERID;
-            const motherID = response.data.data.MOTHERID;
-            const registrantID = response.data.data.REGISTRANTID;
+    useEffect(() => {
+        const fetchApplicationDetails = async () => {
+        try {
+            console.log("Current appID:", appID);
+            const response = await axios.get(`http://localhost:5000/newbornapply/newbornDetail/${appID}`);
+            if (response.data.success)
+            {
+                setApplication(response.data.data);
+                const fatherID = response.data.data.FATHERID;
+                const motherID = response.data.data.MOTHERID;
+                const registrantID = response.data.data.REGISTRANTID;
 
-            console.log("father id : " , fatherID);
-            console.log("mother id: ",motherID);
-            console.log("registrant id:", registrantID ) 
-           }
-         else {
-          setError('Failed to fetch application details');
+                console.log("father id : " , fatherID);
+                console.log("mother id: ",motherID);
+                console.log("registrant id:", registrantID ) 
+            }
+            else {
+            setError('Failed to fetch application details');
+            }
+        } catch (err) {
+            console.error("Error fetching application details:", err);
+            setError('Error fetching application details');
+        } finally {
+            setIsLoading(false);
         }
-      } catch (err) {
-        console.error("Error fetching application details:", err);
-        setError('Error fetching application details');
-      } finally {
+        };
+        if (appID) {
+        fetchApplicationDetails();
+        } else {
+        setError('No application ID provided');
         setIsLoading(false);
-      }
-    };
-    if (appID) {
-      fetchApplicationDetails();
-    } else {
-      setError('No application ID provided');
-      setIsLoading(false);
-    }
-  }, [appID]);
+        }
+    }, [appID]);
 
-const handleViewDocument = async () => {
-  setIsPdfLoading(true);
-  setPdfError(null);
+    const handleViewDocument = async () => {
+        setIsPdfLoading(true);
+        setPdfError(null);
 
-  try {
-    const response = await axios.get(
-      `http://localhost:5000/newbornapply/document/${appID}?appType=${appType}`,
-      { responseType: 'blob', validateStatus: false } // 👈 this is important
-    );
+        try {
+            const response = await axios.get(
+            `http://localhost:5000/newbornapply/document/${appID}?appType=${appType}`,
+            { responseType: 'blob', validateStatus: false } // 👈 this is important
+            );
 
-    // Handle 404 manually
-    if (response.status === 404) {
-      toast.warning('Dokumen Tidak Dijumpai', {
-        position: "top-center",
-        autoClose: 3000,
-      });
-      return; // stop further execution
-    }
+            // Handle 404 manually
+            if (response.status === 404) {
+            toast.warning('Dokumen Tidak Dijumpai', {
+                position: "top-center",
+                autoClose: 3000,
+            });
+            return; // stop further execution
+            }
 
-    // If other errors, or empty blob
-    if (!response.data || response.data.size === 0) {
-      toast.warning('Dokumen Tidak Dijumpai', {
-        position: "top-center",
-        autoClose: 3000,
-      });
-      return;
-    }
+            // If other errors, or empty blob
+            if (!response.data || response.data.size === 0) {
+            toast.warning('Dokumen Tidak Dijumpai', {
+                position: "top-center",
+                autoClose: 3000,
+            });
+            return;
+            }
 
-    const blob = new Blob([response.data], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
 
-  } catch (err) {
-    console.error('Error fetching PDF:', err);
-    toast.error('Ralat ketika memuatkan dokumen.', {
-      position: "top-center",
-      autoClose: 3000,
-    });
-  } finally {
-    setIsPdfLoading(false);
-  }
-};
-
-
-  const handleReviewNewborn = async (decision) => {
-    const staffID = sessionStorage.getItem("staffID");
-
-    const payload = {
-      appID: appID,
-      staffID: parseInt(staffID),
-      decision: decision,
-      comments: comment || null,
-      fullname: application?.BABY_NAME,
-      dob: application?.DOB,
-      registrantID: application?.REGISTRANTID,
-      gender: application?.GENDER,
-      race: application?.RACE,
-      religion: application?.RELIGION,
-      address: application?.ADDRESS || null,
-      status_marriage: application?.STATUS_MARRIAGE,
-      fatherID: application?.FATHERID,
-      motherID: application?.MOTHERID,
-    };
-
-    try {
-      const response = await axios.post("http://localhost:5000/newbornapply/reviewNewborn", payload);
-      if (response.data.success) {
-        toast.success(
-          decision === 'ACCEPT' 
-            ? 'Permohonan diterima!' 
-            : 'Permohonan ditolak!', 
-          {
+        } catch (err) {
+            console.error('Error fetching PDF:', err);
+            toast.error('Ralat ketika memuatkan dokumen.', {
             position: "top-center",
             autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          }
+            });
+        } finally {
+            setIsPdfLoading(false);
+        }
+    };
+
+
+    const handleReviewNewborn = async (decision) => {
+        setIsSubmitting(true);
+        const staffID = sessionStorage.getItem("staffID");
+
+        // Determine the final comment based on user selection
+        const finalComment = selectedCommentOption === 'LAIN-LAIN'
+            ? customComment
+            : selectedCommentOption;
+
+        // Validation: A comment is required for rejection
+        if (decision === 'REJECT' && !finalComment) {
+            toast.error("Sila pilih atau masukkan komen untuk menolak permohonan.", {
+                position: "top-center",
+                autoClose: 3000,
+            });
+            setIsSubmitting(false);
+            return;
+        }
+        
+        const dobAsDate = new Date(application?.DOB);
+        const dobForPayload = dobAsDate.toISOString();
+
+        const payload = {
+            appID: appID,
+            staffID: parseInt(staffID),
+            decision: decision,
+            comments: finalComment || null, // Use the determined final comment
+            fullname: application?.BABY_NAME,
+            dob: dobForPayload,
+            registrantID: application?.REGISTRANTID,
+            gender: application?.GENDER,
+            race: application?.RACE,
+            religion: application?.RELIGION,
+            address: application?.ADDRESS || null,
+            status_marriage: application?.STATUS_MARRIAGE,
+            fatherID: application?.FATHERID,
+            motherID: application?.MOTHERID,
+        };
+
+        try {
+            const response = await axios.post("http://localhost:5000/newbornapply/reviewNewborn", payload);
+            if (response.data.success) {
+                toast.success(
+                decision === 'ACCEPT' 
+                    ? 'Permohonan diterima!' 
+                    : 'Permohonan ditolak!', 
+                {
+                    position: "top-center",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                }
+                );
+                setTimeout(() => navigate("/adminApplication/checkNewborn"), 3000);
+            } else {
+                toast.error(response.data.message || 'Permohonan gagal diproses', {
+                position: "top-center",
+                autoClose: 5000,
+                });
+            }
+        } catch (error) {
+            console.error("Error reviewing newborn application:", error);
+            toast.error("Ralat pelayan! Sila cuba lagi.", {
+                position: "top-center",
+                autoClose: 5000,
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (isLoading) {
+        return (
+        <Container className="mt-5 text-center">
+            <Spinner color="primary" />
+            <h4>Loading application details...</h4>
+        </Container>
         );
-        setTimeout(() => navigate("/adminApplication/checkNewborn"), 3000);
-      } else {
-        toast.error(response.data.message || 'Permohonan gagal diproses', {
-          position: "top-center",
-          autoClose: 5000,
-        });
-      }
-    } catch (error) {
-      console.error("Error reviewing newborn application:", error);
-      toast.error("Ralat pelayan! Sila cuba lagi.", {
-        position: "top-center",
-        autoClose: 5000,
-      });
     }
-  };
 
-  if (isLoading) {
-    return (
-      <Container className="mt-5 text-center">
-        <Spinner color="primary" />
-        <h4>Loading application details...</h4>
-      </Container>
-    );
-  }
+    if (error) {
+        return (
+        <Container className="mt-5 text-center">
+            <h4 className="text-danger">{error}</h4>
+            <Link to="/adminApplication/checkNewborn">
+            <Button color="secondary" style={{ fontWeight: 700 }} className="mt-3">Back</Button>
+            </Link>
+        </Container>
+        );
+    }
 
-  if (error) {
-    return (
-      <Container className="mt-5 text-center">
-        <h4 className="text-danger">{error}</h4>
-        <Link to="/adminApplication/checkNewborn">
-          <Button color="secondary" style={{ fontWeight: 700 }} className="mt-3">Back</Button>
-        </Link>
-      </Container>
-    );
-  }
-
-  if (!application) {
-    return (
-      <Container className="mt-5 text-center">
-        <h4>No application data found</h4>
-        <Link to="/adminApplication/checkIC">
-          <Button color="secondary" style={{ fontWeight: 700 }} className="mt-3">Back</Button>
-        </Link>
-      </Container>
-    );
-  }
+    if (!application) {
+        return (
+        <Container className="mt-5 text-center">
+            <h4>No application data found</h4>
+            <Link to="/adminApplication/checkIC">
+            <Button color="secondary" style={{ fontWeight: 700 }} className="mt-3">Back</Button>
+            </Link>
+        </Container>
+        );
+    }
 
     return (
       <>
@@ -239,14 +263,16 @@ const handleViewDocument = async () => {
                   {/* Registrant Info */}
                   <h4 className="mb-3" style={{ fontWeight: 700 }}>Maklumat Pemohon</h4>
                   <table className="table table-bordered">
-                    <tr>
-                        <th width="30%">Nama Pendaftar</th>
-                        <td>{application?.REGISTRANT_NAME || 'N/A'}</td>
-                    </tr>
-                    <tr>
-                        <th width="30%">Nombor Kad Pengenalan Pendaftar</th>
-                        <td>{application?.REGISTRANT_ICNO || 'N/A'}</td>
-                    </tr>
+                    <tbody>
+                      <tr>
+                          <th width="30%">Nama Pendaftar</th>
+                          <td>{application?.REGISTRANT_NAME || 'N/A'}</td>
+                      </tr>
+                      <tr>
+                          <th width="30%">Nombor Kad Pengenalan Pendaftar</th>
+                          <td>{application?.REGISTRANT_ICNO || 'N/A'}</td>
+                      </tr>
+                    </tbody>
                   </table>
 
                   {/* Parent Info */}
@@ -314,7 +340,7 @@ const handleViewDocument = async () => {
                       </tr>
                       <tr>
                         <th>Tarikh Lahir Bayi</th>
-                        <td>{application?.DOB || 'N/A'}</td>
+                        <td>{application?.DOB ? new Date(application.DOB).toLocaleDateString('ms-MY') : 'N/A'}</td>
                       </tr>
                       <tr>
                         <th>Agama Bayi</th>
@@ -357,43 +383,76 @@ const handleViewDocument = async () => {
                             {pdfError && <span className="text-danger ml-2">{pdfError}</span>}
                           </td>
                         </tr>
+                      {/* === NEW: Updated Komen section with Dropdown and conditional Textarea === */}
                       <tr>
-                      <td >Komen</td>
-                      <td >
-                        <Input
-                          type="textarea"
-                          value={comment}
-                          onChange={(e) => setComment(e.target.value)}
-                          style={{
-                            width: '100%',
-                            minHeight: '100px',
-                            border: '1px solid #ced4da',
-                            borderRadius: '4px',
-                            padding: '8px'
-                          }}
-                          placeholder="Masukkan komen anda di sini..."
-                        />
-                      </td>
-                    </tr>
+                        <td>Komen</td>
+                        <td>
+                          <Input
+                            type="select"
+                            value={selectedCommentOption}
+                            onChange={(e) => {
+                              setSelectedCommentOption(e.target.value);
+                              // Clear custom comment if user switches away from "LAIN-LAIN"
+                              if (e.target.value !== 'LAIN-LAIN') {
+                                setCustomComment('');
+                              }
+                            }}
+                            className="mb-2"
+                          >
+                            <option value="">Sila pilih komen...</option>
+                            <option value="DOKUMEN TAK SAH">DOKUMEN TAK SAH</option>
+                            <option value="MAKLUMAT DALAM BORANG PERMOHONAN TIDAK SAH">MAKLUMAT DALAM BORANG PERMOHONAN TIDAK SAH</option>
+                            <option value="MAKLUMAT DALAM BORANG PERMOHONAN TIDAK LENGKAP">MAKLUMAT DALAM BORANG PERMOHONAN TIDAK LENGKAP</option>
+                            <option value="LAIN-LAIN">LAIN-LAIN</option>
+                          </Input>
+
+                          {selectedCommentOption === 'LAIN-LAIN' && (
+                            <Input
+                              type="textarea"
+                              value={customComment}
+                              onChange={(e) => setCustomComment(e.target.value)}
+                              style={{
+                                width: '100%',
+                                minHeight: '100px',
+                                border: '1px solid #ced4da',
+                                borderRadius: '4px',
+                                padding: '8px'
+                              }}
+                              placeholder="Sila nyatakan sebab lain di sini..."
+                            />
+                          )}
+                        </td>
+                      </tr>
+                      {/* ============================================================================== */}
                     </tbody>
                   </table>
-                  <div>
+                  
+                  <hr style={{ borderTop: '2px solid #000', margin: '20px 0' }} />
+
+                  <div className="d-flex justify-content-between">
+                    <Link to="/adminApplication/checkNewborn">
+                      <Button color="secondary" style={{ fontWeight: 700 }}>Back</Button>
+                    </Link>
+                    <div>
                       <Button
-                        color="danger"
+                        color="warning"
                         className="mr-2"
                         style={{ fontWeight: 700 }}
                         onClick={() => handleReviewNewborn("REJECT")}
+                        disabled={isSubmitting}
                       >
-                        TOLAK
+                        {isSubmitting ? <Spinner size="sm" /> : 'TOLAK'}
                       </Button>
                       <Button
                         color="success"
                         style={{ fontWeight: 700 }}
                         onClick={() => handleReviewNewborn("ACCEPT")}
+                        disabled={isSubmitting}
                       >
-                        TERIMA
+                        {isSubmitting ? <Spinner size="sm" /> : 'TERIMA'}
                       </Button>
                     </div>
+                  </div>
                 </CardBody>
               </Card>
             </Col>

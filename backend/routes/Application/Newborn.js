@@ -13,7 +13,8 @@ const upload = multer({ storage: storage });
 router.post('/1', upload.single('document'), async (req, res) => {
   const {
     citizenID, fatherID, motherID, babyName, gender,
-    dob, religion, race, address
+    dob, // This is the ISO string from the frontend, e.g., "2023-11-21T00:00:00.000Z"
+    religion, race, address
   } = req.body;
 
   const documentBuffer = req.file ? req.file.buffer : null;
@@ -34,19 +35,27 @@ router.post('/1', upload.single('document'), async (req, res) => {
     const nbAppIDResult = await execute(`SELECT newborn_application_seq.NEXTVAL AS nbAppID FROM dual`);
     const nbAppID = nbAppIDResult.rows[0].NBAPPID;
 
-    // Step 4: Insert into newborn_application with document
+    // ======================== FINAL FIX IS HERE ========================
+    
+    // Change 1: REMOVE the TO_DATE function from the SQL string. 
+    // We will pass a native JavaScript Date object directly.
     await execute(
       `INSERT INTO NEWBORN_APPLICATION
         (nbAppID, APPID, fatherID, motherID, babyName, gender, date_of_birth, religion, race, address, document_detail)
        VALUES
-        (:1, :2, :3, :4, :5, :6, TO_DATE(:7, 'YYYY-MM-DD'), :8, :9, :10, :11)`,
+        (:1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11)`,
       [
         nbAppID, appID, fatherID, motherID,
-        babyName, gender, dob, religion,
+        babyName, gender, 
+        // Change 2: Convert the incoming 'dob' string into a real JS Date object.
+        // The oracledb driver will handle the rest.
+        new Date(dob), 
+        religion,
         race, address, documentBuffer
       ],
       { autoCommit: true }
     );
+    // ====================================================================
 
     // Step 5: Send success response
     res.status(201).json({
@@ -159,7 +168,11 @@ router.get('/newbornDetail/:appID', async (req, res) => {
     status_marriage(nb.fatherID,nb.motherID) AS status_marriage,
     nb.babyName as baby_name,
     nb.gender as gender,
-    TO_CHAR(nb.date_of_birth, 'DD/MM/YYYY') AS  dob,
+    -- ======================= THE FIX =======================
+    -- REMOVE TO_CHAR and just select the date column.
+    -- The Node.js driver will convert it to a JS Date, which becomes a full ISO string in JSON.
+    nb.date_of_birth AS dob,
+    -- =======================================================
     nb.religion as religion,
     nb.race as race,
     nb.address as address

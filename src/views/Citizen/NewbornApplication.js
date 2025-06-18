@@ -42,13 +42,12 @@ const NewbornApplication = () => {
         }
 
         const debounceTimer = setTimeout(async () => {
-            // ⬇️ **CRITICAL FIX**: Using environment variable for API key
             const apiKey = process.env.REACT_APP_OPENCAGE_API_KEY;
-            console.log("Attempting to use API Key for NewbornApplication:", apiKey); // Debugging log
+            console.log("Attempting to use API Key for NewbornApplication:", apiKey); 
 
             if (!apiKey) {
                 console.error("FATAL: OpenCage API Key is not defined. Please check your .env file and restart the development server.");
-                return; // Stop if key is missing
+                return; 
             }
 
             try {
@@ -61,23 +60,21 @@ const NewbornApplication = () => {
                     }
                 });
                 
-                console.log("API Response Received:", response.data); // Debugging log
+                console.log("API Response Received:", response.data); 
 
                 if (response.data.results) {
-                    // Storing the full result object, not just the string
                     setAddressSuggestions(response.data.results);
                 }
             } catch (error) {
                 console.error("Error fetching address suggestions:", error);
-                setAddressSuggestions([]); // Clear suggestions on error
+                setAddressSuggestions([]); 
             }
         }, 500);
 
-        // Cleanup function to clear the timer
         return () => {
             clearTimeout(debounceTimer);
         };
-    }, [address]); // This effect runs whenever the `address` state changes
+    }, [address]); 
     // ==============================================================================
 
     const validateParent = async (fullname, icno) => {
@@ -148,7 +145,17 @@ const NewbornApplication = () => {
         formData.append('motherID', motherID);
         formData.append('babyName', fullname.trim());
         formData.append('gender', gender);
-        formData.append('dob', dob);
+        
+        // ============ ⬇️ KEY CHANGE HERE ⬇️ ============
+        // Create a Date object from the YYYY-MM-DD string from the input.
+        // This ensures the date is interpreted as local time, not UTC.
+        const dateObject = new Date(dob);
+        
+        // Convert to a full ISO string (e.g., "2023-11-21T00:00:00.000Z").
+        // This is the most reliable and unambiguous format to send to a backend server.
+        formData.append('dob', dateObject.toISOString());
+        // ===============================================
+
         formData.append('religion', religion);
         formData.append('race', race);
         formData.append('address', address.trim());
@@ -199,6 +206,9 @@ const NewbornApplication = () => {
             </Container>
         );
     }
+    
+    // For clarity, calculate the max date for the input field here
+    const maxDate = new Date().toISOString().split("T")[0];
   
     return (
         <Container className="mt-5">
@@ -321,7 +331,6 @@ const NewbornApplication = () => {
                                 </Col>
                                 </Row>
 
-                                {/* === MODIFIED AND CORRECTED ADDRESS INPUT SECTION === */}
                                 <Row>
                                     <Col lg="12">
                                         <FormGroup style={{ position: 'relative' }}>
@@ -340,7 +349,6 @@ const NewbornApplication = () => {
                                                 onChange={(e) => setAddress(e.target.value)}
                                                 autoComplete="off"
                                             />
-                                            {/* Render suggestions dropdown (UI from ICApplication.js) */}
                                             {addressSuggestions.length > 0 && (
                                                 <div className="list-group" style={{ position: 'absolute', width: '100%', zIndex: 1000 }}>
                                                     {addressSuggestions.map((suggestion, index) => (
@@ -358,7 +366,6 @@ const NewbornApplication = () => {
                                         </FormGroup>
                                     </Col>
                                 </Row>
-                                {/* ==================================================== */}
 
 
                                 <Row>
@@ -374,7 +381,7 @@ const NewbornApplication = () => {
                                             className="form-control"
                                             id="input-dob"
                                             type="date"
-                                            max={new Date().toISOString().split("T")[0]}
+                                            max={maxDate}
                                             value={dob}
                                             onChange={(e) => setDob(e.target.value)}
                                         />
