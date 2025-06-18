@@ -32,7 +32,10 @@ import {
     // Get appID from URL query parameters
     const queryParams = new URLSearchParams(location.search);
     const appID = queryParams.get('appID');
-    const [comment, setComment] = useState("");
+    
+    // State for the comment section (similar to TableNewborn)
+    const [selectedCommentOption, setSelectedCommentOption] = useState("");
+    const [customComment, setCustomComment] = useState("");
       
   //stored staffID and username
     useEffect(() => {
@@ -154,9 +157,23 @@ if (error) {
     );
   }
   
-  // Add this function before the return statement
 const handleReviewDeath = async (decision) => {
   setIsSubmitting(true);
+  
+  // Determine the final comment based on user selection
+  const finalComment = selectedCommentOption === 'LAIN-LAIN'
+      ? customComment
+      : selectedCommentOption;
+
+  // Validation: A comment is required for rejection
+  if (decision === 'REJECT' && !finalComment) {
+      toast.error("Sila pilih atau masukkan komen untuk menolak permohonan.", {
+          position: "top-center",
+          autoClose: 3000,
+      });
+      setIsSubmitting(false);
+      return;
+  }
   
   try {
     const staffID = sessionStorage.getItem('staffID');
@@ -164,7 +181,7 @@ const handleReviewDeath = async (decision) => {
       appID: parseInt(appID),
       staffID: parseInt(staffID),
       decision,
-      comments: comment,
+      comments: finalComment, // Use the determined final comment
       deceasedID: application?.deceased_id,
       registrantID: application?.registrant_id
     });
@@ -290,43 +307,75 @@ const handleReviewDeath = async (decision) => {
                             {pdfError && <span className="text-danger ml-2">{pdfError}</span>}
                           </td>
                         </tr>
-                      <td >Komen</td>
-                      <td >
-                        <Input
-                          type="textarea"
-                          value={comment}
-                          onChange={(e) => setComment(e.target.value)}
-                          style={{
-                            width: '100%',
-                            minHeight: '100px',
-                            border: '1px solid #ced4da',
-                            borderRadius: '4px',
-                            padding: '8px'
-                          }}
-                          placeholder="Masukkan komen anda di sini..."
-                        />
-                      </td>
+                      {/* === UPDATED: Komen section with Dropdown and conditional Textarea === */}
+                      <tr>
+                        <td>Komen</td>
+                        <td>
+                          <Input
+                            type="select"
+                            value={selectedCommentOption}
+                            onChange={(e) => {
+                              setSelectedCommentOption(e.target.value);
+                              // Clear custom comment if user switches away from "LAIN-LAIN"
+                              if (e.target.value !== 'LAIN-LAIN') {
+                                setCustomComment('');
+                              }
+                            }}
+                            className="mb-2"
+                          >
+                            <option value="">Sila pilih komen...</option>
+                            <option value="DOKUMEN TAK SAH">DOKUMEN TAK SAH</option>
+                            <option value="MAKLUMAT DALAM BORANG PERMOHONAN TIDAK SAH">MAKLUMAT DALAM BORANG PERMOHONAN TIDAK SAH</option>
+                            <option value="MAKLUMAT DALAM BORANG PERMOHONAN TIDAK LENGKAP">MAKLUMAT DALAM BORANG PERMOHONAN TIDAK LENGKAP</option>
+                            <option value="LAIN-LAIN">LAIN-LAIN</option>
+                          </Input>
+
+                          {selectedCommentOption === 'LAIN-LAIN' && (
+                            <Input
+                              type="textarea"
+                              value={customComment}
+                              onChange={(e) => setCustomComment(e.target.value)}
+                              style={{
+                                width: '100%',
+                                minHeight: '100px',
+                                border: '1px solid #ced4da',
+                                borderRadius: '4px',
+                                padding: '8px'
+                              }}
+                              placeholder="Sila nyatakan sebab lain di sini..."
+                            />
+                          )}
+                        </td>
+                      </tr>
+                      {/* ======================================================================= */}
                     </tbody>
                   </table>
 
-                  <div>
-                    <Button 
-                      color="danger" 
-                      className="mr-2" 
-                      style={{ fontWeight: 700 }}
-                      onClick={() => handleReviewDeath('REJECT')}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? <Spinner size="sm" /> : 'TOLAK'}
-                    </Button>
-                    <Button 
-                      color="success" 
-                      style={{ fontWeight: 700 }}
-                      onClick={() => handleReviewDeath('ACCEPT')}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? <Spinner size="sm" /> : 'TERIMA'}
-                    </Button>
+                  <hr style={{ borderTop: '2px solid #000', margin: '20px 0' }} />
+
+                  <div className="d-flex justify-content-between">
+                    <Link to="/adminApplication/checkDeath">
+                      <Button color="secondary" style={{ fontWeight: 700 }}>Back</Button>
+                    </Link>
+                    <div>
+                      <Button 
+                        color="danger" 
+                        className="mr-2" 
+                        style={{ fontWeight: 700 }}
+                        onClick={() => handleReviewDeath('REJECT')}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? <Spinner size="sm" /> : 'TOLAK'}
+                      </Button>
+                      <Button 
+                        color="success" 
+                        style={{ fontWeight: 700 }}
+                        onClick={() => handleReviewDeath('ACCEPT')}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? <Spinner size="sm" /> : 'TERIMA'}
+                      </Button>
+                    </div>
                   </div>
                 </CardBody>
               </Card>
