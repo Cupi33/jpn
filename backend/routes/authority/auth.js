@@ -1,8 +1,6 @@
-// --- START OF FILE auth.js ---
-
 import express from 'express';
 import bcrypt from 'bcrypt';
-import { execute } from "../../config/db.js" // this connects to Oracle DB
+import { execute } from "../../config/db.js" 
 
 const router = express.Router();
 const saltRounds = 10; // Standard cost factor for bcrypt

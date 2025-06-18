@@ -22,7 +22,11 @@ const TableIC = () => {
   const [application, setApplication] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const [comment, setComment] = useState("");
+  
+  // State for the new comment section
+  const [selectedCommentOption, setSelectedCommentOption] = useState("");
+  const [customComment, setCustomComment] = useState("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
@@ -125,6 +129,21 @@ const TableIC = () => {
     setIsSubmitting(true);
     setSubmitError(null);
     
+    // Determine the final comment based on user selection
+    const finalComment = selectedCommentOption === 'LAIN-LAIN'
+      ? customComment
+      : selectedCommentOption;
+
+    // Validation: A comment is required for rejection
+    if (decision === 'REJECT' && !finalComment) {
+      toast.error("Sila pilih atau masukkan komen untuk menolak permohonan.", {
+        position: "top-center",
+        autoClose: 3000,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const staffID = sessionStorage.getItem('staffID');
       
@@ -132,7 +151,7 @@ const TableIC = () => {
         appID: parseInt(appID),
         staffID: parseInt(staffID),
         decision,
-        comments: comment,
+        comments: finalComment, // Pass the final determined comment
         address: application.address
       });
 
@@ -246,16 +265,13 @@ const TableIC = () => {
                       <td>{application.reason_desc || 'N/A'}</td>
                     </tr>
 
-                    {/* === NEW: Conditionally render address row only for 'ta' (Tukar Alamat) reason === */}
                     {application.reason === 'ta' && (
                       <tr>
                         <td>Alamat Baru</td>
                         <td>{application.address || 'N/A'}</td>
                       </tr>
                     )}
-                    {/* =================================================================================== */}
 
-                    {/* Conditionally render document row only for 'ha' reason */}
                     {application.reason === 'ha' && (
                       <tr>
                         <td>Surat Laporan Polis</td>
@@ -287,24 +303,47 @@ const TableIC = () => {
                         </td>
                       </tr>
                     )}
+                    {/* === NEW: Updated Komen section with Dropdown and conditional Textarea === */}
                     <tr>
                       <td>Komen</td>
                       <td>
                         <Input
-                          type="textarea"
-                          value={comment}
-                          onChange={(e) => setComment(e.target.value)}
-                          style={{
-                            width: '100%',
-                            minHeight: '100px',
-                            border: '1px solid #ced4da',
-                            borderRadius: '4px',
-                            padding: '8px'
+                          type="select"
+                          value={selectedCommentOption}
+                          onChange={(e) => {
+                            setSelectedCommentOption(e.target.value);
+                            // Clear custom comment if user switches away from "LAIN-LAIN"
+                            if (e.target.value !== 'LAIN-LAIN') {
+                              setCustomComment('');
+                            }
                           }}
-                          placeholder="Masukkan komen anda di sini..."
-                        />
+                          className="mb-2"
+                        >
+                          <option value="">Sila pilih komen...</option>
+                          <option value="DOKUMEN TAK SAH">DOKUMEN TAK SAH</option>
+                          <option value="MAKLUMAT DALAM BORANG PERMOHONAN TIDAK SAH">MAKLUMAT DALAM BORANG PERMOHONAN TIDAK SAH</option>
+                          <option value="MAKLUMAT DALAM BORANG PERMOHONAN TIDAK LENGKAP">MAKLUMAT DALAM BORANG PERMOHONAN TIDAK LENGKAP</option>
+                          <option value="LAIN-LAIN">LAIN-LAIN</option>
+                        </Input>
+
+                        {selectedCommentOption === 'LAIN-LAIN' && (
+                          <Input
+                            type="textarea"
+                            value={customComment}
+                            onChange={(e) => setCustomComment(e.target.value)}
+                            style={{
+                              width: '100%',
+                              minHeight: '100px',
+                              border: '1px solid #ced4da',
+                              borderRadius: '4px',
+                              padding: '8px'
+                            }}
+                            placeholder="Sila nyatakan sebab lain di sini..."
+                          />
+                        )}
                       </td>
                     </tr>
+                    {/* ============================================================================== */}
                   </tbody>
                 </table>
                 
