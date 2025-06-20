@@ -4,7 +4,7 @@ import oracledb from 'oracledb';
 const dbConfig = {
   user: "cupi",
   password: "password",
-  connectString: "127.0.0.1:10521/jpn"
+  connectString: "20.198.176.110:1521/orclpdb.0v5qdtvn0v3elnsh3lc41kz4df.ix.internal.cloudapp.net"
 };
 
 export async function getConnection() {
