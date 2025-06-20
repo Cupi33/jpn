@@ -5,12 +5,12 @@ import html2canvas from 'html2canvas';
 
 // --- UPDATED DATA & ASSETS TO MATCH MYKAD SAMPLE ---
 const cardHolderData = {
-  name: 'Mohd Asri Bin Hashim',
-  icNumber: '830412138839',
-  address: 'Taman Meru Bestari, 30020 Ipoh,\n Perak',
-  gender: 'LELAKI',
+  name: 'Lim Suet Ling',
+  icNumber: '880725054010',
+  address: 'Taman Bukit Mewah 43000 Kajang,\n Selangor',
+  gender: 'PEREMPUAN',
   citizenship: 'WARGANEGARA',
-  religion: 'ISLAM',
+  religion: 'BUDDHA',
   photoUrl: process.env.PUBLIC_URL + '/user.png',
   flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Flag_of_Malaysia.svg/125px-Flag_of_Malaysia.svg.png',
 };

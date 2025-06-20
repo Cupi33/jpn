@@ -224,7 +224,7 @@ const Index = (props) => {
                       Overview
                     </h6>
                     <h2 className="text-white mb-0">
-                      {activeNav === 1 ? 'Annual Deaths' : 'Annual Births'}
+                      {activeNav === 1 ? 'Jumlah Kematian Per Tahun' : 'Jumlah Kelahiran Per Tahun'}
                     </h2>
                   </div>
                   <div className="col">
@@ -237,7 +237,7 @@ const Index = (props) => {
                           href="#pablo"
                           onClick={(e) => toggleNavs(e, 1)}
                         >
-                          <span className="d-none d-md-block">Deaths</span>
+                          <span className="d-none d-md-block">Kematian</span>
                           <span className="d-md-none">D</span>
                         </NavLink>
                       </NavItem>
@@ -250,7 +250,7 @@ const Index = (props) => {
                           href="#pablo"
                           onClick={(e) => toggleNavs(e, 2)}
                         >
-                          <span className="d-none d-md-block">Births</span>
+                          <span className="d-none d-md-block">Kelahiran</span>
                           <span className="d-md-none">B</span>
                         </NavLink>
                       </NavItem>
