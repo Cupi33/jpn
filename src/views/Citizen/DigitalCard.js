@@ -5,12 +5,12 @@ import html2canvas from 'html2canvas';
 
 // --- UPDATED DATA & ASSETS TO MATCH MYKAD SAMPLE ---
 const cardHolderData = {
-  name: 'Lim Suet Ling',
-  icNumber: '880725054010',
-  address: 'Taman Bukit Mewah 43000 Kajang,\n Selangor',
-  gender: 'PEREMPUAN',
+  name: 'Ahmad Syafiq Bin Abdullah',
+  icNumber: '900315065447',
+  address: 'No 12, Jalan Melur, Taman Seri Permai,\n 56000 Kuala Lumpur',
+  gender: 'LELAKI',
   citizenship: 'WARGANEGARA',
-  religion: 'BUDDHA',
+  religion: 'ISLAM',
   photoUrl: process.env.PUBLIC_URL + '/user.png',
   flagUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Flag_of_Malaysia.svg/125px-Flag_of_Malaysia.svg.png',
 };
