@@ -5,9 +5,9 @@ import html2canvas from 'html2canvas';
 
 // --- UPDATED DATA & ASSETS TO MATCH MYKAD SAMPLE ---
 const cardHolderData = {
-  name: 'Ahmad Syafiq Bin Abdullah',
-  icNumber: '900315065447',
-  address: 'No 12, Jalan Melur, Taman Seri Permai,\n 56000 Kuala Lumpur',
+  name: 'Mohd Asri Bin Hashim',
+  icNumber: '850315044251',
+  address: 'No 12, Jalan Melati 5, Taman Seri Damai,\n 43000 Kajang, Selangor',
   gender: 'LELAKI',
   citizenship: 'WARGANEGARA',
   religion: 'ISLAM',

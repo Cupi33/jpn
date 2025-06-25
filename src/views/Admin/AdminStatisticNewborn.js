@@ -1,7 +1,7 @@
 // AdminStatisticNewborn.js
 
 import { useEffect, useState } from "react";
-import { Line, Pie, Bar, Doughnut } from "react-chartjs-2";
+import { Line, Pie,  Doughnut } from "react-chartjs-2";
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from "react-simple-maps";
 import { Tooltip as ReactTooltip } from "react-tooltip";
 import { Card, CardHeader, CardBody, Table, Container, Row, Col, Progress, Button, Input } from "reactstrap";

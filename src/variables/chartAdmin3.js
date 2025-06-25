@@ -43,7 +43,8 @@ Chart.elements.Rectangle.prototype.draw = function () {
   for (var i = 1; i < 4; i++) {
     corner = cornerAt(i); let nextCornerId = i + 1; if (nextCornerId === 4) { nextCornerId = 0; }
     let width = corners[2][0] - corners[1][0]; let height = corners[0][1] - corners[1][1];
-    let x = corners[1][0]; let y = corners[1][1]; var radius = cornerRadius;
+    let x = corners[1][0]; let y = corners[1][1]; 
+    radius = cornerRadius;
     if (radius > height / 2) { radius = height / 2; }
     if (radius > width / 2) { radius = width / 2; }
     ctx.moveTo(x + radius, y); ctx.lineTo(x + width - radius, y);

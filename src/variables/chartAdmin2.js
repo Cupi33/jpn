@@ -9,7 +9,7 @@ Chart.elements.Rectangle.prototype.draw = function () {
   var vm = this._view;
   var left, right, top, bottom, signX, signY, borderSkipped, radius;
   var borderWidth = vm.borderWidth;
-  var cornerRadius = 6;
+
 
   if (!vm.horizontal) {
     left = vm.x - vm.width / 2; right = vm.x + vm.width / 2; top = vm.y; bottom = vm.base;
@@ -48,7 +48,7 @@ Chart.elements.Rectangle.prototype.draw = function () {
     let height = corners[0][1] - corners[1][1];
     let x = corners[1][0];
     let y = corners[1][1];
-    var radius = cornerRadius;
+    // var radius = cornerRadius;
     if (radius > height / 2) { radius = height / 2; }
     if (radius > width / 2) { radius = width / 2; }
     ctx.moveTo(x + radius, y);
