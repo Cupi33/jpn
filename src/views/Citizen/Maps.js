@@ -4,9 +4,7 @@ import { Card, Container, Row } from "reactstrap";
 // core components
 import Header from "components/Headers/Header.js";
 
-// *** 1. JPN Office Locations Data ***
-// A list of JPN offices with their name, address, and coordinates.
-// For a real application, you would fetch this data from your backend/API.
+// *** 1. JPN Office Locations Data (No changes needed here) ***
 const jpnLocations = [
   {
     name: "Ibu Pejabat JPN Putrajaya",
@@ -58,92 +56,53 @@ const jpnLocations = [
   },
 ];
 
-
 const MapWrapper = () => {
   const mapRef = React.useRef(null);
+
   React.useEffect(() => {
-    let google = window.google;
-    let map = mapRef.current;
+    // Check if the map container is available and if Leaflet (L) is loaded
+    if (!mapRef.current || !window.L) return;
 
-    // *** 2. Center the map on Malaysia and adjust zoom ***
-    const mapOptions = {
-      zoom: 6, // Zoom out to see the whole of Malaysia
-      center: new google.maps.LatLng(4.2105, 101.9758), // Center of Malaysia
-      scrollwheel: false,
-      zoomControl: true,
-      styles: [
-        {
-          featureType: "administrative",
-          elementType: "labels.text.fill",
-          stylers: [{ color: "#444444" }],
-        },
-        {
-          featureType: "landscape",
-          elementType: "all",
-          stylers: [{ color: "#f2f2f2" }],
-        },
-        {
-          featureType: "poi",
-          elementType: "all",
-          stylers: [{ visibility: "off" }],
-        },
-        {
-          featureType: "road",
-          elementType: "all",
-          stylers: [{ saturation: -100 }, { lightness: 45 }],
-        },
-        {
-          featureType: "road.highway",
-          elementType: "all",
-          stylers: [{ visibility: "simplified" }],
-        },
-        {
-          featureType: "road.arterial",
-          elementType: "labels.icon",
-          stylers: [{ visibility: "off" }],
-        },
-        {
-          featureType: "transit",
-          elementType: "all",
-          stylers: [{ visibility: "off" }],
-        },
-        {
-          featureType: "water",
-          elementType: "all",
-          stylers: [{ color: "#5e72e4" }, { visibility: "on" }],
-        },
-      ],
-    };
+    // We no longer need the apiKey for this default map style
+    // const apiKey = "I76Q2zPbaR1PNnWoBq1S";
 
-    map = new google.maps.Map(map, mapOptions);
+    // *** 2. Initialize the map and center it on Malaysia ***
+    const map = window.L.map(mapRef.current).setView([4.2105, 101.9758], 6);
 
-    // *** 3. Loop through locations to create markers and info windows ***
+    // *** 3. Add the OpenStreetMap Tile Layer (THE FIX IS HERE) ***
+    // We are switching to the standard, detailed OpenStreetMap tile server.
+    // This provides the classic "street map" look and doesn't require an API key.
+    window.L.tileLayer(
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        attribution:
+          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19, // The default map has a max zoom of 19
+      }
+    ).addTo(map);
+
+    // *** 4. Loop through locations to create markers and popups (No changes here) ***
     jpnLocations.forEach((office) => {
       // Create a marker for each office
-      const marker = new google.maps.Marker({
-        position: new google.maps.LatLng(office.lat, office.lng),
-        map: map,
-        animation: google.maps.Animation.DROP,
-        title: office.name, // Text that appears on hover
-      });
+      const marker = window.L.marker([office.lat, office.lng]).addTo(map);
 
-      // Create an InfoWindow for each marker
-      const contentString =
+      // Create the popup content
+      const popupContent =
         `<div class="info-window-content">` +
         `<h4>${office.name}</h4>` +
         `<p>${office.address}</p>` +
         `</div>`;
-
-      const infowindow = new google.maps.InfoWindow({
-        content: contentString,
-      });
-
-      // Add a click listener to each marker to open its InfoWindow
-      google.maps.event.addListener(marker, "click", function () {
-        infowindow.open(map, marker);
-      });
+        
+      // Bind the popup to the marker. It will open on click.
+      marker.bindPopup(popupContent);
     });
-  }, []); // The empty array ensures this effect runs only once
+
+    // Cleanup function to remove the map instance when the component unmounts
+    return () => {
+      map.remove();
+    };
+
+  }, []);
 
   return (
     <>
@@ -157,6 +116,7 @@ const MapWrapper = () => {
   );
 };
 
+// No changes needed for the Maps component itself
 const Maps = () => {
   return (
     <>
