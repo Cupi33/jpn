@@ -1,4 +1,4 @@
-// --- START OF FILE Register.js ---
+// --- START OF FILE Register.js (Final Corrected Version) ---
 
 import {
   Button,
@@ -22,6 +22,7 @@ import * as pdfjsLib from 'pdfjs-dist/build/pdf';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.mjs`;
 
 const escapeRegex = (string) => {
+  if (typeof string !== 'string') return '';
   return string.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
 };
 
@@ -89,7 +90,10 @@ const Register = () => {
       
       let ocrAddress = '';
       if (ocrName) {
-        const addressRegex = new RegExp(`${escapeRegex(ocrName)}\\s*\\n([\\s\\S]+?)(?=WARGANEGARA|Agama|ISLAM|LELAKI)`, 'i');
+        // --- THIS IS THE CORRECTED LINE ---
+        // We now use the raw `ocrName` (without cleaning it here) to find the starting point.
+        // This ensures it matches the raw text from the OCR, imperfections and all.
+        const addressRegex = new RegExp(`${escapeRegex(ocrName)}\\s*\\n([\\s\\S]+?)(?=WARGANEGARA|Agama|ISLAM|LELAKI|PEREMPUAN)`, 'i');
         const addressMatch = text.match(addressRegex);
         ocrAddress = addressMatch ? addressMatch[1].trim().replace(/\s+/g, ' ') : '';
       }
@@ -101,16 +105,32 @@ const Register = () => {
       
       const userIcNo = icno.replace(/-/g, '');
       
-      if (ocrName.toUpperCase() !== fullName.toUpperCase() || ocrIcNo !== userIcNo) {
+      // We still clean the name for the final comparison, which is correct.
+      const cleanedOcrName = ocrName.replace(/[^a-zA-Z\s@/]/g, "").trim();
+
+      if (cleanedOcrName.toUpperCase() !== fullName.toUpperCase() || ocrIcNo !== userIcNo) {
          setIsLoading(false);
          console.log("COMPARISON FAILED:");
-         console.log(`Typed Name: "${fullName.toUpperCase()}" | OCR Name: "${ocrName.toUpperCase()}"`);
+         console.log(`Typed Name: "${fullName.toUpperCase()}" | Cleaned OCR Name: "${cleanedOcrName.toUpperCase()}"`);
          console.log(`Typed IC: "${userIcNo}" | OCR IC: "${ocrIcNo}"`);
-         return Swal.fire("Pengesahan Gagal", "Maklumat yang ditaip tidak sepadan dengan maklumat pada Kad Pengenalan yang dimuat naik.", "error");
+         console.log(`Typed Address: "${address.toUpperCase().replace(/\s+/g, ' ')}" | OCR Address: "${ocrAddress.toUpperCase()}"`);
+         console.log(`OCR Gender: "${ocrGender.toUpperCase()}"`);
+         console.log(`OCR Religion: "${ocrReligion.toUpperCase()}"`);
+         
+         let failReason = [];
+         if (cleanedOcrName.toUpperCase() !== fullName.toUpperCase()) {
+           failReason.push("nama");
+         }
+         if (ocrIcNo !== userIcNo) {
+           failReason.push("No. Kad Pengenalan");
+         }
+         const reasonText = failReason.join(' dan ');
+         
+         return Swal.fire("Pengesahan Gagal", `Maklumat ${reasonText} yang ditaip tidak sepadan dengan dokumen yang dimuat naik. Sila periksa semula.`, "error");
       }
 
       const dataToSend = {
-        fullName: ocrName,
+        fullName: cleanedOcrName, 
         icno: ocrIcNo,
         address: ocrAddress,
         gender: ocrGender,
@@ -122,7 +142,6 @@ const Register = () => {
       console.log(dataToSend);
       console.log("----------------------------------------");
 
-      // Call backend for final DB validation
       const validationResponse = await axios.post('http://localhost:5000/validate-mykad', dataToSend);
 
       if (validationResponse.data.success) {
@@ -139,7 +158,6 @@ const Register = () => {
     }
   };
 
-  // --- START OF UPDATED handleRegister FUNCTION ---
   const handleRegister = async () => {
     // --- Validation Block ---
     if (!termsAccepted) {
@@ -154,7 +172,6 @@ const Register = () => {
     if (password.length < 6) {
       return Swal.fire("Ralat Kata Laluan", "Kata laluan mesti sekurang-kurangnya 6 aksara.", "error");
     }
-    // Check for at least two numbers in the password
     const numbersInPassword = password.match(/\d/g) || [];
     if (numbersInPassword.length < 2) {
       return Swal.fire("Ralat Kata Laluan", "Kata laluan mesti mengandungi sekurang-kurangnya dua nombor.", "error");
@@ -181,7 +198,6 @@ const Register = () => {
       Swal.fire("Pendaftaran Gagal", errorMessage, "error");
     }
   };
-  // --- END OF UPDATED handleRegister FUNCTION ---
 
   return (
     <Col lg="6" md="8">
